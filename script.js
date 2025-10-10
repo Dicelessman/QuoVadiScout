@@ -1,155 +1,143 @@
-// Caricamento dati e funzionalità dell'app prototype
-let dataset = []; // dati correnti (modificabili)
-let original = []; // copia originale per reset
-const cardsEl = document.getElementById('cards');
-const searchEl = document.getElementById('search');
-const provSelect = document.getElementById('provSelect');
-const hasCasa = document.getElementById('hasCasa');
-const hasTerreno = document.getElementById('hasTerreno');
-const resetBtn = document.getElementById('resetBtn');
-const exportBtn = document.getElementById('exportBtn');
+// === Firebase SDK Imports ===
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Modal ed edit
-const modal = document.getElementById('modal');
-const closeModal = document.getElementById('closeModal');
-const editForm = document.getElementById('editForm');
-const saveBtn = document.getElementById('saveBtn');
-const deleteBtn = document.getElementById('deleteBtn');
+// === Configurazione Firebase ===
+const firebaseConfig = {
+  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
+  authDomain: "quovadiscout.firebaseapp.com",
+  projectId: "quovadiscout",
+  storageBucket: "quovadiscout.firebasestorage.app",
+  messagingSenderId: "745134651793",
+  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
+};
 
-// Carica dati (data.json)
-async function loadData(){
-  try{
-    const resp = await fetch('data.json');
-    const json = await resp.json();
-    dataset = json;
-    original = JSON.parse(JSON.stringify(json));
-    // se esiste versione in localStorage la carico
-    const local = localStorage.getItem('strutture_data');
-    if(local){ dataset = JSON.parse(local); }
-    populateProv();
-    renderCards(dataset);
-  }catch(e){ console.error(e); cardsEl.innerHTML='<p>Errore caricamento dati.</p>';}
+// === Inizializzazione Firebase ===
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const colRef = collection(db, "strutture");
+
+// === Caricamento dati da Firestore ===
+async function caricaStrutture() {
+  const snapshot = await getDocs(colRef);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-function populateProv(){
-  const provs = Array.from(new Set(dataset.map(d=>d.Prov).filter(Boolean))).sort();
-  provs.forEach(p => {
-    const opt = document.createElement('option'); opt.value=p; opt.textContent=p;
-    provSelect.appendChild(opt);
+// === Render delle card ===
+function renderStrutture(lista) {
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  if (lista.length === 0) {
+    container.innerHTML = `<p>Nessuna struttura trovata.</p>`;
+    return;
+  }
+
+  lista.forEach((s) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h3>${s.Struttura || "Senza nome"}</h3>
+      <p><strong>Luogo:</strong> ${s.Luogo || ""}</p>
+      <p><strong>Provincia:</strong> ${s.Prov || ""}</p>
+      <p><strong>Info:</strong> ${s.Info || ""}</p>
+      <p><strong>Casa:</strong> ${s.Casa ? "✅" : "❌"} |
+         <strong>Terreno:</strong> ${s.Terreno ? "✅" : "❌"}</p>
+      <p><strong>Referente:</strong> ${s.Referente || ""}</p>
+      <p><strong>Contatti:</strong> ${s.Contatto || s.Email || "—"}</p>
+      <div class="buttons">
+        <button class="edit" data-id="${s.id}">Modifica</button>
+        <button class="delete" data-id="${s.id}">Elimina</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Eventi pulsanti
+  document.querySelectorAll(".edit").forEach((btn) => {
+    btn.addEventListener("click", () => modificaStruttura(btn.dataset.id));
+  });
+  document.querySelectorAll(".delete").forEach((btn) => {
+    btn.addEventListener("click", () => eliminaStruttura(btn.dataset.id));
   });
 }
 
-// Filtri
-function applyFilters(){
-  const q = searchEl.value.trim().toLowerCase();
-  const prov = provSelect.value;
-  const casa = hasCasa.checked;
-  const terreno = hasTerreno.checked;
-  let res = dataset.filter(item => {
-    // ricerca fulltext su alcune colonne
-    const hay = (item.Struttura + ' ' + item.Luogo + ' ' + (item.Referente||'') + ' ' + (item.Info||'')).toLowerCase();
-    if(q && !hay.includes(q)) return false;
-    if(prov && item.Prov !== prov) return false;
-    if(casa && !(Number(item.Casa) > 0 || item.Casa === '1' || item.Casa === 1)) return false;
-    if(terreno && !(Number(item.Terreno) > 0 || item.Terreno === '1' || item.Terreno === 1)) return false;
-    return true;
-  });
-  renderCards(res);
-}
+// === Filtri e ricerca ===
+function filtra(lista) {
+  const q = document.getElementById("search").value.toLowerCase();
+  const prov = document.getElementById("filter-prov").value;
+  const casa = document.getElementById("filter-casa").checked;
+  const terreno = document.getElementById("filter-terreno").checked;
 
-function renderCards(list){
-  if(!list || list.length===0){ cardsEl.innerHTML='<p class="footer-note">Nessuna struttura trovata.</p>'; return; }
-  cardsEl.innerHTML='';
-  list.forEach((item, idx) => {
-    const card = document.createElement('article'); card.className='card';
-    const h = document.createElement('h3'); h.textContent = item.Struttura || '(senza nome)';
-    const meta = document.createElement('div'); meta.className='meta';
-    meta.innerHTML = `<strong>${item.Luogo||''}</strong> — ${item.Indirizzo||''} <br> <small>${item.Prov||''} • Referente: ${item.Referente||''}</small>`;
-    const info = document.createElement('div'); info.textContent = item.Info || '';
-    const tags = document.createElement('div'); tags.className='tags';
-    if(item.Casa && Number(item.Casa)>0) tags.innerHTML += `<span class="tag">Casa</span>`;
-    if(item.Terreno && Number(item.Terreno)>0) tags.innerHTML += `<span class="tag">Terreno</span>`;
-    if(item.Offerta && String(item.Offerta).toLowerCase().includes('si')) tags.innerHTML += `<span class="tag">Offerta</span>`;
-    // Contatti
-    const contacts = document.createElement('div'); contacts.className='meta';
-    contacts.innerHTML = `Contatto: ${item.Contatto||''} ${item.IIcontatto?(' / '+item.IIcontatto):''} <br> Email: ${item.Email||''} Sito: ${item.Sito||''}`;
-    // Azioni
-    const actions = document.createElement('div'); actions.style.marginTop='10px';
-    const btnView = document.createElement('button'); btnView.textContent='Modifica'; btnView.onclick = ()=> openModal(item, idx);
-    actions.appendChild(btnView);
-    card.appendChild(h); card.appendChild(meta); card.appendChild(info); card.appendChild(tags); card.appendChild(contacts); card.appendChild(actions);
-    cardsEl.appendChild(card);
+  return lista.filter((s) => {
+    const matchTesto =
+      s.Struttura?.toLowerCase().includes(q) ||
+      s.Luogo?.toLowerCase().includes(q) ||
+      s.Info?.toLowerCase().includes(q) ||
+      s.Referente?.toLowerCase().includes(q);
+    const matchProv = !prov || s.Prov === prov;
+    const matchCasa = !casa || s.Casa === true;
+    const matchTerreno = !terreno || s.Terreno === true;
+    return matchTesto && matchProv && matchCasa && matchTerreno;
   });
 }
 
-// Modal edit
-let currentIdx = null;
-function openModal(item, idx){
-  currentIdx = idx;
-  editForm.innerHTML = '';
-  // crea campi per le colonne principali
-  const keys = ['Struttura','Luogo','Indirizzo','Prov','Info','Contatto','IIcontatto','Referente','Email','Sito','Casa','Terreno','Offerta','€ notte','Forfait'];
-  keys.forEach(k=>{
-    const label = document.createElement('label'); label.innerHTML = `<span>${k}</span>`;
-    const input = document.createElement('input'); input.name = k; input.value = item[k] || '';
-    // tipi checkbox per Casa/Terreno
-    if(k==='Casa' || k==='Terreno'){ input.type='number'; input.min=0; }
-    label.appendChild(input);
-    editForm.appendChild(label);
-  });
-  modal.classList.remove('hidden');
+// === Modifica struttura ===
+async function modificaStruttura(id) {
+  const nuovoNome = prompt("Nuovo nome struttura:");
+  if (!nuovoNome) return;
+  await updateDoc(doc(db, "strutture", id), { Struttura: nuovoNome });
+  aggiornaLista();
 }
 
-closeModal.onclick = ()=>{ modal.classList.add('hidden'); currentIdx=null; }
-saveBtn.onclick = (e)=>{
-  e.preventDefault();
-  if(currentIdx===null) return;
-  const formData = new FormData(editForm);
-  const obj = dataset.find((d,i)=>i===currentIdx);
-  const keys = Array.from(formData.keys());
-  keys.forEach(k=>{
-    obj[k] = formData.get(k);
-  });
-  // salva su localStorage
-  localStorage.setItem('strutture_data', JSON.stringify(dataset));
-  applyFilters();
-  modal.classList.add('hidden');
-}
-deleteBtn.onclick = (e)=>{
-  e.preventDefault();
-  if(currentIdx===null) return;
-  if(!confirm('Eliminare questa struttura?')) return;
-  dataset.splice(currentIdx,1);
-  localStorage.setItem('strutture_data', JSON.stringify(dataset));
-  applyFilters();
-  modal.classList.add('hidden');
-}
-
-// Export JSON
-exportBtn.onclick = ()=>{
-  const a = document.createElement('a');
-  const blob = new Blob([JSON.stringify(dataset, null, 2)], {type:'application/json;charset=utf-8'});
-  a.href = URL.createObjectURL(blob);
-  a.download = 'strutture_export.json';
-  a.click();
-}
-
-// Reset
-resetBtn.onclick = ()=>{
-  if(confirm('Ripristinare i dati originali e pulire le modifiche locali?')){
-    dataset = JSON.parse(JSON.stringify(original));
-    localStorage.removeItem('strutture_data');
-    provSelect.value='';
-    hasCasa.checked=false; hasTerreno.checked=false; searchEl.value='';
-    applyFilters();
+// === Elimina struttura ===
+async function eliminaStruttura(id) {
+  if (confirm("Vuoi davvero eliminare questa struttura?")) {
+    await deleteDoc(doc(db, "strutture", id));
+    aggiornaLista();
   }
 }
 
-// Event listeners
-searchEl.addEventListener('input', applyFilters);
-provSelect.addEventListener('change', applyFilters);
-hasCasa.addEventListener('change', applyFilters);
-hasTerreno.addEventListener('change', applyFilters);
+// === Aggiungi nuova struttura ===
+async function aggiungiStruttura() {
+  const nome = prompt("Nome nuova struttura:");
+  if (!nome) return;
+  await addDoc(colRef, { Struttura: nome, Casa: false, Terreno: false });
+  aggiornaLista();
+}
 
-// Inizializzo
-loadData();
+// === Aggiorna lista ===
+let strutture = [];
+async function aggiornaLista() {
+  strutture = await caricaStrutture();
+  renderStrutture(filtra(strutture));
+}
+
+// === Inizializzazione pagina ===
+window.addEventListener("DOMContentLoaded", async () => {
+  strutture = await caricaStrutture();
+  renderStrutture(strutture);
+
+  document.getElementById("search").addEventListener("input", () => {
+    renderStrutture(filtra(strutture));
+  });
+  document.getElementById("filter-prov").addEventListener("change", () => {
+    renderStrutture(filtra(strutture));
+  });
+  document.getElementById("filter-casa").addEventListener("change", () => {
+    renderStrutture(filtra(strutture));
+  });
+  document.getElementById("filter-terreno").addEventListener("change", () => {
+    renderStrutture(filtra(strutture));
+  });
+  document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
+});

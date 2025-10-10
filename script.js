@@ -28,21 +28,32 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   try {
-    console.log('Tentativo di caricamento da Firestore...');
+    console.log('🔗 Connessione a Firestore...');
+    console.log('📊 Progetto:', firebaseConfig.projectId);
+    console.log('📁 Collezione: strutture');
+    
     const snapshot = await getDocs(colRef);
-    const dati = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    console.log(`Caricate ${dati.length} strutture da Firestore`);
+    console.log('✅ Connessione Firestore riuscita');
+    console.log('📄 Documenti trovati:', snapshot.docs.length);
+    
+    const dati = snapshot.docs.map((d) => {
+      const docData = d.data();
+      console.log(`📋 Documento ${d.id}:`, docData);
+      return { id: d.id, ...docData };
+    });
+    
+    console.log(`✅ Caricate ${dati.length} strutture da Firestore`);
     
     // Se Firestore è vuoto, prova con i dati locali
     if (dati.length === 0) {
-      console.log('Firestore vuoto, tentativo di caricamento da file locale...');
+      console.log('⚠️ Firestore vuoto, tentativo di caricamento da file locale...');
       return await caricaStruttureLocali();
     }
     
     return dati;
   } catch (error) {
-    console.warn('Errore nel caricamento da Firestore:', error);
-    console.log('Tentativo di caricamento da file locale...');
+    console.error('❌ Errore nel caricamento da Firestore:', error);
+    console.log('🔄 Tentativo di caricamento da file locale...');
     return await caricaStruttureLocali();
   }
 }
@@ -302,6 +313,89 @@ async function eliminaStruttura(id) {
   }
 }
 
+// === Test Firestore ===
+async function testFirestore() {
+  console.log('🔥 Test connessione Firestore...');
+  
+  try {
+    // Test di scrittura
+    console.log('📝 Test scrittura...');
+    const testDoc = await addDoc(colRef, {
+      Struttura: 'Test Firestore',
+      Luogo: 'Test',
+      Prov: 'TS',
+      Casa: true,
+      Terreno: false,
+      Referente: 'Test User',
+      Contatto: 'test@example.com',
+      Info: 'Documento di test per verificare la connessione Firestore',
+      timestamp: new Date().toISOString()
+    });
+    console.log('✅ Scrittura riuscita, ID:', testDoc.id);
+    
+    // Test di lettura
+    console.log('📖 Test lettura...');
+    const snapshot = await getDocs(colRef);
+    console.log('✅ Lettura riuscita, documenti:', snapshot.docs.length);
+    
+    // Mostra tutti i documenti
+    snapshot.docs.forEach(doc => {
+      console.log(`📋 ${doc.id}:`, doc.data());
+    });
+    
+    alert('✅ Test Firestore completato con successo!\nControlla la console per i dettagli.');
+    
+    // Ricarica i dati
+    aggiornaLista();
+    
+  } catch (error) {
+    console.error('❌ Test Firestore fallito:', error);
+    alert('❌ Test Firestore fallito!\nErrore: ' + error.message + '\nControlla la console per i dettagli.');
+  }
+}
+
+// === Aggiungi dati di test a Firestore ===
+async function aggiungiDatiTest() {
+  const datiTest = [
+    {
+      Struttura: 'Casa Scout Milano Centro',
+      Luogo: 'Milano',
+      Prov: 'MI',
+      Casa: true,
+      Terreno: false,
+      Referente: 'Mario Rossi',
+      Contatto: '333-1234567',
+      Email: 'mario@scout.it',
+      Info: 'Casa scout nel centro di Milano'
+    },
+    {
+      Struttura: 'Terreno Scout Bergamo',
+      Luogo: 'Bergamo',
+      Prov: 'BG',
+      Casa: false,
+      Terreno: true,
+      Referente: 'Giulia Bianchi',
+      Contatto: '035-123456',
+      Email: 'giulia@scout.it',
+      Info: 'Terreno scout a Bergamo'
+    }
+  ];
+  
+  try {
+    console.log('📝 Aggiunta dati di test a Firestore...');
+    for (const dato of datiTest) {
+      await addDoc(colRef, dato);
+      console.log('✅ Aggiunto:', dato.Struttura);
+    }
+    console.log('✅ Tutti i dati di test aggiunti');
+    alert('✅ Dati di test aggiunti a Firestore!');
+    aggiornaLista();
+  } catch (error) {
+    console.error('❌ Errore nell\'aggiunta dati test:', error);
+    alert('❌ Errore nell\'aggiunta dati test: ' + error.message);
+  }
+}
+
 // === Aggiungi nuova struttura ===
 async function aggiungiStruttura() {
   const nome = prompt("Nome nuova struttura:");
@@ -551,6 +645,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       console.error('Errore nel ricaricamento:', error);
     }
   });
+  document.getElementById("testFirestoreBtn").addEventListener("click", testFirestore);
+  document.getElementById("addTestDataBtn").addEventListener("click", aggiungiDatiTest);
   
   // Event listeners per il modale
   document.getElementById("closeModal").addEventListener("click", chiudiModale);

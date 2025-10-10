@@ -923,15 +923,16 @@ async function aggiungiStruttura() {
     Fuochi: '',
     Escursioni: '',
     Trasporti: '',
-    Branco: '',
-    Reparto: '',
-    Compagnia: '',
+    Branco: false,
+    Reparto: false,
+    Compagnia: false,
     Referente: '',
     Email: '',
     Sito: '',
     Contatto: '',
     IIcontatto: '',
-    'Ultimo controllo': ''
+    'Ultimo controllo': '',
+    Note: ''
   };
   
   // Aggiungi la struttura temporanea all'array
@@ -1323,23 +1324,43 @@ function mostraSchedaCompleta(strutturaId) {
         
         if (isEditMode) {
           // Modalità modifica
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = struttura[campo] || '';
-          input.placeholder = 'Non specificato';
-          input.style.cssText = `
-            width: 100%;
-            padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-          `;
-          input.onchange = (e) => {
-            struttura[campo] = e.target.value;
-          };
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia'].includes(campo);
           
-          campoDiv.appendChild(label);
-          campoDiv.appendChild(input);
+          if (isCheckboxField) {
+            // Campo checkbox
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = struttura[campo] === true || struttura[campo] === 'true' || struttura[campo] === 'Sì' || struttura[campo] === 'sì';
+            input.style.cssText = `
+              margin-left: 10px;
+              transform: scale(1.2);
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.checked;
+            };
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(input);
+          } else {
+            // Campo di testo normale
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = struttura[campo] || '';
+            input.placeholder = 'Non specificato';
+            input.style.cssText = `
+              width: 100%;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value;
+            };
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(input);
+          }
         } else {
           // Modalità visualizzazione
           const value = document.createElement('span');
@@ -1368,100 +1389,81 @@ function mostraSchedaCompleta(strutturaId) {
       content.appendChild(categoriaDiv);
     });
     
-    // Aggiungi altri campi non categorizzati
-    const tuttiCampiCategorizzati = [
-      ...categorie['Informazioni Principali'],
-      ...categorie['Prezzi e Offerte'],
-      ...categorie['Caratteristiche Struttura'],
-      ...categorie['Attività e Servizi'],
-      ...categorie['Gruppi Scout'],
-      ...categorie['Contatti'],
-      ...categorie['Gestione']
-    ];
+    // Aggiungi campo Note
+    const noteDiv = document.createElement('div');
+    noteDiv.style.cssText = `
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      border-left: 4px solid #6c757d;
+      grid-column: 1 / -1;
+    `;
     
-    const altriCampi = Object.keys(struttura).filter(key => 
-      !tuttiCampiCategorizzati.includes(key) && key !== 'id'
-    );
+    const noteTitle = document.createElement('h3');
+    noteTitle.textContent = 'Note';
+    noteTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #6c757d;
+      font-size: 1.1rem;
+    `;
+    noteDiv.appendChild(noteTitle);
     
-    if (altriCampi.length > 0) {
-      const altriDiv = document.createElement('div');
-      altriDiv.style.cssText = `
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        border-left: 4px solid #6c757d;
-        grid-column: 1 / -1;
+    const campoDiv = document.createElement('div');
+    campoDiv.style.cssText = `
+      margin-bottom: 10px;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #e9ecef;
+    `;
+    
+    const label = document.createElement('strong');
+    label.textContent = 'Note: ';
+    label.style.color = '#495057';
+    
+    if (isEditMode) {
+      // Modalità modifica - textarea per note
+      const textarea = document.createElement('textarea');
+      textarea.value = struttura.Note || '';
+      textarea.placeholder = 'Aggiungi note aggiuntive...';
+      textarea.rows = 4;
+      textarea.style.cssText = `
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 80px;
       `;
+      textarea.onchange = (e) => {
+        struttura.Note = e.target.value;
+      };
       
-      const altriTitle = document.createElement('h3');
-      altriTitle.textContent = 'Altri Campi';
-      altriTitle.style.cssText = `
-        margin: 0 0 15px 0;
-        color: #6c757d;
-        font-size: 1.1rem;
-      `;
-      altriDiv.appendChild(altriTitle);
+      campoDiv.appendChild(label);
+      campoDiv.appendChild(textarea);
+    } else {
+      // Modalità visualizzazione
+      const value = document.createElement('span');
+      const valore = struttura.Note;
       
-      altriCampi.forEach(campo => {
-        const campoDiv = document.createElement('div');
-        campoDiv.style.cssText = `
-          margin-bottom: 10px;
-          padding: 8px;
-          background: white;
-          border-radius: 4px;
-          border: 1px solid #e9ecef;
-        `;
-        
-        const label = document.createElement('strong');
-        label.textContent = `${campo}: `;
-        label.style.color = '#495057';
-        
-        if (isEditMode) {
-          // Modalità modifica
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = struttura[campo] || '';
-          input.placeholder = 'Non specificato';
-          input.style.cssText = `
-            width: 100%;
-            padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-          `;
-          input.onchange = (e) => {
-            struttura[campo] = e.target.value;
-          };
-          
-          campoDiv.appendChild(label);
-          campoDiv.appendChild(input);
-        } else {
-          // Modalità visualizzazione
-          const value = document.createElement('span');
-          const valore = struttura[campo];
-          
-          if (valore === undefined || valore === null || valore === '') {
-            value.textContent = 'Non specificato';
-            value.style.color = '#6c757d';
-            value.style.fontStyle = 'italic';
-          } else if (typeof valore === 'boolean') {
-            value.textContent = valore ? 'Sì' : 'No';
-            value.style.color = valore ? '#28a745' : '#dc3545';
-            value.style.fontWeight = 'bold';
-          } else {
-            value.textContent = valore;
-            value.style.color = '#212529';
-          }
-          
-          campoDiv.appendChild(label);
-          campoDiv.appendChild(value);
-        }
-        
-        altriDiv.appendChild(campoDiv);
-      });
+      if (valore === undefined || valore === null || valore === '') {
+        value.textContent = 'Nessuna nota';
+        value.style.color = '#6c757d';
+        value.style.fontStyle = 'italic';
+      } else {
+        value.textContent = valore;
+        value.style.color = '#212529';
+        value.style.whiteSpace = 'pre-wrap';
+      }
       
-      content.appendChild(altriDiv);
+      campoDiv.appendChild(label);
+      campoDiv.appendChild(value);
     }
+    
+    noteDiv.appendChild(campoDiv);
+    content.appendChild(noteDiv);
   }
   
   // Funzione per alternare modalità
@@ -1500,7 +1502,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         alert('✅ Nuova struttura creata con successo!');
         modalScheda.remove();
-        aggiornaLista();
+  aggiornaLista();
         
       } else {
         // Aggiorna struttura esistente

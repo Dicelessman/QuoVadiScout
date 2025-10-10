@@ -400,23 +400,56 @@ function leggiFileExcel(file) {
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         // Mappa i campi Excel ai campi dell'app
-        const datiMappati = jsonData.map((row, index) => ({
-          Struttura: row['Struttura'] || row['Nome'] || row['Nome Struttura'] || '',
-          Luogo: row['Luogo'] || row['Città'] || row['Città'] || '',
-          Prov: row['Prov'] || row['Provincia'] || row['Prov'] || '',
-          Casa: convertiBoolean(row['Casa'] || row['Ha Casa'] || row['Casa']),
-          Terreno: convertiBoolean(row['Terreno'] || row['Ha Terreno'] || row['Terreno']),
-          Referente: row['Referente'] || row['Contatto'] || row['Responsabile'] || '',
-          Contatto: row['Contatto'] || row['Telefono'] || row['Tel'] || '',
-          Email: row['Email'] || row['E-mail'] || row['Mail'] || '',
-          Info: row['Info'] || row['Informazioni'] || row['Note'] || row['Descrizione'] || '',
-          // Campi aggiuntivi
-          Indirizzo: row['Indirizzo'] || row['Via'] || '',
-          Cap: row['Cap'] || row['CAP'] || '',
-          Coordinate: row['Coordinate'] || row['GPS'] || '',
-          Capacita: row['Capacità'] || row['Posti'] || '',
-          Servizi: row['Servizi'] || row['Disponibilità'] || ''
-        }));
+        const datiMappati = jsonData.map((row, index) => {
+          const record = {
+            // Campi principali
+            Struttura: row['Struttura'] || row['Nome'] || row['Nome Struttura'] || '',
+            Luogo: row['Luogo'] || row['Città'] || row['Città'] || '',
+            Prov: row['Prov'] || row['Provincia'] || row['Prov'] || '',
+            Casa: convertiBoolean(row['Casa'] || row['Ha Casa'] || row['Casa']),
+            Terreno: convertiBoolean(row['Terreno'] || row['Ha Terreno'] || row['Terreno']),
+            Referente: row['Referente'] || row['Contatto'] || row['Responsabile'] || '',
+            Contatto: row['Contatto'] || row['Telefono'] || row['Tel'] || '',
+            Email: row['Email'] || row['E-mail'] || row['Mail'] || '',
+            Info: row['Info'] || row['Informazioni'] || row['Note'] || row['Descrizione'] || '',
+            
+            // Campi aggiuntivi standard
+            Indirizzo: row['Indirizzo'] || row['Via'] || '',
+            Cap: row['Cap'] || row['CAP'] || '',
+            Coordinate: row['Coordinate'] || row['GPS'] || '',
+            Capacita: row['Capacità'] || row['Posti'] || '',
+            Servizi: row['Servizi'] || row['Disponibilità'] || '',
+            
+            // Importa TUTTI gli altri campi dal Excel
+            ...Object.keys(row).reduce((acc, key) => {
+              // Se il campo non è già mappato, aggiungilo
+              const keyLower = key.toLowerCase();
+              const isMapped = [
+                'struttura', 'nome', 'nome struttura',
+                'luogo', 'città', 'città',
+                'prov', 'provincia',
+                'casa', 'ha casa',
+                'terreno', 'ha terreno',
+                'referente', 'contatto', 'responsabile',
+                'telefono', 'tel',
+                'email', 'e-mail', 'mail',
+                'info', 'informazioni', 'note', 'descrizione',
+                'indirizzo', 'via',
+                'cap', 'cap',
+                'coordinate', 'gps',
+                'capacità', 'posti',
+                'servizi', 'disponibilità'
+              ].includes(keyLower);
+              
+              if (!isMapped && row[key] !== undefined && row[key] !== null && row[key] !== '') {
+                acc[key] = row[key];
+              }
+              return acc;
+            }, {})
+          };
+          
+          return record;
+        });
         
         resolve(datiMappati);
       } catch (error) {
@@ -446,23 +479,45 @@ async function mostraAnteprimaImportazione(dati) {
         <button class="close" onclick="this.closest('.modal').remove()">✕</button>
         <h2>📊 Anteprima Importazione</h2>
         <p><strong>${dati.length}</strong> strutture trovate nel file Excel</p>
+        
+        <!-- Mostra tutti i campi disponibili -->
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0;">
+          <strong>📋 Campi che verranno importati:</strong>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+            ${Object.keys(dati[0] || {}).slice(0, 15).map(campo => 
+              `<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 12px;">${campo}</span>`
+            ).join('')}
+            ${Object.keys(dati[0] || {}).length > 15 ? 
+              `<span style="background: #f0f0f0; color: #666; padding: 4px 8px; border-radius: 12px; font-size: 12px;">+${Object.keys(dati[0] || {}).length - 15} altri</span>` : ''
+            }
+          </div>
+        </div>
+        
         <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
           ${dati.slice(0, 10).map((item, i) => `
             <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
               <strong>${i + 1}. ${item.Struttura || 'Senza nome'}</strong><br>
               <small>📍 ${item.Luogo}, ${item.Prov} | 👤 ${item.Referente || 'N/A'}</small>
+              <br><small style="color: #666;">📊 ${Object.keys(item).length} campi per questa struttura</small>
             </div>
           `).join('')}
           ${dati.length > 10 ? `<div style="text-align: center; padding: 10px; color: #666;">... e altre ${dati.length - 10} strutture</div>` : ''}
         </div>
         <div class="modal-actions">
-          <button onclick="this.closest('.modal').remove(); window.importaInFirestore(${JSON.stringify(dati).replace(/"/g, '&quot;')}); resolve(true);" style="background: var(--accent); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">✅ Importa in Firestore</button>
+          <button id="importaBtn" style="background: var(--accent); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">✅ Importa in Firestore</button>
           <button onclick="this.closest('.modal').remove(); resolve(false);" style="background: #666; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">❌ Annulla</button>
         </div>
       </div>
     `;
     
     document.body.appendChild(modal);
+    
+    // Event listener per il pulsante di importazione
+    modal.querySelector('#importaBtn').addEventListener('click', async () => {
+      modal.remove();
+      await importaInFirestore(dati);
+      resolve(true);
+    });
     
     // Chiudi cliccando fuori
     modal.addEventListener('click', (e) => {
@@ -479,22 +534,63 @@ async function importaInFirestore(dati) {
   let successi = 0;
   let errori = 0;
   
-  for (const [index, dato] of dati.entries()) {
-    try {
-      await addDoc(colRef, dato);
-      successi++;
-      console.log(`✅ ${index + 1}/${dati.length}: ${dato.Struttura}`);
-    } catch (error) {
-      errori++;
-      console.error(`❌ ${index + 1}/${dati.length}: ${dato.Struttura} - ${error.message}`);
+  // Mostra indicatore di progresso
+  const progressModal = document.createElement('div');
+  progressModal.className = 'modal';
+  progressModal.innerHTML = `
+    <div class="modal-content" style="max-width: 500px;">
+      <h2>📤 Importazione in corso...</h2>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p id="progressText">Preparazione importazione...</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(progressModal);
+  
+  const progressFill = progressModal.querySelector('#progressFill');
+  const progressText = progressModal.querySelector('#progressText');
+  
+  try {
+    for (const [index, dato] of dati.entries()) {
+      try {
+        await addDoc(colRef, dato);
+        successi++;
+        
+        // Aggiorna progresso
+        const percentuale = Math.round(((index + 1) / dati.length) * 100);
+        progressFill.style.width = `${percentuale}%`;
+        progressText.textContent = `${index + 1}/${dati.length} (${percentuale}%) - ${dato.Struttura || 'Senza nome'}`;
+        
+        console.log(`✅ ${index + 1}/${dati.length}: ${dato.Struttura}`);
+        
+        // Piccola pausa per non sovraccaricare Firestore
+        if (index % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+      } catch (error) {
+        errori++;
+        console.error(`❌ ${index + 1}/${dati.length}: ${dato.Struttura} - ${error.message}`);
+      }
     }
+    
+    // Chiudi modal di progresso
+    progressModal.remove();
+    
+    console.log(`📊 Importazione completata: ${successi} successi, ${errori} errori`);
+    alert(`✅ Importazione completata!\n\n📊 Risultati:\n• ${successi} strutture importate con successo\n• ${errori} errori\n\nL'app si ricaricherà automaticamente.`);
+    
+    // Ricarica i dati
+    aggiornaLista();
+    
+  } catch (error) {
+    progressModal.remove();
+    console.error('❌ Errore durante l\'importazione:', error);
+    alert('❌ Errore durante l\'importazione: ' + error.message);
   }
-  
-  console.log(`📊 Importazione completata: ${successi} successi, ${errori} errori`);
-  alert(`✅ Importazione completata!\n\n📊 Risultati:\n• ${successi} strutture importate con successo\n• ${errori} errori\n\nL'app si ricaricherà automaticamente.`);
-  
-  // Ricarica i dati
-  aggiornaLista();
 }
 
 // === Aggiungi dati di test a Firestore ===

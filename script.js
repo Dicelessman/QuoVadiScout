@@ -162,8 +162,7 @@ function renderStrutture(lista) {
       </div>
       
       <div class="card-footer">
-        <button class="btn-edit" data-id="${s.id}">✏️ Modifica</button>
-        <button class="btn-view" data-id="${s.id}">📋 Scheda</button>
+        <button class="btn-view" data-id="${s.id}">📋 Visualizza/Modifica</button>
         <button class="btn-delete" data-id="${s.id}">🗑️ Elimina</button>
       </div>
     `;
@@ -171,9 +170,6 @@ function renderStrutture(lista) {
   });
 
   // Eventi pulsanti
-  document.querySelectorAll(".btn-edit").forEach((btn) => {
-    btn.addEventListener("click", () => modificaStruttura(btn.dataset.id));
-  });
   document.querySelectorAll(".btn-view").forEach((btn) => {
     btn.addEventListener("click", () => mostraSchedaCompleta(btn.dataset.id));
   });
@@ -1039,7 +1035,10 @@ function generaContenutoStampa(struttureElenco) {
   `;
 }
 
-// === Scheda Completa Struttura ===
+// === Scheda Completa Struttura (Visualizzazione + Modifica) ===
+let modalScheda = null;
+let isEditMode = false;
+
 function mostraSchedaCompleta(strutturaId) {
   const struttura = strutture.find(s => s.id === strutturaId);
   if (!struttura) {
@@ -1047,10 +1046,15 @@ function mostraSchedaCompleta(strutturaId) {
     return;
   }
   
+  // Rimuovi modal esistente se presente
+  if (modalScheda) {
+    modalScheda.remove();
+  }
+  
   // Crea modal per scheda completa
-  const modal = document.createElement('div');
-  modal.id = 'schedaCompletaModal';
-  modal.style.cssText = `
+  modalScheda = document.createElement('div');
+  modalScheda.id = 'schedaCompletaModal';
+  modalScheda.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
@@ -1068,14 +1072,14 @@ function mostraSchedaCompleta(strutturaId) {
     background: white;
     border-radius: 12px;
     padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
+    max-width: 95%;
+    max-height: 95%;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     position: relative;
   `;
   
-  // Header con titolo e pulsante chiusura
+  // Header con titolo e controlli
   const header = document.createElement('div');
   header.style.cssText = `
     display: flex;
@@ -1087,12 +1091,60 @@ function mostraSchedaCompleta(strutturaId) {
   `;
   
   const title = document.createElement('h2');
-  title.textContent = `📋 Scheda Completa: ${struttura.Struttura || 'Senza nome'}`;
+  title.textContent = `📋 Scheda: ${struttura.Struttura || 'Senza nome'}`;
   title.style.cssText = `
     margin: 0;
     color: #2f6b2f;
     font-size: 1.5rem;
   `;
+  
+  const controls = document.createElement('div');
+  controls.style.cssText = `
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  `;
+  
+  const editBtn = document.createElement('button');
+  editBtn.innerHTML = '✏️ Modifica';
+  editBtn.style.cssText = `
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  editBtn.onclick = () => toggleEditMode();
+  
+  const saveBtn = document.createElement('button');
+  saveBtn.innerHTML = '💾 Salva';
+  saveBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
+  `;
+  saveBtn.onclick = () => salvaModificheScheda(strutturaId);
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerHTML = '❌ Annulla';
+  cancelBtn.style.cssText = `
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
+  `;
+  cancelBtn.onclick = () => toggleEditMode();
   
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
@@ -1109,167 +1161,257 @@ function mostraSchedaCompleta(strutturaId) {
     align-items: center;
     justify-content: center;
   `;
-  closeBtn.onclick = () => modal.remove();
+  closeBtn.onclick = () => modalScheda.remove();
+  
+  controls.appendChild(editBtn);
+  controls.appendChild(saveBtn);
+  controls.appendChild(cancelBtn);
+  controls.appendChild(closeBtn);
   
   header.appendChild(title);
-  header.appendChild(closeBtn);
+  header.appendChild(controls);
   
   // Contenuto scheda
   const content = document.createElement('div');
+  content.id = 'schedaContent';
   content.style.cssText = `
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
   `;
   
-  // Organizza i campi per categoria
-  const categorie = {
-    'Informazioni Principali': [
-      'Struttura', 'Luogo', 'Prov', 'Indirizzo', 'CAP', 'Coordinate'
-    ],
-    'Contatti': [
-      'Referente', 'Contatto', 'Email', 'Telefono'
-    ],
-    'Caratteristiche': [
-      'Casa', 'Terreno', 'Capacità', 'Servizi', 'Disponibilità'
-    ],
-    'Informazioni Aggiuntive': [
-      'Info', 'Note', 'Descrizione'
-    ]
-  };
-  
-  // Aggiungi campi per categoria
-  Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
-    const categoriaDiv = document.createElement('div');
-    categoriaDiv.style.cssText = `
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
-      border-left: 4px solid #2f6b2f;
-    `;
+  // Funzione per creare il contenuto
+  function creaContenutoScheda() {
+    content.innerHTML = '';
     
-    const categoriaTitle = document.createElement('h3');
-    categoriaTitle.textContent = nomeCategoria;
-    categoriaTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #2f6b2f;
-      font-size: 1.1rem;
-    `;
-    categoriaDiv.appendChild(categoriaTitle);
+    // Organizza i campi per categoria
+    const categorie = {
+      'Informazioni Principali': [
+        'Struttura', 'Luogo', 'Prov', 'Indirizzo', 'CAP', 'Coordinate'
+      ],
+      'Contatti': [
+        'Referente', 'Contatto', 'Email', 'Telefono'
+      ],
+      'Caratteristiche': [
+        'Casa', 'Terreno', 'Capacità', 'Servizi', 'Disponibilità'
+      ],
+      'Informazioni Aggiuntive': [
+        'Info', 'Note', 'Descrizione'
+      ]
+    };
     
-    campi.forEach(campo => {
-      const campoDiv = document.createElement('div');
-      campoDiv.style.cssText = `
-        margin-bottom: 10px;
-        padding: 8px;
-        background: white;
-        border-radius: 4px;
-        border: 1px solid #e9ecef;
+    // Aggiungi campi per categoria
+    Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
+      const categoriaDiv = document.createElement('div');
+      categoriaDiv.style.cssText = `
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid #2f6b2f;
       `;
       
-      const label = document.createElement('strong');
-      label.textContent = `${campo}: `;
-      label.style.color = '#495057';
+      const categoriaTitle = document.createElement('h3');
+      categoriaTitle.textContent = nomeCategoria;
+      categoriaTitle.style.cssText = `
+        margin: 0 0 15px 0;
+        color: #2f6b2f;
+        font-size: 1.1rem;
+      `;
+      categoriaDiv.appendChild(categoriaTitle);
       
-      const value = document.createElement('span');
-      const valore = struttura[campo];
+      campi.forEach(campo => {
+        const campoDiv = document.createElement('div');
+        campoDiv.style.cssText = `
+          margin-bottom: 10px;
+          padding: 8px;
+          background: white;
+          border-radius: 4px;
+          border: 1px solid #e9ecef;
+        `;
+        
+        const label = document.createElement('strong');
+        label.textContent = `${campo}: `;
+        label.style.color = '#495057';
+        
+        if (isEditMode) {
+          // Modalità modifica
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = struttura[campo] || '';
+          input.placeholder = 'Non specificato';
+          input.style.cssText = `
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+          `;
+          input.onchange = (e) => {
+            struttura[campo] = e.target.value;
+          };
+          
+          campoDiv.appendChild(label);
+          campoDiv.appendChild(input);
+        } else {
+          // Modalità visualizzazione
+          const value = document.createElement('span');
+          const valore = struttura[campo];
+          
+          if (valore === undefined || valore === null || valore === '') {
+            value.textContent = 'Non specificato';
+            value.style.color = '#6c757d';
+            value.style.fontStyle = 'italic';
+          } else if (typeof valore === 'boolean') {
+            value.textContent = valore ? 'Sì' : 'No';
+            value.style.color = valore ? '#28a745' : '#dc3545';
+            value.style.fontWeight = 'bold';
+          } else {
+            value.textContent = valore;
+            value.style.color = '#212529';
+          }
+          
+          campoDiv.appendChild(label);
+          campoDiv.appendChild(value);
+        }
+        
+        categoriaDiv.appendChild(campoDiv);
+      });
       
-      if (valore === undefined || valore === null || valore === '') {
-        value.textContent = 'Non specificato';
-        value.style.color = '#6c757d';
-        value.style.fontStyle = 'italic';
-      } else if (typeof valore === 'boolean') {
-        value.textContent = valore ? 'Sì' : 'No';
-        value.style.color = valore ? '#28a745' : '#dc3545';
-        value.style.fontWeight = 'bold';
-      } else {
-        value.textContent = valore;
-        value.style.color = '#212529';
-      }
-      
-      campoDiv.appendChild(label);
-      campoDiv.appendChild(value);
-      categoriaDiv.appendChild(campoDiv);
+      content.appendChild(categoriaDiv);
     });
     
-    content.appendChild(categoriaDiv);
-  });
-  
-  // Aggiungi altri campi non categorizzati
-  const altriCampi = Object.keys(struttura).filter(key => 
-    !categorie['Informazioni Principali'].includes(key) &&
-    !categorie['Contatti'].includes(key) &&
-    !categorie['Caratteristiche'].includes(key) &&
-    !categorie['Informazioni Aggiuntive'].includes(key) &&
-    key !== 'id'
-  );
-  
-  if (altriCampi.length > 0) {
-    const altriDiv = document.createElement('div');
-    altriDiv.style.cssText = `
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 15px;
-      border-left: 4px solid #6c757d;
-      grid-column: 1 / -1;
-    `;
+    // Aggiungi altri campi non categorizzati
+    const altriCampi = Object.keys(struttura).filter(key => 
+      !categorie['Informazioni Principali'].includes(key) &&
+      !categorie['Contatti'].includes(key) &&
+      !categorie['Caratteristiche'].includes(key) &&
+      !categorie['Informazioni Aggiuntive'].includes(key) &&
+      key !== 'id'
+    );
     
-    const altriTitle = document.createElement('h3');
-    altriTitle.textContent = 'Altri Campi';
-    altriTitle.style.cssText = `
-      margin: 0 0 15px 0;
-      color: #6c757d;
-      font-size: 1.1rem;
-    `;
-    altriDiv.appendChild(altriTitle);
-    
-    altriCampi.forEach(campo => {
-      const campoDiv = document.createElement('div');
-      campoDiv.style.cssText = `
-        margin-bottom: 10px;
-        padding: 8px;
-        background: white;
-        border-radius: 4px;
-        border: 1px solid #e9ecef;
+    if (altriCampi.length > 0) {
+      const altriDiv = document.createElement('div');
+      altriDiv.style.cssText = `
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid #6c757d;
+        grid-column: 1 / -1;
       `;
       
-      const label = document.createElement('strong');
-      label.textContent = `${campo}: `;
-      label.style.color = '#495057';
+      const altriTitle = document.createElement('h3');
+      altriTitle.textContent = 'Altri Campi';
+      altriTitle.style.cssText = `
+        margin: 0 0 15px 0;
+        color: #6c757d;
+        font-size: 1.1rem;
+      `;
+      altriDiv.appendChild(altriTitle);
       
-      const value = document.createElement('span');
-      const valore = struttura[campo];
+      altriCampi.forEach(campo => {
+        const campoDiv = document.createElement('div');
+        campoDiv.style.cssText = `
+          margin-bottom: 10px;
+          padding: 8px;
+          background: white;
+          border-radius: 4px;
+          border: 1px solid #e9ecef;
+        `;
+        
+        const label = document.createElement('strong');
+        label.textContent = `${campo}: `;
+        label.style.color = '#495057';
+        
+        if (isEditMode) {
+          // Modalità modifica
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = struttura[campo] || '';
+          input.placeholder = 'Non specificato';
+          input.style.cssText = `
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+          `;
+          input.onchange = (e) => {
+            struttura[campo] = e.target.value;
+          };
+          
+          campoDiv.appendChild(label);
+          campoDiv.appendChild(input);
+        } else {
+          // Modalità visualizzazione
+          const value = document.createElement('span');
+          const valore = struttura[campo];
+          
+          if (valore === undefined || valore === null || valore === '') {
+            value.textContent = 'Non specificato';
+            value.style.color = '#6c757d';
+            value.style.fontStyle = 'italic';
+          } else if (typeof valore === 'boolean') {
+            value.textContent = valore ? 'Sì' : 'No';
+            value.style.color = valore ? '#28a745' : '#dc3545';
+            value.style.fontWeight = 'bold';
+          } else {
+            value.textContent = valore;
+            value.style.color = '#212529';
+          }
+          
+          campoDiv.appendChild(label);
+          campoDiv.appendChild(value);
+        }
+        
+        altriDiv.appendChild(campoDiv);
+      });
       
-      if (valore === undefined || valore === null || valore === '') {
-        value.textContent = 'Non specificato';
-        value.style.color = '#6c757d';
-        value.style.fontStyle = 'italic';
-      } else if (typeof valore === 'boolean') {
-        value.textContent = valore ? 'Sì' : 'No';
-        value.style.color = valore ? '#28a745' : '#dc3545';
-        value.style.fontWeight = 'bold';
-      } else {
-        value.textContent = valore;
-        value.style.color = '#212529';
-      }
-      
-      campoDiv.appendChild(label);
-      campoDiv.appendChild(value);
-      altriDiv.appendChild(campoDiv);
-    });
-    
-    content.appendChild(altriDiv);
+      content.appendChild(altriDiv);
+    }
   }
+  
+  // Funzione per alternare modalità
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    editBtn.style.display = isEditMode ? 'none' : 'inline-block';
+    saveBtn.style.display = isEditMode ? 'inline-block' : 'none';
+    cancelBtn.style.display = isEditMode ? 'inline-block' : 'none';
+    creaContenutoScheda();
+  }
+  
+  // Funzione per salvare modifiche
+  async function salvaModificheScheda(strutturaId) {
+    try {
+      const docRef = doc(db, "strutture", strutturaId);
+      await updateDoc(docRef, struttura);
+      
+      // Aggiorna la struttura locale
+      const index = strutture.findIndex(s => s.id === strutturaId);
+      if (index !== -1) {
+        strutture[index] = { ...struttura };
+      }
+      
+      alert('✅ Modifiche salvate con successo!');
+      toggleEditMode();
+      
+    } catch (error) {
+      console.error('❌ Errore nel salvataggio:', error);
+      alert('❌ Errore nel salvataggio: ' + error.message);
+    }
+  }
+  
+  // Inizializza contenuto
+  creaContenutoScheda();
   
   modalContent.appendChild(header);
   modalContent.appendChild(content);
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
+  modalScheda.appendChild(modalContent);
+  document.body.appendChild(modalScheda);
   
   // Chiudi modal cliccando fuori
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.remove();
+  modalScheda.addEventListener('click', (e) => {
+    if (e.target === modalScheda) {
+      modalScheda.remove();
     }
   });
 }

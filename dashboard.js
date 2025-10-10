@@ -242,7 +242,7 @@ function aggiungiMarkers() {
             </div>
             <div style="margin-top: 10px; text-align: center;">
               <button onclick="mostraSchedaCompleta('${struttura.id || index}')" style="background: #2f6b2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                📋 Scheda Completa
+                📋 Visualizza/Modifica
               </button>
             </div>
           </div>

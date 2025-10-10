@@ -241,6 +241,8 @@ function cambiaPagina(nuovaPagina) {
 
 // === Ricerca Avanzata ===
 function mostraRicercaAvanzata() {
+  console.log('🔍 Apertura ricerca avanzata...');
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('ricercaAvanzataModal');
   if (existingModal) {
@@ -1841,7 +1843,15 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
-  document.getElementById("advancedSearchBtn").addEventListener("click", mostraRicercaAvanzata);
+  
+  // Event listener per ricerca avanzata
+  const advancedSearchBtn = document.getElementById("advancedSearchBtn");
+  if (advancedSearchBtn) {
+    console.log('✅ Pulsante ricerca avanzata trovato, aggiungo event listener');
+    advancedSearchBtn.addEventListener("click", mostraRicercaAvanzata);
+  } else {
+    console.error('❌ Pulsante ricerca avanzata non trovato!');
+  }
   
   // Event listeners per il modale
   document.getElementById("closeModal").addEventListener("click", chiudiModale);

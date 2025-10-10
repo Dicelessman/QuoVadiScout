@@ -70,6 +70,7 @@ main{padding:16px;}
 .info-banner button:hover{color:#0d47a1;}
 
 .contatore{background:var(--accent);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
+.contatore-risultati{background:#17a2b8;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 
 /* Pulsanti speciali */
 #importBtn{background:#ff9800;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
@@ -78,6 +79,13 @@ main{padding:16px;}
 #cleanupBtn:hover{background:#c2185b;}
 .btn-dashboard{background:#673ab7;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
 .btn-dashboard:hover{background:#512da8;}
+
+/* Filtri Rapidi */
+.quick-filters{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
+.quick-filter{background:white;border:2px solid #e9ecef;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.quick-filter:hover{background:#f0f0f0;border-color:#2f6b2f;transform:translateY(-1px);}
+.quick-filter.active{background:#2f6b2f;color:white;border-color:#2f6b2f;box-shadow:0 2px 8px rgba(47,107,47,0.3);}
+.quick-filter.active:hover{background:#1e5a1e;transform:translateY(-1px);}
 
 /* Barra di progresso */
 .progress-container{margin:20px 0;}

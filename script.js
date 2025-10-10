@@ -221,6 +221,8 @@ function cambiaPagina(nuovaPagina) {
 }
 
 // === Filtri e ricerca ===
+let filtroRapidoAttivo = 'all';
+
 function filtra(lista) {
   const q = document.getElementById("search").value.toLowerCase();
   const prov = document.getElementById("filter-prov").value;
@@ -234,9 +236,31 @@ function filtra(lista) {
       s.Info?.toLowerCase().includes(q) ||
       s.Referente?.toLowerCase().includes(q);
     const matchProv = !prov || s.Prov === prov;
-    const matchCasa = !casa || s.Casa === true;
-    const matchTerreno = !terreno || s.Terreno === true;
-    return matchTesto && matchProv && matchCasa && matchTerreno;
+    
+    // Applica filtro rapido se attivo
+    let matchFiltroRapido = true;
+    if (filtroRapidoAttivo !== 'all') {
+      switch (filtroRapidoAttivo) {
+        case 'casa':
+          matchFiltroRapido = s.Casa && !s.Terreno;
+          break;
+        case 'terreno':
+          matchFiltroRapido = s.Terreno && !s.Casa;
+          break;
+        case 'entrambe':
+          matchFiltroRapido = s.Casa && s.Terreno;
+          break;
+        case 'senza':
+          matchFiltroRapido = !s.Casa && !s.Terreno;
+          break;
+      }
+    }
+    
+    // Filtri tradizionali (solo se nessun filtro rapido attivo)
+    const matchCasa = filtroRapidoAttivo === 'all' ? (!casa || s.Casa === true) : true;
+    const matchTerreno = filtroRapidoAttivo === 'all' ? (!terreno || s.Terreno === true) : true;
+    
+    return matchTesto && matchProv && matchCasa && matchTerreno && matchFiltroRapido;
   });
 
   // Applica ordinamento
@@ -257,6 +281,56 @@ function filtra(lista) {
   });
 
   return filtrata;
+}
+
+// === Filtri Rapidi ===
+function applicaFiltroRapido(tipo) {
+  filtroRapidoAttivo = tipo;
+  
+  // Aggiorna UI
+  document.querySelectorAll('.quick-filter').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector(`[data-filter="${tipo}"]`).classList.add('active');
+  
+  // Disabilita filtri tradizionali se filtro rapido attivo
+  const casaCheckbox = document.getElementById('filter-casa');
+  const terrenoCheckbox = document.getElementById('filter-terreno');
+  
+  if (tipo === 'all') {
+    casaCheckbox.disabled = false;
+    terrenoCheckbox.disabled = false;
+  } else {
+    casaCheckbox.disabled = true;
+    terrenoCheckbox.disabled = true;
+    casaCheckbox.checked = false;
+    terrenoCheckbox.checked = false;
+  }
+  
+  // Reset alla prima pagina
+  paginaCorrente = 1;
+  
+  // Applica filtro
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
+  
+  // Mostra contatore risultati
+  aggiornaContatoreRisultati(listaFiltrata.length);
+}
+
+function aggiornaContatoreRisultati(numero) {
+  let contatore = document.getElementById('contatore-risultati');
+  if (!contatore) {
+    contatore = document.createElement('div');
+    contatore.id = 'contatore-risultati';
+    contatore.className = 'contatore-risultati';
+    document.querySelector('.topbar').appendChild(contatore);
+  }
+  
+  const filtroAttivo = document.querySelector('.quick-filter.active');
+  const nomeFiltro = filtroAttivo ? filtroAttivo.textContent.trim() : 'Tutte';
+  
+  contatore.textContent = `${nomeFiltro}: ${numero} risultati`;
 }
 
 // === Modifica struttura ===
@@ -967,6 +1041,22 @@ function resetFiltri() {
   document.getElementById('filter-prov').value = '';
   document.getElementById('filter-casa').checked = false;
   document.getElementById('filter-terreno').checked = false;
+  
+  // Reset filtri rapidi
+  filtroRapidoAttivo = 'all';
+  document.querySelectorAll('.quick-filter').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelector('[data-filter="all"]').classList.add('active');
+  
+  // Riabilita filtri tradizionali
+  document.getElementById('filter-casa').disabled = false;
+  document.getElementById('filter-terreno').disabled = false;
+  
+  // Reset contatore
+  const contatore = document.getElementById('contatore-risultati');
+  if (contatore) contatore.remove();
+  
   renderStrutture(filtra(strutture));
 }
 
@@ -1049,6 +1139,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     paginaCorrente = 1; // Reset alla prima pagina
     renderStrutture(filtra(strutture));
   });
+  
+  // Event listeners per filtri rapidi
+  document.querySelectorAll('.quick-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filtro = btn.dataset.filter;
+      applicaFiltroRapido(filtro);
+    });
+  });
+  
+  // Inizializza filtro "Tutte" come attivo
+  document.querySelector('[data-filter="all"]').classList.add('active');
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);

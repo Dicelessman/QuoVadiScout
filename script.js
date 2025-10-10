@@ -163,6 +163,7 @@ function renderStrutture(lista) {
       
       <div class="card-footer">
         <button class="btn-edit" data-id="${s.id}">✏️ Modifica</button>
+        <button class="btn-view" data-id="${s.id}">📋 Scheda</button>
         <button class="btn-delete" data-id="${s.id}">🗑️ Elimina</button>
       </div>
     `;
@@ -172,6 +173,9 @@ function renderStrutture(lista) {
   // Eventi pulsanti
   document.querySelectorAll(".btn-edit").forEach((btn) => {
     btn.addEventListener("click", () => modificaStruttura(btn.dataset.id));
+  });
+  document.querySelectorAll(".btn-view").forEach((btn) => {
+    btn.addEventListener("click", () => mostraSchedaCompleta(btn.dataset.id));
   });
   document.querySelectorAll(".btn-delete").forEach((btn) => {
     btn.addEventListener("click", () => eliminaStruttura(btn.dataset.id));
@@ -1033,6 +1037,241 @@ function generaContenutoStampa(struttureElenco) {
     </body>
     </html>
   `;
+}
+
+// === Scheda Completa Struttura ===
+function mostraSchedaCompleta(strutturaId) {
+  const struttura = strutture.find(s => s.id === strutturaId);
+  if (!struttura) {
+    console.error('Struttura non trovata:', strutturaId);
+    return;
+  }
+  
+  // Crea modal per scheda completa
+  const modal = document.createElement('div');
+  modal.id = 'schedaCompletaModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+  `;
+  
+  // Header con titolo e pulsante chiusura
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = `📋 Scheda Completa: ${struttura.Struttura || 'Senza nome'}`;
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Contenuto scheda
+  const content = document.createElement('div');
+  content.style.cssText = `
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  `;
+  
+  // Organizza i campi per categoria
+  const categorie = {
+    'Informazioni Principali': [
+      'Struttura', 'Luogo', 'Prov', 'Indirizzo', 'CAP', 'Coordinate'
+    ],
+    'Contatti': [
+      'Referente', 'Contatto', 'Email', 'Telefono'
+    ],
+    'Caratteristiche': [
+      'Casa', 'Terreno', 'Capacità', 'Servizi', 'Disponibilità'
+    ],
+    'Informazioni Aggiuntive': [
+      'Info', 'Note', 'Descrizione'
+    ]
+  };
+  
+  // Aggiungi campi per categoria
+  Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
+    const categoriaDiv = document.createElement('div');
+    categoriaDiv.style.cssText = `
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      border-left: 4px solid #2f6b2f;
+    `;
+    
+    const categoriaTitle = document.createElement('h3');
+    categoriaTitle.textContent = nomeCategoria;
+    categoriaTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #2f6b2f;
+      font-size: 1.1rem;
+    `;
+    categoriaDiv.appendChild(categoriaTitle);
+    
+    campi.forEach(campo => {
+      const campoDiv = document.createElement('div');
+      campoDiv.style.cssText = `
+        margin-bottom: 10px;
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+      `;
+      
+      const label = document.createElement('strong');
+      label.textContent = `${campo}: `;
+      label.style.color = '#495057';
+      
+      const value = document.createElement('span');
+      const valore = struttura[campo];
+      
+      if (valore === undefined || valore === null || valore === '') {
+        value.textContent = 'Non specificato';
+        value.style.color = '#6c757d';
+        value.style.fontStyle = 'italic';
+      } else if (typeof valore === 'boolean') {
+        value.textContent = valore ? 'Sì' : 'No';
+        value.style.color = valore ? '#28a745' : '#dc3545';
+        value.style.fontWeight = 'bold';
+      } else {
+        value.textContent = valore;
+        value.style.color = '#212529';
+      }
+      
+      campoDiv.appendChild(label);
+      campoDiv.appendChild(value);
+      categoriaDiv.appendChild(campoDiv);
+    });
+    
+    content.appendChild(categoriaDiv);
+  });
+  
+  // Aggiungi altri campi non categorizzati
+  const altriCampi = Object.keys(struttura).filter(key => 
+    !categorie['Informazioni Principali'].includes(key) &&
+    !categorie['Contatti'].includes(key) &&
+    !categorie['Caratteristiche'].includes(key) &&
+    !categorie['Informazioni Aggiuntive'].includes(key) &&
+    key !== 'id'
+  );
+  
+  if (altriCampi.length > 0) {
+    const altriDiv = document.createElement('div');
+    altriDiv.style.cssText = `
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      border-left: 4px solid #6c757d;
+      grid-column: 1 / -1;
+    `;
+    
+    const altriTitle = document.createElement('h3');
+    altriTitle.textContent = 'Altri Campi';
+    altriTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #6c757d;
+      font-size: 1.1rem;
+    `;
+    altriDiv.appendChild(altriTitle);
+    
+    altriCampi.forEach(campo => {
+      const campoDiv = document.createElement('div');
+      campoDiv.style.cssText = `
+        margin-bottom: 10px;
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+      `;
+      
+      const label = document.createElement('strong');
+      label.textContent = `${campo}: `;
+      label.style.color = '#495057';
+      
+      const value = document.createElement('span');
+      const valore = struttura[campo];
+      
+      if (valore === undefined || valore === null || valore === '') {
+        value.textContent = 'Non specificato';
+        value.style.color = '#6c757d';
+        value.style.fontStyle = 'italic';
+      } else if (typeof valore === 'boolean') {
+        value.textContent = valore ? 'Sì' : 'No';
+        value.style.color = valore ? '#28a745' : '#dc3545';
+        value.style.fontWeight = 'bold';
+      } else {
+        value.textContent = valore;
+        value.style.color = '#212529';
+      }
+      
+      campoDiv.appendChild(label);
+      campoDiv.appendChild(value);
+      altriDiv.appendChild(campoDiv);
+    });
+    
+    content.appendChild(altriDiv);
+  }
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(content);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi modal cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
 }
 
 // === Reset filtri ===

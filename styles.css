@@ -41,9 +41,11 @@ main{padding:16px;}
 .contact-info strong{color:var(--accent);}
 
 .card-footer{display:flex;gap:8px;padding:12px 16px;background:#fafafa;border-top:1px solid #f0f0f0;}
-.btn-edit, .btn-delete{flex:1;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;}
+.btn-edit, .btn-view, .btn-delete{flex:1;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;}
 .btn-edit{background:#e3f2fd;color:#1976d2;border:1px solid #bbdefb;}
 .btn-edit:hover{background:#bbdefb;}
+.btn-view{background:#e8f5e8;color:#28a745;border:1px solid #c3e6c3;}
+.btn-view:hover{background:#c3e6c3;}
 .btn-delete{background:#ffebee;color:#d32f2f;border:1px solid #ffcdd2;}
 .btn-delete:hover{background:#ffcdd2;}
 
@@ -160,5 +162,5 @@ small.helper{display:block;color:var(--muted);font-size:12px;margin-top:6px;}
   main{padding:8px;}
   .card-content{padding:8px 12px;}
   .card-footer{padding:8px 12px;}
-  .btn-edit, .btn-delete{padding:6px 8px;font-size:12px;}
+  .btn-edit, .btn-view, .btn-delete{padding:6px 8px;font-size:12px;}
 }

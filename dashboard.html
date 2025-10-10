@@ -106,12 +106,22 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    // Definisci initMap come funzione globale PRIMA di caricare il modulo
+    window.initMap = function() {
+      console.log('🗺️ Google Maps callback chiamato');
+      // La funzione verrà ridefinita dal modulo dashboard.js
+      if (window.dashboardInitMap) {
+        window.dashboardInitMap();
+      }
+    };
+  </script>
   <script type="module" src="dashboard.js"></script>
   <script>
     // Carica Google Maps dopo che il modulo è stato caricato
     function loadGoogleMaps() {
       const script = document.createElement('script');
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI&callback=initMap';
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI&callback=initMap&loading=async';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);

@@ -175,8 +175,8 @@ function initMap() {
   }
 }
 
-// Rendi initMap globale per il callback di Google Maps
-window.initMap = initMap;
+// Rendi la funzione disponibile globalmente per il callback
+window.dashboardInitMap = initMap;
 
 function aggiungiMarkers() {
   if (!map) {
@@ -395,6 +395,14 @@ async function inizializzaDashboard() {
     aggiornaStatisticheProvince();
     creaGrafici();
     
+    // Se Google Maps è già caricato, inizializza la mappa
+    if (typeof google !== 'undefined' && google.maps) {
+      console.log('🗺️ Google Maps già disponibile, inizializzazione mappa...');
+      initMap();
+    } else {
+      console.log('⏳ Google Maps non ancora caricato, attendo...');
+    }
+    
     document.getElementById('loading').classList.add('hidden');
     
   } catch (error) {
@@ -418,14 +426,17 @@ window.addEventListener('DOMContentLoaded', inizializzaDashboard);
 // Fallback per Google Maps se non disponibile
 setTimeout(() => {
   if (typeof google === 'undefined' || !google.maps) {
-    console.warn('⚠️ Google Maps non caricato, inizializzazione mappa fallita');
+    console.warn('⚠️ Google Maps non caricato dopo 5 secondi, mostrando fallback');
     const mapContainer = document.getElementById('map');
-    if (mapContainer) {
+    if (mapContainer && !map) {
       mapContainer.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666; flex-direction: column;">
           <h3>🗺️ Mappa non disponibile</h3>
           <p>Google Maps non è stato caricato correttamente</p>
           <p style="font-size: 0.9rem; color: #999;">Le statistiche e i grafici sono comunque disponibili</p>
+          <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #2f6b2f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            🔄 Riprova
+          </button>
         </div>
       `;
     }

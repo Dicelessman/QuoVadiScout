@@ -1369,12 +1369,18 @@ function mostraSchedaCompleta(strutturaId) {
     });
     
     // Aggiungi altri campi non categorizzati
+    const tuttiCampiCategorizzati = [
+      ...categorie['Informazioni Principali'],
+      ...categorie['Prezzi e Offerte'],
+      ...categorie['Caratteristiche Struttura'],
+      ...categorie['Attività e Servizi'],
+      ...categorie['Gruppi Scout'],
+      ...categorie['Contatti'],
+      ...categorie['Gestione']
+    ];
+    
     const altriCampi = Object.keys(struttura).filter(key => 
-      !categorie['Informazioni Principali'].includes(key) &&
-      !categorie['Contatti'].includes(key) &&
-      !categorie['Caratteristiche'].includes(key) &&
-      !categorie['Informazioni Aggiuntive'].includes(key) &&
-      key !== 'id'
+      !tuttiCampiCategorizzati.includes(key) && key !== 'id'
     );
     
     if (altriCampi.length > 0) {

@@ -188,7 +188,11 @@ function aggiungiMarkers() {
   markers.forEach(marker => marker.setMap(null));
   markers = [];
   
-  strutture.forEach(struttura => {
+  let markerCount = 0;
+  let coordinateCount = 0;
+  let provinciaCount = 0;
+  
+  strutture.forEach((struttura, index) => {
     // Prova a estrarre coordinate se disponibili
     let lat, lng;
     
@@ -197,36 +201,44 @@ function aggiungiMarkers() {
       if (coords.length === 2) {
         lat = parseFloat(coords[0].trim());
         lng = parseFloat(coords[1].trim());
+        if (!isNaN(lat) && !isNaN(lng)) {
+          coordinateCount++;
+        }
       }
     }
     
     // Se non ci sono coordinate, usa geocoding approssimativo per provincia
-    if (!lat || !lng) {
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
       const coord = getCoordinateProvincia(struttura.Prov);
       if (coord) {
-        lat = coord.lat;
-        lng = coord.lng;
+        lat = coord.lat + (Math.random() - 0.5) * 0.1; // Aggiungi variazione per evitare sovrapposizione
+        lng = coord.lng + (Math.random() - 0.5) * 0.1;
+        provinciaCount++;
       }
     }
     
-    if (lat && lng) {
+    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
       const marker = new google.maps.Marker({
         position: { lat, lng },
         map: map,
         title: struttura.Struttura || 'Struttura senza nome',
-        icon: getMarkerIcon(struttura)
+        icon: getMarkerIcon(struttura),
+        // Aggiungi dati della struttura al marker per i filtri
+        struttura: struttura
       });
       
       const infoWindow = new google.maps.InfoWindow({
         content: `
-          <div style="padding: 10px;">
-            <h4>${struttura.Struttura || 'Senza nome'}</h4>
-            <p><strong>📍 Luogo:</strong> ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</p>
-            <p><strong>👤 Referente:</strong> ${struttura.Referente || 'N/A'}</p>
-            <p><strong>📞 Contatto:</strong> ${struttura.Contatto || 'N/A'}</p>
+          <div style="padding: 10px; max-width: 300px;">
+            <h4 style="margin: 0 0 8px 0; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</h4>
+            <p style="margin: 4px 0;"><strong>📍 Luogo:</strong> ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>👤 Referente:</strong> ${struttura.Referente || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>📞 Contatto:</strong> ${struttura.Contatto || 'N/A'}</p>
+            ${struttura.Info ? `<p style="margin: 4px 0; font-size: 0.9rem; color: #666;">${struttura.Info}</p>` : ''}
             <div style="margin-top: 8px;">
-              ${struttura.Casa ? '<span style="background: #1976d2; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">🏠 Casa</span>' : ''}
-              ${struttura.Terreno ? '<span style="background: #4caf50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-left: 4px;">🌱 Terreno</span>' : ''}
+              ${struttura.Casa ? '<span style="background: #1976d2; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-right: 4px;">🏠 Casa</span>' : ''}
+              ${struttura.Terreno ? '<span style="background: #4caf50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">🌱 Terreno</span>' : ''}
+              ${!struttura.Casa && !struttura.Terreno ? '<span style="background: #9e9e9e; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">❓ Senza categoria</span>' : ''}
             </div>
           </div>
         `
@@ -237,10 +249,12 @@ function aggiungiMarkers() {
       });
       
       markers.push(marker);
+      markerCount++;
     }
   });
   
-  console.log(`✅ Aggiunti ${markers.length} marker alla mappa`);
+  console.log(`✅ Aggiunti ${markerCount} marker alla mappa`);
+  console.log(`📊 Dettagli: ${coordinateCount} con coordinate GPS, ${provinciaCount} con coordinate provincia`);
 }
 
 function getMarkerIcon(struttura) {
@@ -267,17 +281,23 @@ function getMarkerIcon(struttura) {
 function filtraMarkers(tipo) {
   currentFilter = tipo;
   
+  console.log(`🔍 Filtro mappa: ${tipo}`);
+  
   // Aggiorna pulsanti
   document.querySelectorAll('.map-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  const activeBtn = document.querySelector(`[onclick*="${tipo}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+  
+  let visibleCount = 0;
   
   markers.forEach(marker => {
-    const struttura = strutture.find(s => 
-      marker.getPosition().lat() === s.lat && 
-      marker.getPosition().lng() === s.lng
-    );
+    // Usa i dati della struttura salvati nel marker
+    const struttura = marker.struttura;
     
-    if (!struttura) return;
+    if (!struttura) {
+      marker.setVisible(false);
+      return;
+    }
     
     let show = false;
     switch (tipo) {
@@ -296,26 +316,104 @@ function filtraMarkers(tipo) {
     }
     
     marker.setVisible(show);
+    if (show) visibleCount++;
   });
+  
+  console.log(`✅ Filtro applicato: ${visibleCount} marker visibili su ${markers.length} totali`);
 }
 
 // === Coordinate Province ===
 function getCoordinateProvincia(provincia) {
   const coordinate = {
+    // Lombardia
     'MI': { lat: 45.4642, lng: 9.1900 },
-    'RM': { lat: 41.9028, lng: 12.4964 },
-    'NA': { lat: 40.8518, lng: 14.2681 },
-    'TO': { lat: 45.0703, lng: 7.6869 },
-    'FI': { lat: 43.7696, lng: 11.2558 },
-    'BO': { lat: 44.4949, lng: 11.3426 },
-    'GE': { lat: 44.4056, lng: 8.9463 },
-    'BA': { lat: 41.1177, lng: 16.8719 },
-    'CA': { lat: 39.2238, lng: 9.1217 },
-    'VE': { lat: 45.4408, lng: 12.3155 },
     'BG': { lat: 45.6944, lng: 9.6773 },
+    'BS': { lat: 45.5416, lng: 10.2118 },
     'CO': { lat: 45.8081, lng: 9.0852 },
+    'CR': { lat: 45.1426, lng: 10.0237 },
+    'LC': { lat: 45.8566, lng: 9.3906 },
+    'LO': { lat: 45.2958, lng: 9.5333 },
+    'MN': { lat: 45.1473, lng: 10.7942 },
+    'PV': { lat: 45.1847, lng: 9.1582 },
     'SO': { lat: 46.1708, lng: 9.8742 },
-    'PV': { lat: 45.1847, lng: 9.1582 }
+    'VA': { lat: 45.8206, lng: 8.8251 },
+    'VI': { lat: 45.6089, lng: 8.8581 },
+    
+    // Lazio
+    'RM': { lat: 41.9028, lng: 12.4964 },
+    'FR': { lat: 41.6401, lng: 13.3507 },
+    'LT': { lat: 41.4679, lng: 12.9036 },
+    'RI': { lat: 42.4014, lng: 12.8628 },
+    'VT': { lat: 42.4174, lng: 12.1082 },
+    
+    // Campania
+    'NA': { lat: 40.8518, lng: 14.2681 },
+    'AV': { lat: 40.9142, lng: 14.7828 },
+    'BN': { lat: 41.1315, lng: 14.7801 },
+    'CE': { lat: 41.0731, lng: 14.3328 },
+    'SA': { lat: 40.6824, lng: 14.7681 },
+    
+    // Piemonte
+    'TO': { lat: 45.0703, lng: 7.6869 },
+    'AL': { lat: 44.8990, lng: 8.2060 },
+    'AT': { lat: 44.8990, lng: 8.2060 },
+    'BI': { lat: 45.5664, lng: 8.0536 },
+    'CN': { lat: 44.3849, lng: 7.5427 },
+    'NO': { lat: 45.4469, lng: 8.6219 },
+    'VB': { lat: 45.8206, lng: 8.8251 },
+    'VC': { lat: 45.8206, lng: 8.8251 },
+    
+    // Toscana
+    'FI': { lat: 43.7696, lng: 11.2558 },
+    'AR': { lat: 43.4647, lng: 11.8826 },
+    'GR': { lat: 42.7606, lng: 11.1139 },
+    'LI': { lat: 43.5489, lng: 10.3106 },
+    'LU': { lat: 43.8430, lng: 10.5079 },
+    'MS': { lat: 44.1466, lng: 9.8281 },
+    'PI': { lat: 43.7228, lng: 10.4017 },
+    'PT': { lat: 43.8735, lng: 11.0462 },
+    'PO': { lat: 43.8735, lng: 11.0462 },
+    'SI': { lat: 43.3188, lng: 11.3307 },
+    
+    // Emilia-Romagna
+    'BO': { lat: 44.4949, lng: 11.3426 },
+    'FE': { lat: 44.8381, lng: 11.6196 },
+    'FC': { lat: 44.2207, lng: 12.0407 },
+    'MO': { lat: 44.6471, lng: 10.9252 },
+    'PR': { lat: 44.8015, lng: 10.3279 },
+    'RE': { lat: 44.6989, lng: 10.6297 },
+    'RN': { lat: 44.0594, lng: 12.5684 },
+    
+    // Liguria
+    'GE': { lat: 44.4056, lng: 8.9463 },
+    'IM': { lat: 43.9208, lng: 7.7772 },
+    'SP': { lat: 44.1025, lng: 9.8238 },
+    'SV': { lat: 44.3076, lng: 8.4607 },
+    
+    // Puglia
+    'BA': { lat: 41.1177, lng: 16.8719 },
+    'BT': { lat: 41.1386, lng: 16.3106 },
+    'FG': { lat: 41.4622, lng: 15.5450 },
+    'LE': { lat: 40.3512, lng: 18.1680 },
+    'TA': { lat: 40.4749, lng: 17.2302 },
+    'BR': { lat: 40.5891, lng: 17.9361 },
+    
+    // Sardegna
+    'CA': { lat: 39.2238, lng: 9.1217 },
+    'CI': { lat: 39.1653, lng: 8.7963 },
+    'NU': { lat: 40.3209, lng: 9.3301 },
+    'OR': { lat: 39.9056, lng: 8.5923 },
+    'SS': { lat: 40.7259, lng: 8.5557 },
+    'SU': { lat: 39.1706, lng: 8.4392 },
+    
+    // Veneto
+    'VE': { lat: 45.4408, lng: 12.3155 },
+    'BL': { lat: 46.1396, lng: 12.2170 },
+    'PD': { lat: 45.4064, lng: 11.8768 },
+    'RO': { lat: 45.0703, lng: 11.7902 },
+    'TV': { lat: 45.6669, lng: 12.2431 },
+    'VR': { lat: 45.4384, lng: 10.9916 },
+    'VI': { lat: 45.5455, lng: 11.5353 }
   };
   
   return coordinate[provincia] || null;

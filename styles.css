@@ -63,6 +63,12 @@ main{padding:16px;}
 .error button{background:#d32f2f;color:white;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:14px;}
 .error button:hover{background:#b71c1c;}
 
+/* Banner informativo */
+.info-message{margin-bottom:16px;}
+.info-banner{background:#e3f2fd;color:#1976d2;padding:12px 16px;border-radius:8px;border:1px solid #bbdefb;display:flex;justify-content:space-between;align-items:center;font-size:14px;}
+.info-banner button{background:none;border:none;color:#1976d2;cursor:pointer;font-size:16px;padding:0;margin-left:8px;}
+.info-banner button:hover{color:#0d47a1;}
+
 .contatore{background:var(--accent);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 
 /* Menu di esportazione */

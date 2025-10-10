@@ -32,6 +32,13 @@ async function caricaStrutture() {
     const snapshot = await getDocs(colRef);
     const dati = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
     console.log(`Caricate ${dati.length} strutture da Firestore`);
+    
+    // Se Firestore è vuoto, prova con i dati locali
+    if (dati.length === 0) {
+      console.log('Firestore vuoto, tentativo di caricamento da file locale...');
+      return await caricaStruttureLocali();
+    }
+    
     return dati;
   } catch (error) {
     console.warn('Errore nel caricamento da Firestore:', error);
@@ -482,6 +489,20 @@ window.addEventListener("DOMContentLoaded", async () => {
     strutture = await caricaStrutture();
     renderStrutture(strutture);
     aggiornaContatoreElenco();
+    
+    // Mostra messaggio informativo se si usano dati locali
+    if (strutture.length > 0 && strutture[0].id.startsWith('demo-')) {
+      const container = document.getElementById("results");
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'info-message';
+      infoDiv.innerHTML = `
+        <div class="info-banner">
+          <strong>ℹ️ Modalità Demo</strong> - Stai visualizzando dati di esempio. 
+          <button onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>
+      `;
+      container.insertBefore(infoDiv, container.firstChild);
+    }
   } catch (error) {
     console.error('Errore nel caricamento:', error);
     const container = document.getElementById("results");

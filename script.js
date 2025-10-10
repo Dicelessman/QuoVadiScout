@@ -98,7 +98,10 @@ async function caricaStruttureLocali() {
   }
 }
 
-// === Render delle card ===
+// === Paginazione ===
+let paginaCorrente = 1;
+const elementiPerPagina = 20;
+
 function renderStrutture(lista) {
   const container = document.getElementById("results");
   container.innerHTML = "";
@@ -113,7 +116,13 @@ function renderStrutture(lista) {
     return;
   }
 
-  lista.forEach((s) => {
+  // Calcola paginazione
+  const totalePagine = Math.ceil(lista.length / elementiPerPagina);
+  const inizio = (paginaCorrente - 1) * elementiPerPagina;
+  const fine = inizio + elementiPerPagina;
+  const listaPagina = lista.slice(inizio, fine);
+
+  listaPagina.forEach((s) => {
     const card = document.createElement("div");
     card.className = "card";
     const isInElenco = elencoPersonale.includes(s.id);
@@ -181,6 +190,34 @@ function renderStrutture(lista) {
       }
     });
   });
+
+  // Aggiungi controlli di paginazione
+  if (totalePagine > 1) {
+    const paginazione = document.createElement('div');
+    paginazione.className = 'paginazione';
+    paginazione.innerHTML = `
+      <div class="pagination-info">
+        Mostrando ${inizio + 1}-${Math.min(fine, lista.length)} di ${lista.length} strutture
+      </div>
+      <div class="pagination-controls">
+        <button ${paginaCorrente === 1 ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente - 1})">« Precedente</button>
+        <span class="pagination-numbers">
+          ${Array.from({length: Math.min(5, totalePagine)}, (_, i) => {
+            const num = Math.max(1, Math.min(totalePagine, paginaCorrente - 2 + i));
+            return `<button class="${num === paginaCorrente ? 'active' : ''}" onclick="cambiaPagina(${num})">${num}</button>`;
+          }).join('')}
+        </span>
+        <button ${paginaCorrente === totalePagine ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente + 1})">Successiva »</button>
+      </div>
+    `;
+    container.appendChild(paginazione);
+  }
+}
+
+function cambiaPagina(nuovaPagina) {
+  paginaCorrente = Math.max(1, nuovaPagina);
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
 }
 
 // === Filtri e ricerca ===
@@ -190,7 +227,7 @@ function filtra(lista) {
   const casa = document.getElementById("filter-casa").checked;
   const terreno = document.getElementById("filter-terreno").checked;
 
-  return lista.filter((s) => {
+  let filtrata = lista.filter((s) => {
     const matchTesto =
       s.Struttura?.toLowerCase().includes(q) ||
       s.Luogo?.toLowerCase().includes(q) ||
@@ -201,6 +238,25 @@ function filtra(lista) {
     const matchTerreno = !terreno || s.Terreno === true;
     return matchTesto && matchProv && matchCasa && matchTerreno;
   });
+
+  // Applica ordinamento
+  const sortBy = document.getElementById("sort-by").value;
+  filtrata.sort((a, b) => {
+    switch (sortBy) {
+      case 'struttura':
+        return (a.Struttura || '').localeCompare(b.Struttura || '');
+      case 'luogo':
+        return (a.Luogo || '').localeCompare(b.Luogo || '');
+      case 'provincia':
+        return (a.Prov || '').localeCompare(b.Prov || '');
+      case 'referente':
+        return (a.Referente || '').localeCompare(b.Referente || '');
+      default:
+        return 0;
+    }
+  });
+
+  return filtrata;
 }
 
 // === Modifica struttura ===
@@ -871,6 +927,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("filter-terreno").addEventListener("change", () => {
     renderStrutture(filtra(strutture));
   });
+  document.getElementById("sort-by").addEventListener("change", () => {
+    paginaCorrente = 1; // Reset alla prima pagina
+    renderStrutture(filtra(strutture));
+  });
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
@@ -884,8 +944,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       console.error('Errore nel ricaricamento:', error);
     }
   });
-  document.getElementById("testFirestoreBtn").addEventListener("click", testFirestore);
-  document.getElementById("addTestDataBtn").addEventListener("click", aggiungiDatiTest);
   document.getElementById("importBtn").addEventListener("click", avviaImportazioneExcel);
   document.getElementById("excelFile").addEventListener("change", importaExcel);
   

@@ -12,14 +12,18 @@
     <div class="controls">
       <input id="search" placeholder="Cerca nome, luogo, referente..." />
       <select id="filter-prov"><option value="">Tutte le province</option></select>
+      <select id="sort-by">
+        <option value="struttura">Ordina per Nome</option>
+        <option value="luogo">Ordina per Luogo</option>
+        <option value="provincia">Ordina per Provincia</option>
+        <option value="referente">Ordina per Referente</option>
+      </select>
       <label><input type="checkbox" id="filter-casa" /> Casa</label>
       <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
       <button id="add-btn">Aggiungi</button>
       <button id="resetBtn">Reset</button>
       <button id="exportBtn">Esporta Elenco</button>
       <button id="reloadBtn">🔄 Ricarica</button>
-      <button id="testFirestoreBtn">🔥 Test Firestore</button>
-      <button id="addTestDataBtn">📝 Aggiungi Dati Test</button>
       <button id="importBtn">📊 Importa Excel</button>
       <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;">
       <span id="contatore-elenco" class="contatore">Elenco personale: 0</span>

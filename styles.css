@@ -81,6 +81,16 @@ main{padding:16px;}
 .progress-fill{height:100%;background:linear-gradient(90deg, var(--accent), #4caf50);width:0%;transition:width 0.3s ease;}
 #progressText{margin-top:10px;text-align:center;font-size:14px;color:var(--muted);}
 
+/* Paginazione */
+.paginazione{margin-top:20px;padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
+.pagination-info{text-align:center;color:var(--muted);font-size:14px;margin-bottom:12px;}
+.pagination-controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;}
+.pagination-controls button{padding:8px 12px;border:1px solid #ddd;background:white;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.pagination-controls button:hover:not(:disabled){background:var(--accent);color:white;border-color:var(--accent);}
+.pagination-controls button:disabled{opacity:0.5;cursor:not-allowed;}
+.pagination-controls button.active{background:var(--accent);color:white;border-color:var(--accent);}
+.pagination-numbers{display:flex;gap:4px;}
+
 /* Menu di esportazione */
 .export-menu{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;}
 .export-options{background:white;padding:24px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:90%;}

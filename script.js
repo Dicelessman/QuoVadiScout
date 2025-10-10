@@ -7,8 +7,19 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
 const firebaseConfig = {
@@ -23,6 +34,8 @@ const firebaseConfig = {
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 const colRef = collection(db, "strutture");
 
 // === Caricamento dati da Firestore ===
@@ -849,37 +862,90 @@ async function aggiungiStruttura() {
   mostraSchedaCompleta(nuovaStruttura.id);
 }
 
-// === Gestione Utenti ===
+// === Gestione Utenti Firebase ===
 let utenteCorrente = null;
+let userProfile = null;
 
-function inizializzaUtente() {
-  // Controlla se c'è un utente salvato
-  const utenteSalvato = localStorage.getItem('utenteCorrente');
-  if (utenteSalvato) {
-    utenteCorrente = JSON.parse(utenteSalvato);
-    aggiornaUIUtente();
-    caricaElencoPersonaleUtente();
-  } else {
-    mostraSelezioneUtente();
+// Inizializza il sistema di autenticazione
+function inizializzaAuth() {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Utente autenticato
+      utenteCorrente = user;
+      console.log('✅ Utente autenticato:', user.email);
+      
+      // Nascondi schermata di login
+      nascondiSchermataLogin();
+      
+      // Carica profilo utente da Firestore
+      await caricaProfiloUtente(user.uid);
+      
+      // Aggiorna UI
+      aggiornaUIUtente();
+      caricaElencoPersonaleUtente();
+      
+      // Aggiorna contatore elenco
+      aggiornaContatoreElenco();
+    } else {
+      // Utente non autenticato
+      utenteCorrente = null;
+      userProfile = null;
+      elencoPersonale = [];
+      console.log('❌ Nessun utente autenticato');
+      
+      // Mostra schermata di login
+      mostraSchermataLogin();
+    }
+  });
+}
+
+async function caricaProfiloUtente(uid) {
+  try {
+    const userDocRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      userProfile = userDoc.data();
+      console.log('📋 Profilo utente caricato:', userProfile);
+    } else {
+      // Crea profilo utente se non esiste
+      userProfile = {
+        nome: utenteCorrente.displayName || utenteCorrente.email.split('@')[0],
+        email: utenteCorrente.email,
+        dataCreazione: new Date().toISOString(),
+        elencoPersonale: []
+      };
+      
+      await setDoc(userDocRef, userProfile);
+      console.log('✅ Nuovo profilo utente creato');
+    }
+  } catch (error) {
+    console.error('❌ Errore caricamento profilo:', error);
   }
 }
 
-function mostraSelezioneUtente() {
+function mostraSchermataLogin() {
+  // Nascondi il contenuto principale
+  const main = document.querySelector('main');
+  const header = document.querySelector('header');
+  if (main) main.style.display = 'none';
+  if (header) header.style.display = 'none';
+  
   // Rimuovi modal esistente se presente
-  const existingModal = document.getElementById('selezioneUtenteModal');
+  const existingModal = document.getElementById('loginModal');
   if (existingModal) {
     existingModal.remove();
   }
   
   const modal = document.createElement('div');
-  modal.id = 'selezioneUtenteModal';
+  modal.id = 'loginModal';
   modal.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: linear-gradient(135deg, #2f6b2f 0%, #28a745 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -889,227 +955,354 @@ function mostraSelezioneUtente() {
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
     background: white;
-    border-radius: 12px;
-    padding: 30px;
-    max-width: 500px;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 450px;
     width: 90%;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     text-align: center;
   `;
   
-  const utenteCorrenteInfo = utenteCorrente ? 
-    `<div style="background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-      <h3 style="color: #28a745; margin: 0 0 10px 0;">👤 Utente Corrente</h3>
-      <p style="margin: 0; font-weight: bold;">${utenteCorrente.nome}</p>
-      <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
-        ${elencoPersonale.length} strutture nell'elenco personale
-      </p>
-      <button onclick="logoutUtente()" 
-              style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">
-        🚪 Disconnetti
-      </button>
-    </div>` : '';
-
   modalContent.innerHTML = `
-    <h2 style="color: #2f6b2f; margin-bottom: 20px;">👤 Gestione Utenti</h2>
-    <p style="color: #666; margin-bottom: 25px;">
-      ${utenteCorrente ? 'Cambia utente o crea un nuovo account.' : 'Scegli un utente per accedere alla tua lista personale di strutture.'}
-    </p>
+    <div style="margin-bottom: 30px;">
+      <h1 style="color: #2f6b2f; margin: 0 0 10px 0; font-size: 2rem;">🏕️ QuoVadiScout</h1>
+      <p style="color: #666; margin: 0;">Strutture e Terreni per Scout</p>
+    </div>
     
-    ${utenteCorrenteInfo}
-    
-    <div style="margin-bottom: 20px;">
-      <input type="text" id="nuovoUtente" placeholder="Nome utente" 
-             style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px;">
+    <div id="loginForm" style="margin-bottom: 20px;">
+      <input type="email" id="loginEmail" placeholder="Email" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
       
-      <button onclick="creaNuovoUtente()" 
-              style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        ➕ Crea Nuovo Utente
+      <input type="password" id="loginPassword" placeholder="Password" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
+      
+      <button id="loginBtn" 
+              style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
+        🔑 Accedi
+      </button>
+      
+      <button id="googleLoginBtn" 
+              style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
+        🌐 Accedi con Google
+      </button>
+      
+      <button id="showRegisterBtn" 
+              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
+        📝 Crea Account
       </button>
     </div>
     
-    <div id="utentiEsistenti" style="margin-top: 20px;">
-      <h3 style="color: #2f6b2f; margin-bottom: 15px;">Utenti Esistenti</h3>
-      <div id="listaUtenti"></div>
+    <div id="registerForm" style="margin-bottom: 20px; display: none;">
+      <input type="text" id="registerNome" placeholder="Nome utente" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
+      
+      <input type="email" id="registerEmail" placeholder="Email" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
+      
+      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
+      
+      <button id="registerBtn" 
+              style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
+        ✨ Registrati
+      </button>
+      
+      <button id="showLoginBtn" 
+              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
+        ← Torna al Login
+      </button>
     </div>
+    
+    <div id="loadingMessage" style="display: none; color: #28a745; font-weight: bold;">
+      <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #28a745; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
+      Caricamento...
+    </div>
+    
+    <div id="errorMessage" style="display: none; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin-top: 20px;"></div>
   `;
   
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
   
-  // Carica utenti esistenti
-  caricaUtentiEsistenti();
+  // Aggiungi CSS per animazione
+  if (!document.getElementById('authStyles')) {
+    const style = document.createElement('style');
+    style.id = 'authStyles';
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
   
-  // Enter per creare nuovo utente
-  document.getElementById('nuovoUtente').addEventListener('keypress', (e) => {
+  // Event listeners
+  setupAuthEventListeners();
+}
+
+function setupAuthEventListeners() {
+  // Toggle tra login e registrazione
+  document.getElementById('showRegisterBtn').onclick = () => {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    hideError();
+  };
+  
+  document.getElementById('showLoginBtn').onclick = () => {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    hideError();
+  };
+  
+  // Login con email/password
+  document.getElementById('loginBtn').onclick = async () => {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      showError('⚠️ Inserisci email e password');
+      return;
+    }
+    
+    await loginWithEmail(email, password);
+  };
+  
+  // Registrazione
+  document.getElementById('registerBtn').onclick = async () => {
+    const nome = document.getElementById('registerNome').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    
+    if (!nome || !email || !password) {
+      showError('⚠️ Compila tutti i campi');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showError('⚠️ La password deve essere di almeno 6 caratteri');
+      return;
+    }
+    
+    await registerWithEmail(nome, email, password);
+  };
+  
+  // Login con Google
+  document.getElementById('googleLoginBtn').onclick = async () => {
+    await loginWithGoogle();
+  };
+  
+  // Enter per login
+  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      creaNuovoUtente();
+      document.getElementById('loginBtn').click();
     }
   });
 }
 
-function caricaUtentiEsistenti() {
-  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
-  const listaUtenti = document.getElementById('listaUtenti');
-  
-  if (utenti.length === 0) {
-    listaUtenti.innerHTML = '<p style="color: #999; font-style: italic;">Nessun utente esistente</p>';
-    return;
+async function loginWithEmail(email, password) {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login riuscito:', userCredential.user.email);
+    
+    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    
+  } catch (error) {
+    console.error('❌ Errore login:', error);
+    let errorMessage = 'Errore durante il login';
+    
+    switch (error.code) {
+      case 'auth/user-not-found':
+        errorMessage = '❌ Utente non trovato';
+        break;
+      case 'auth/wrong-password':
+        errorMessage = '❌ Password errata';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = '❌ Email non valida';
+        break;
+      case 'auth/too-many-requests':
+        errorMessage = '❌ Troppi tentativi, riprova più tardi';
+        break;
+    }
+    
+    showError(errorMessage);
+  } finally {
+    showLoading(false);
   }
-  
-  listaUtenti.innerHTML = utenti.map(utente => `
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; ${utente.id === utenteCorrente?.id ? 'background: #f8f9fa; border-color: #28a745;' : ''}">
-      <div>
-        <strong>${utente.nome}</strong>
-        <br><small style="color: #666;">
-          Creato: ${new Date(utente.dataCreazione).toLocaleDateString()} | 
-          Strutture: ${(utente.elencoPersonale || []).length}
-        </small>
-      </div>
-      <button onclick="selezionaUtente('${utente.id}')" 
-              style="background: ${utente.id === utenteCorrente?.id ? '#28a745' : '#007bff'}; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-        ${utente.id === utenteCorrente?.id ? 'Attivo' : 'Seleziona'}
-      </button>
-    </div>
-  `).join('');
 }
 
-function creaNuovoUtente() {
-  const nomeInput = document.getElementById('nuovoUtente');
-  const nome = nomeInput.value.trim();
-  
-  if (!nome) {
-    alert('⚠️ Inserisci un nome utente!');
-    return;
+async function registerWithEmail(nome, email, password) {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Aggiorna il profilo con il nome
+    await userCredential.user.updateProfile({
+      displayName: nome
+    });
+    
+    console.log('✅ Registrazione riuscita:', userCredential.user.email);
+    
+    // Il profilo verrà creato automaticamente in caricaProfiloUtente
+    
+  } catch (error) {
+    console.error('❌ Errore registrazione:', error);
+    let errorMessage = 'Errore durante la registrazione';
+    
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage = '❌ Email già in uso';
+        break;
+      case 'auth/weak-password':
+        errorMessage = '❌ Password troppo debole';
+        break;
+      case 'auth/invalid-email':
+        errorMessage = '❌ Email non valida';
+        break;
+    }
+    
+    showError(errorMessage);
+  } finally {
+    showLoading(false);
   }
-  
-  if (nome.length < 2) {
-    alert('⚠️ Il nome utente deve essere di almeno 2 caratteri!');
-    return;
-  }
-  
-  // Controlla se l'utente esiste già
-  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
-  if (utenti.some(u => u.nome.toLowerCase() === nome.toLowerCase())) {
-    alert('⚠️ Questo nome utente esiste già!');
-    return;
-  }
-  
-  // Crea nuovo utente
-  const nuovoUtente = {
-    id: 'user_' + Date.now(),
-    nome: nome,
-    dataCreazione: new Date().toISOString(),
-    elencoPersonale: []
-  };
-  
-  // Salva utente
-  utenti.push(nuovoUtente);
-  localStorage.setItem('utenti', JSON.stringify(utenti));
-  
-  // Seleziona nuovo utente
-  selezionaUtente(nuovoUtente.id);
 }
 
-function selezionaUtente(utenteId) {
-  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
-  utenteCorrente = utenti.find(u => u.id === utenteId);
-  
-  if (!utenteCorrente) {
-    alert('❌ Utente non trovato!');
-    return;
+async function loginWithGoogle() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log('✅ Login Google riuscito:', result.user.email);
+    
+    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    
+  } catch (error) {
+    console.error('❌ Errore login Google:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con Google');
+    }
+  } finally {
+    showLoading(false);
   }
-  
-  // Salva utente corrente
-  localStorage.setItem('utenteCorrente', JSON.stringify(utenteCorrente));
-  
-  // Chiudi modal
-  const modal = document.getElementById('selezioneUtenteModal');
-  if (modal) modal.remove();
-  
-  // Aggiorna UI
-  aggiornaUIUtente();
-  caricaElencoPersonaleUtente();
-  
-  // Aggiorna contatore elenco
-  aggiornaContatoreElenco();
 }
+
+async function logoutUser() {
+  try {
+    await signOut(auth);
+    console.log('✅ Logout riuscito');
+    
+    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    
+  } catch (error) {
+    console.error('❌ Errore logout:', error);
+    alert('Errore durante il logout');
+  }
+}
+
+function showLoading(show) {
+  const loading = document.getElementById('loadingMessage');
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const googleBtn = document.getElementById('googleLoginBtn');
+  
+  if (loading) loading.style.display = show ? 'block' : 'none';
+  if (loginBtn) loginBtn.disabled = show;
+  if (registerBtn) registerBtn.disabled = show;
+  if (googleBtn) googleBtn.disabled = show;
+}
+
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  if (errorDiv) {
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  }
+}
+
+function hideError() {
+  const errorDiv = document.getElementById('errorMessage');
+  if (errorDiv) {
+    errorDiv.style.display = 'none';
+  }
+}
+
+// Funzioni rimosse - ora gestite da Firebase Auth
 
 function aggiornaUIUtente() {
   const userBtn = document.getElementById('userBtn');
   const userName = userBtn.querySelector('.user-name');
   if (utenteCorrente) {
-    userName.textContent = utenteCorrente.nome;
-    userBtn.title = `Utente: ${utenteCorrente.nome} (${elencoPersonale.length} strutture)`;
+    const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
+    userName.textContent = displayName;
+    userBtn.title = `Utente: ${displayName} (${elencoPersonale.length} strutture) - Clicca per disconnetterti`;
   } else {
-    userName.textContent = 'Utente';
-    userBtn.title = 'Seleziona utente';
+    userName.textContent = 'Accedi';
+    userBtn.title = 'Accedi o registrati';
   }
 }
 
 function caricaElencoPersonaleUtente() {
-  if (utenteCorrente) {
-    elencoPersonale = utenteCorrente.elencoPersonale || [];
+  if (userProfile) {
+    elencoPersonale = userProfile.elencoPersonale || [];
   } else {
     elencoPersonale = [];
   }
 }
 
-function salvaElencoPersonaleUtente() {
-  if (utenteCorrente) {
-    utenteCorrente.elencoPersonale = elencoPersonale;
-    
-    // Aggiorna nella lista utenti
-    const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
-    const index = utenti.findIndex(u => u.id === utenteCorrente.id);
-    if (index !== -1) {
-      utenti[index] = utenteCorrente;
-      localStorage.setItem('utenti', JSON.stringify(utenti));
+async function salvaElencoPersonaleUtente() {
+  if (utenteCorrente && userProfile) {
+    try {
+      // Aggiorna il profilo locale
+      userProfile.elencoPersonale = elencoPersonale;
+      
+      // Salva su Firestore
+      const userDocRef = doc(db, 'users', utenteCorrente.uid);
+      await updateDoc(userDocRef, {
+        elencoPersonale: elencoPersonale,
+        ultimoAggiornamento: new Date().toISOString()
+      });
+      
+      console.log('✅ Elenco personale salvato su Firestore');
+    } catch (error) {
+      console.error('❌ Errore salvataggio elenco personale:', error);
     }
-    
-    // Salva utente corrente
-    localStorage.setItem('utenteCorrente', JSON.stringify(utenteCorrente));
   }
 }
 
 function cambiaUtente() {
   if (utenteCorrente) {
-    // Salva elenco corrente
-    salvaElencoPersonaleUtente();
-    
-    // Mostra selezione utente
-    mostraSelezioneUtente();
+    logoutUser();
   } else {
-    // Se non c'è utente, mostra direttamente la selezione
-    mostraSelezioneUtente();
+    // Se non c'è utente, mostra direttamente la schermata di login
+    mostraSchermataLogin();
   }
 }
 
-function logoutUtente() {
-  if (confirm(`Vuoi disconnetterti? La tua lista personale (${elencoPersonale.length} elementi) sarà salvata automaticamente.`)) {
-    // Salva elenco corrente
-    salvaElencoPersonaleUtente();
-    
-    // Rimuovi utente corrente
-    utenteCorrente = null;
-    localStorage.removeItem('utenteCorrente');
-    
-    // Reset elenco
-    elencoPersonale = [];
-    
-    // Aggiorna UI
-    aggiornaUIUtente();
-    aggiornaContatoreElenco();
-    
-    // Mostra selezione utente
-    mostraSelezioneUtente();
+function nascondiSchermataLogin() {
+  // Mostra il contenuto principale
+  const main = document.querySelector('main');
+  const header = document.querySelector('header');
+  if (main) main.style.display = 'block';
+  if (header) header.style.display = 'flex';
+  
+  // Rimuovi modal di login
+  const loginModal = document.getElementById('loginModal');
+  if (loginModal) {
+    loginModal.remove();
   }
 }
 
-// Rendi le funzioni globali per accesso dall'HTML
-window.creaNuovoUtente = creaNuovoUtente;
-window.selezionaUtente = selezionaUtente;
-window.logoutUtente = logoutUtente;
+// Funzioni globali rimosse - ora gestite da Firebase Auth
 
 // === Elenco personale ===
 let elencoPersonale = [];
@@ -2047,8 +2240,8 @@ function mostraCaricamento() {
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
   
-  // Inizializza sistema utenti
-  inizializzaUtente();
+  // Inizializza sistema autenticazione Firebase
+  inizializzaAuth();
   
   try {
   strutture = await caricaStrutture();

@@ -129,7 +129,7 @@ function renderStrutture(lista) {
 
     card.innerHTML = `
       <div class="card-header">
-        <h3>${s.Struttura || "Senza nome"}</h3>
+      <h3>${s.Struttura || "Senza nome"}</h3>
         <div class="card-actions">
           <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
             ${isInElenco ? '⭐' : '☆'}
@@ -937,6 +937,9 @@ async function aggiungiStruttura() {
   // Aggiungi la struttura temporanea all'array
   strutture.push(nuovaStruttura);
   
+  // Aggiorna le strutture globali
+  window.strutture = strutture;
+  
   // Apri la scheda in modalità creazione
   mostraSchedaCompleta(nuovaStruttura.id);
 }
@@ -1202,6 +1205,8 @@ function mostraSchedaCompleta(strutturaId) {
       const index = strutture.findIndex(s => s.id === strutturaId);
       if (index !== -1) {
         strutture.splice(index, 1);
+        // Aggiorna le strutture globali
+        window.strutture = strutture;
       }
       modalScheda.remove();
     } else {
@@ -1230,6 +1235,8 @@ function mostraSchedaCompleta(strutturaId) {
       const index = strutture.findIndex(s => s.id === strutturaId);
       if (index !== -1) {
         strutture.splice(index, 1);
+        // Aggiorna le strutture globali
+        window.strutture = strutture;
       }
     }
     modalScheda.remove();
@@ -1482,9 +1489,12 @@ function mostraSchedaCompleta(strutturaId) {
           strutture[index] = { ...struttura };
         }
         
+        // Aggiorna le strutture globali
+        window.strutture = strutture;
+        
         alert('✅ Nuova struttura creata con successo!');
         modalScheda.remove();
-  aggiornaLista();
+        aggiornaLista();
         
       } else {
         // Aggiorna struttura esistente
@@ -1496,6 +1506,9 @@ function mostraSchedaCompleta(strutturaId) {
         if (index !== -1) {
           strutture[index] = { ...struttura };
         }
+        
+        // Aggiorna le strutture globali
+        window.strutture = strutture;
         
         alert('✅ Modifiche salvate con successo!');
         toggleEditMode();
@@ -1523,6 +1536,8 @@ function mostraSchedaCompleta(strutturaId) {
         const index = strutture.findIndex(s => s.id === strutturaId);
         if (index !== -1) {
           strutture.splice(index, 1);
+          // Aggiorna le strutture globali
+          window.strutture = strutture;
         }
       }
       modalScheda.remove();
@@ -1530,9 +1545,8 @@ function mostraSchedaCompleta(strutturaId) {
   });
 }
 
-// Rendi la funzione e le variabili globali per essere accessibili dalla dashboard
+// Rendi la funzione globale per essere accessibile dalla dashboard
 window.mostraSchedaCompleta = mostraSchedaCompleta;
-window.strutture = strutture;
 
 // === Reset filtri ===
 function resetFiltri() {
@@ -1563,6 +1577,9 @@ function resetFiltri() {
 let strutture = [];
 async function aggiornaLista() {
   strutture = await caricaStrutture();
+  
+  // Rendi le strutture globali per accesso dalla dashboard
+  window.strutture = strutture;
   renderStrutture(filtra(strutture));
 }
 

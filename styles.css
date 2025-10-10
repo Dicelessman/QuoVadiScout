@@ -76,6 +76,8 @@ main{padding:16px;}
 #importBtn:hover{background:#f57c00;}
 #cleanupBtn{background:#e91e63;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
 #cleanupBtn:hover{background:#c2185b;}
+.btn-dashboard{background:#673ab7;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
+.btn-dashboard:hover{background:#512da8;}
 
 /* Barra di progresso */
 .progress-container{margin:20px 0;}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard - Strutture & Terreni</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>📊 Dashboard Strutture & Terreni</h1>
+    <div class="controls">
+      <button onclick="location.href='index.html'" class="btn-secondary">🏠 Torna all'App</button>
+      <button id="refreshBtn" class="btn-primary">🔄 Aggiorna</button>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <!-- Statistiche Generali -->
+    <section class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-content">
+          <h3 id="totalStructures">-</h3>
+          <p>Strutture Totali</p>
+        </div>
+      </div>
+      
+      <div class="stat-card casa">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-content">
+          <h3 id="totalCase">-</h3>
+          <p>Case</p>
+        </div>
+      </div>
+      
+      <div class="stat-card terreno">
+        <div class="stat-icon">🌱</div>
+        <div class="stat-content">
+          <h3 id="totalTerreni">-</h3>
+          <p>Terreni</p>
+        </div>
+      </div>
+      
+      <div class="stat-card entrambe">
+        <div class="stat-icon">🏢🌱</div>
+        <div class="stat-content">
+          <h3 id="totalEntrambe">-</h3>
+          <p>Casa + Terreno</p>
+        </div>
+      </div>
+      
+      <div class="stat-card senza">
+        <div class="stat-icon">❓</div>
+        <div class="stat-content">
+          <h3 id="totalSenza">-</h3>
+          <p>Senza Categoria</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistiche per Provincia -->
+    <section class="province-section">
+      <h2>📈 Distribuzione per Provincia</h2>
+      <div class="province-grid" id="provinceStats">
+        <!-- Popolato dinamicamente -->
+      </div>
+    </section>
+
+    <!-- Mappa -->
+    <section class="map-section">
+      <h2>🗺️ Geolocalizzazione</h2>
+      <div class="map-container">
+        <div id="map" class="map"></div>
+        <div class="map-controls">
+          <button id="showAllBtn" class="map-btn">Mostra Tutte</button>
+          <button id="showCaseBtn" class="map-btn">Solo Case</button>
+          <button id="showTerrenoBtn" class="map-btn">Solo Terreni</button>
+          <button id="showEntrambeBtn" class="map-btn">Casa + Terreno</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grafici -->
+    <section class="charts-section">
+      <h2>📊 Analisi Dettagliate</h2>
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3>Distribuzione per Tipo</h3>
+          <canvas id="typeChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Top 10 Province</h3>
+          <canvas id="provinceChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Loading -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Caricamento dashboard...</p>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI&callback=initMap" async defer></script>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

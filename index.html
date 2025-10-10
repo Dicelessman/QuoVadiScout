@@ -11,16 +11,18 @@
     <h1>Strutture & Terreni — Prototipo</h1>
     <div class="controls">
       <input id="search" placeholder="Cerca nome, luogo, referente..." />
-      <select id="provSelect"><option value="">Tutte le province</option></select>
-      <label><input type="checkbox" id="hasCasa" /> Casa</label>
-      <label><input type="checkbox" id="hasTerreno" /> Terreno</label>
+      <select id="filter-prov"><option value="">Tutte le province</option></select>
+      <label><input type="checkbox" id="filter-casa" /> Casa</label>
+      <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
+      <button id="add-btn">Aggiungi</button>
       <button id="resetBtn">Reset</button>
-      <button id="exportBtn">Esporta JSON</button>
+      <button id="exportBtn">Esporta Elenco</button>
+      <span id="contatore-elenco" class="contatore">Elenco personale: 0</span>
     </div>
   </header>
 
   <main>
-    <section id="cards" class="cards"></section>
+    <section id="results" class="cards"></section>
   </main>
 
   <!-- Modale di modifica -->
@@ -30,8 +32,9 @@
       <h2>Modifica struttura</h2>
       <form id="editForm"></form>
       <div class="modal-actions">
-        <button id="saveBtn">Salva</button>
-        <button id="deleteBtn" class="danger">Elimina</button>
+        <button id="saveBtn">💾 Salva</button>
+        <button id="deleteBtn" class="danger">🗑️ Elimina</button>
+        <button id="cancelBtn">❌ Annulla</button>
       </div>
     </div>
   </div>

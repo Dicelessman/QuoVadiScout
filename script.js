@@ -27,8 +27,57 @@ const colRef = collection(db, "strutture");
 
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
-  const snapshot = await getDocs(colRef);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  try {
+    console.log('Tentativo di caricamento da Firestore...');
+    const snapshot = await getDocs(colRef);
+    const dati = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log(`Caricate ${dati.length} strutture da Firestore`);
+    return dati;
+  } catch (error) {
+    console.warn('Errore nel caricamento da Firestore:', error);
+    console.log('Tentativo di caricamento da file locale...');
+    return await caricaStruttureLocali();
+  }
+}
+
+// === Caricamento dati locali di fallback ===
+async function caricaStruttureLocali() {
+  try {
+    const response = await fetch('./data.json');
+    if (!response.ok) {
+      throw new Error('File data.json non trovato');
+    }
+    const dati = await response.json();
+    console.log(`Caricate ${dati.length} strutture da file locale`);
+    return dati;
+  } catch (error) {
+    console.error('Errore nel caricamento locale:', error);
+    // Dati di esempio se tutto fallisce
+    return [
+      {
+        id: 'demo-1',
+        Struttura: 'Casa Scout Demo',
+        Luogo: 'Milano',
+        Prov: 'MI',
+        Casa: true,
+        Terreno: false,
+        Referente: 'Mario Rossi',
+        Contatto: '333-1234567',
+        Info: 'Struttura di esempio per test'
+      },
+      {
+        id: 'demo-2',
+        Struttura: 'Terreno Scout Demo',
+        Luogo: 'Bergamo',
+        Prov: 'BG',
+        Casa: false,
+        Terreno: true,
+        Referente: 'Giulia Bianchi',
+        Contatto: 'giulia@scout.it',
+        Info: 'Terreno di esempio per test'
+      }
+    ];
+  }
 }
 
 // === Render delle card ===
@@ -414,11 +463,36 @@ async function aggiornaLista() {
   renderStrutture(filtra(strutture));
 }
 
+// === Indicatore di caricamento ===
+function mostraCaricamento() {
+  const container = document.getElementById("results");
+  container.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Caricamento strutture...</p>
+    </div>
+  `;
+}
+
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
-  strutture = await caricaStrutture();
-  renderStrutture(strutture);
-  aggiornaContatoreElenco();
+  mostraCaricamento();
+  
+  try {
+    strutture = await caricaStrutture();
+    renderStrutture(strutture);
+    aggiornaContatoreElenco();
+  } catch (error) {
+    console.error('Errore nel caricamento:', error);
+    const container = document.getElementById("results");
+    container.innerHTML = `
+      <div class="error">
+        <h3>⚠️ Errore nel caricamento</h3>
+        <p>Impossibile caricare le strutture. Controlla la connessione e riprova.</p>
+        <button onclick="location.reload()">🔄 Ricarica pagina</button>
+      </div>
+    `;
+  }
 
   // Popola le province
   const province = [...new Set(strutture.map(s => s.Prov).filter(Boolean))].sort();
@@ -446,6 +520,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
+  document.getElementById("reloadBtn").addEventListener("click", async () => {
+    mostraCaricamento();
+    try {
+      strutture = await caricaStrutture();
+      renderStrutture(strutture);
+      aggiornaContatoreElenco();
+    } catch (error) {
+      console.error('Errore nel ricaricamento:', error);
+    }
+  });
   
   // Event listeners per il modale
   document.getElementById("closeModal").addEventListener("click", chiudiModale);

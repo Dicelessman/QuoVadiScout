@@ -83,6 +83,40 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#eef6ea);color:#1b1b1b
   transform:translateY(-1px);
   box-shadow:0 2px 8px rgba(23,162,184,0.3);
 }
+
+/* Pulsante Utente */
+.btn-user{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:2px solid #6c757d;
+  background:white;
+  color:#6c757d;
+  cursor:pointer;
+  font-weight:500;
+  transition:all 0.2s;
+  min-width:120px;
+  justify-content:space-between;
+}
+
+.btn-user:hover{
+  background:#6c757d;
+  color:white;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(108,117,125,0.2);
+}
+
+.user-icon{
+  font-size:16px;
+}
+
+.user-name{
+  font-size:14px;
+  flex:1;
+  text-align:left;
+}
 .controls label{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center;}
 
 main{padding:16px;}

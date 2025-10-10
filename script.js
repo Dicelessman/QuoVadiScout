@@ -849,20 +849,282 @@ async function aggiungiStruttura() {
   mostraSchedaCompleta(nuovaStruttura.id);
 }
 
+// === Gestione Utenti ===
+let utenteCorrente = null;
+
+function inizializzaUtente() {
+  // Controlla se c'è un utente salvato
+  const utenteSalvato = localStorage.getItem('utenteCorrente');
+  if (utenteSalvato) {
+    utenteCorrente = JSON.parse(utenteSalvato);
+    aggiornaUIUtente();
+    caricaElencoPersonaleUtente();
+  } else {
+    mostraSelezioneUtente();
+  }
+}
+
+function mostraSelezioneUtente() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('selezioneUtenteModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'selezioneUtenteModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+  `;
+  
+  const utenteCorrenteInfo = utenteCorrente ? 
+    `<div style="background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+      <h3 style="color: #28a745; margin: 0 0 10px 0;">👤 Utente Corrente</h3>
+      <p style="margin: 0; font-weight: bold;">${utenteCorrente.nome}</p>
+      <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+        ${elencoPersonale.length} strutture nell'elenco personale
+      </p>
+      <button onclick="logoutUtente()" 
+              style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+        🚪 Disconnetti
+      </button>
+    </div>` : '';
+
+  modalContent.innerHTML = `
+    <h2 style="color: #2f6b2f; margin-bottom: 20px;">👤 Gestione Utenti</h2>
+    <p style="color: #666; margin-bottom: 25px;">
+      ${utenteCorrente ? 'Cambia utente o crea un nuovo account.' : 'Scegli un utente per accedere alla tua lista personale di strutture.'}
+    </p>
+    
+    ${utenteCorrenteInfo}
+    
+    <div style="margin-bottom: 20px;">
+      <input type="text" id="nuovoUtente" placeholder="Nome utente" 
+             style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px;">
+      
+      <button onclick="creaNuovoUtente()" 
+              style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
+        ➕ Crea Nuovo Utente
+      </button>
+    </div>
+    
+    <div id="utentiEsistenti" style="margin-top: 20px;">
+      <h3 style="color: #2f6b2f; margin-bottom: 15px;">Utenti Esistenti</h3>
+      <div id="listaUtenti"></div>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Carica utenti esistenti
+  caricaUtentiEsistenti();
+  
+  // Enter per creare nuovo utente
+  document.getElementById('nuovoUtente').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      creaNuovoUtente();
+    }
+  });
+}
+
+function caricaUtentiEsistenti() {
+  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
+  const listaUtenti = document.getElementById('listaUtenti');
+  
+  if (utenti.length === 0) {
+    listaUtenti.innerHTML = '<p style="color: #999; font-style: italic;">Nessun utente esistente</p>';
+    return;
+  }
+  
+  listaUtenti.innerHTML = utenti.map(utente => `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; ${utente.id === utenteCorrente?.id ? 'background: #f8f9fa; border-color: #28a745;' : ''}">
+      <div>
+        <strong>${utente.nome}</strong>
+        <br><small style="color: #666;">
+          Creato: ${new Date(utente.dataCreazione).toLocaleDateString()} | 
+          Strutture: ${(utente.elencoPersonale || []).length}
+        </small>
+      </div>
+      <button onclick="selezionaUtente('${utente.id}')" 
+              style="background: ${utente.id === utenteCorrente?.id ? '#28a745' : '#007bff'}; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+        ${utente.id === utenteCorrente?.id ? 'Attivo' : 'Seleziona'}
+      </button>
+    </div>
+  `).join('');
+}
+
+function creaNuovoUtente() {
+  const nomeInput = document.getElementById('nuovoUtente');
+  const nome = nomeInput.value.trim();
+  
+  if (!nome) {
+    alert('⚠️ Inserisci un nome utente!');
+    return;
+  }
+  
+  if (nome.length < 2) {
+    alert('⚠️ Il nome utente deve essere di almeno 2 caratteri!');
+    return;
+  }
+  
+  // Controlla se l'utente esiste già
+  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
+  if (utenti.some(u => u.nome.toLowerCase() === nome.toLowerCase())) {
+    alert('⚠️ Questo nome utente esiste già!');
+    return;
+  }
+  
+  // Crea nuovo utente
+  const nuovoUtente = {
+    id: 'user_' + Date.now(),
+    nome: nome,
+    dataCreazione: new Date().toISOString(),
+    elencoPersonale: []
+  };
+  
+  // Salva utente
+  utenti.push(nuovoUtente);
+  localStorage.setItem('utenti', JSON.stringify(utenti));
+  
+  // Seleziona nuovo utente
+  selezionaUtente(nuovoUtente.id);
+}
+
+function selezionaUtente(utenteId) {
+  const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
+  utenteCorrente = utenti.find(u => u.id === utenteId);
+  
+  if (!utenteCorrente) {
+    alert('❌ Utente non trovato!');
+    return;
+  }
+  
+  // Salva utente corrente
+  localStorage.setItem('utenteCorrente', JSON.stringify(utenteCorrente));
+  
+  // Chiudi modal
+  const modal = document.getElementById('selezioneUtenteModal');
+  if (modal) modal.remove();
+  
+  // Aggiorna UI
+  aggiornaUIUtente();
+  caricaElencoPersonaleUtente();
+  
+  // Aggiorna contatore elenco
+  aggiornaContatoreElenco();
+}
+
+function aggiornaUIUtente() {
+  const userBtn = document.getElementById('userBtn');
+  const userName = userBtn.querySelector('.user-name');
+  if (utenteCorrente) {
+    userName.textContent = utenteCorrente.nome;
+    userBtn.title = `Utente: ${utenteCorrente.nome} (${elencoPersonale.length} strutture)`;
+  } else {
+    userName.textContent = 'Utente';
+    userBtn.title = 'Seleziona utente';
+  }
+}
+
+function caricaElencoPersonaleUtente() {
+  if (utenteCorrente) {
+    elencoPersonale = utenteCorrente.elencoPersonale || [];
+  } else {
+    elencoPersonale = [];
+  }
+}
+
+function salvaElencoPersonaleUtente() {
+  if (utenteCorrente) {
+    utenteCorrente.elencoPersonale = elencoPersonale;
+    
+    // Aggiorna nella lista utenti
+    const utenti = JSON.parse(localStorage.getItem('utenti') || '[]');
+    const index = utenti.findIndex(u => u.id === utenteCorrente.id);
+    if (index !== -1) {
+      utenti[index] = utenteCorrente;
+      localStorage.setItem('utenti', JSON.stringify(utenti));
+    }
+    
+    // Salva utente corrente
+    localStorage.setItem('utenteCorrente', JSON.stringify(utenteCorrente));
+  }
+}
+
+function cambiaUtente() {
+  if (utenteCorrente) {
+    // Salva elenco corrente
+    salvaElencoPersonaleUtente();
+    
+    // Mostra selezione utente
+    mostraSelezioneUtente();
+  } else {
+    // Se non c'è utente, mostra direttamente la selezione
+    mostraSelezioneUtente();
+  }
+}
+
+function logoutUtente() {
+  if (confirm(`Vuoi disconnetterti? La tua lista personale (${elencoPersonale.length} elementi) sarà salvata automaticamente.`)) {
+    // Salva elenco corrente
+    salvaElencoPersonaleUtente();
+    
+    // Rimuovi utente corrente
+    utenteCorrente = null;
+    localStorage.removeItem('utenteCorrente');
+    
+    // Reset elenco
+    elencoPersonale = [];
+    
+    // Aggiorna UI
+    aggiornaUIUtente();
+    aggiornaContatoreElenco();
+    
+    // Mostra selezione utente
+    mostraSelezioneUtente();
+  }
+}
+
+// Rendi le funzioni globali per accesso dall'HTML
+window.creaNuovoUtente = creaNuovoUtente;
+window.selezionaUtente = selezionaUtente;
+window.logoutUtente = logoutUtente;
+
 // === Elenco personale ===
-let elencoPersonale = JSON.parse(localStorage.getItem('elencoPersonale') || '[]');
+let elencoPersonale = [];
 
 function aggiungiAllElenco(id) {
   if (!elencoPersonale.includes(id)) {
     elencoPersonale.push(id);
-    localStorage.setItem('elencoPersonale', JSON.stringify(elencoPersonale));
+    salvaElencoPersonaleUtente();
     aggiornaContatoreElenco();
   }
 }
 
 function rimuoviDallElenco(id) {
   elencoPersonale = elencoPersonale.filter(item => item !== id);
-  localStorage.setItem('elencoPersonale', JSON.stringify(elencoPersonale));
+  salvaElencoPersonaleUtente();
   aggiornaContatoreElenco();
 }
 
@@ -871,6 +1133,9 @@ function aggiornaContatoreElenco() {
   if (contatore) {
     contatore.textContent = elencoPersonale.length;
   }
+  
+  // Aggiorna anche l'UI utente per riflettere il nuovo numero di strutture
+  aggiornaUIUtente();
 }
 
 // === Gestione Elenco Personale ===
@@ -1091,7 +1356,7 @@ function mostraGestioneElencoPersonale() {
   clearAllBtn.onclick = () => {
     if (confirm('Sei sicuro di voler svuotare completamente l\'elenco personale?')) {
       elencoPersonale = [];
-      localStorage.setItem('elencoPersonale', JSON.stringify(elencoPersonale));
+      salvaElencoPersonaleUtente();
       aggiornaContatoreElenco();
       modal.remove();
       mostraGestioneElencoPersonale();
@@ -1782,6 +2047,9 @@ function mostraCaricamento() {
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
   
+  // Inizializza sistema utenti
+  inizializzaUtente();
+  
   try {
   strutture = await caricaStrutture();
   renderStrutture(strutture);
@@ -1851,6 +2119,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     advancedSearchBtn.addEventListener("click", mostraRicercaAvanzata);
   } else {
     console.error('❌ Pulsante ricerca avanzata non trovato!');
+  }
+  
+  // Event listener per pulsante utente
+  const userBtn = document.getElementById("userBtn");
+  if (userBtn) {
+    console.log('✅ Pulsante utente trovato, aggiungo event listener');
+    userBtn.addEventListener("click", cambiaUtente);
+  } else {
+    console.error('❌ Pulsante utente non trovato!');
   }
   
   // Event listeners per il modale

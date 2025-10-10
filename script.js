@@ -1198,6 +1198,10 @@ async function loginWithGoogle() {
 
 async function logoutUser() {
   try {
+    // Salva l'elenco personale prima del logout
+    await salvaElencoPersonaleUtente();
+    
+    // Effettua il logout
     await signOut(auth);
     console.log('✅ Logout riuscito');
     
@@ -1240,14 +1244,28 @@ function hideError() {
 
 function aggiornaUIUtente() {
   const userBtn = document.getElementById('userBtn');
+  const userIcon = userBtn.querySelector('.user-icon');
   const userName = userBtn.querySelector('.user-name');
+  
   if (utenteCorrente) {
     const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
     userName.textContent = displayName;
+    userIcon.textContent = '👤';
     userBtn.title = `Utente: ${displayName} (${elencoPersonale.length} strutture) - Clicca per disconnetterti`;
+    
+    // Aggiungi stile per utente autenticato
+    userBtn.style.background = '#28a745';
+    userBtn.style.color = 'white';
+    userBtn.style.borderColor = '#28a745';
   } else {
     userName.textContent = 'Accedi';
+    userIcon.textContent = '🔑';
     userBtn.title = 'Accedi o registrati';
+    
+    // Stile per utente non autenticato
+    userBtn.style.background = 'white';
+    userBtn.style.color = '#6c757d';
+    userBtn.style.borderColor = '#6c757d';
   }
 }
 
@@ -1281,11 +1299,96 @@ async function salvaElencoPersonaleUtente() {
 
 function cambiaUtente() {
   if (utenteCorrente) {
-    logoutUser();
+    // Mostra conferma logout elegante
+    mostraConfermaLogout();
   } else {
     // Se non c'è utente, mostra direttamente la schermata di login
     mostraSchermataLogin();
   }
+}
+
+function mostraConfermaLogout() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('logoutModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'logoutModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+  `;
+  
+  const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
+  
+  modalContent.innerHTML = `
+    <div style="margin-bottom: 20px;">
+      <div style="font-size: 48px; margin-bottom: 15px;">🚪</div>
+      <h2 style="color: #dc3545; margin: 0 0 10px 0;">Conferma Logout</h2>
+      <p style="color: #666; margin: 0;">
+        Ciao <strong>${displayName}</strong>!<br>
+        Vuoi disconnetterti dall'applicazione?
+      </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+      <p style="margin: 0; color: #666; font-size: 14px;">
+        📋 La tua lista personale (${elencoPersonale.length} elementi) sarà salvata automaticamente e potrai riaccederci al prossimo login.
+      </p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="cancelLogoutBtn" 
+              style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+        ❌ Annulla
+      </button>
+      <button id="confirmLogoutBtn" 
+              style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+        🚪 Disconnetti
+      </button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Event listeners
+  document.getElementById('cancelLogoutBtn').onclick = () => {
+    modal.remove();
+  };
+  
+  document.getElementById('confirmLogoutBtn').onclick = async () => {
+    modal.remove();
+    await logoutUser();
+  };
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
 }
 
 function nascondiSchermataLogin() {

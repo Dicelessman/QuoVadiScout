@@ -534,16 +534,296 @@ function aggiornaContatoreElenco() {
   }
 }
 
-// === Esportazione ===
+// === Gestione Elenco Personale ===
 function esportaElencoPersonale() {
+  mostraGestioneElencoPersonale();
+}
+
+function mostraGestioneElencoPersonale() {
   const struttureElenco = strutture.filter(s => elencoPersonale.includes(s.id));
   
-  if (struttureElenco.length === 0) {
-    alert('Il tuo elenco personale è vuoto!');
-    return;
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('gestioneElencoModal');
+  if (existingModal) {
+    existingModal.remove();
   }
+  
+  const modal = document.createElement('div');
+  modal.id = 'gestioneElencoModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 600px;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = `📋 Elenco Personale (${struttureElenco.length} strutture)`;
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Contenuto principale
+  const content = document.createElement('div');
+  content.style.cssText = `
+    margin-bottom: 20px;
+  `;
+  
+  if (struttureElenco.length === 0) {
+    content.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #6c757d;">
+        <div style="font-size: 3rem; margin-bottom: 20px;">📝</div>
+        <h3>Elenco personale vuoto</h3>
+        <p>Non hai ancora aggiunto strutture al tuo elenco personale.</p>
+        <p>Clicca sulla stella ⭐ nelle schede delle strutture per aggiungerle.</p>
+      </div>
+    `;
+  } else {
+    // Lista strutture
+    const listaContainer = document.createElement('div');
+    listaContainer.style.cssText = `
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 10px;
+    `;
+    
+    struttureElenco.forEach((struttura, index) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+      `;
+      
+      const infoDiv = document.createElement('div');
+      infoDiv.style.cssText = `flex: 1;`;
+      infoDiv.innerHTML = `
+        <div style="font-weight: bold; color: #2f6b2f; margin-bottom: 4px;">
+          ${struttura.Struttura || 'Senza nome'}
+        </div>
+        <div style="font-size: 0.9rem; color: #666;">
+          📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+          ${struttura.Referente ? ` | 👤 ${struttura.Referente}` : ''}
+        </div>
+        <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">
+          ${struttura.Casa ? '🏠 Casa' : ''} ${struttura.Terreno ? '🌱 Terreno' : ''}
+          ${!struttura.Casa && !struttura.Terreno ? '❓ Senza categoria' : ''}
+        </div>
+      `;
+      
+      const actionsDiv = document.createElement('div');
+      actionsDiv.style.cssText = `
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      `;
+      
+      const viewBtn = document.createElement('button');
+      viewBtn.innerHTML = '👁️';
+      viewBtn.title = 'Visualizza scheda completa';
+      viewBtn.style.cssText = `
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 14px;
+      `;
+      viewBtn.onclick = () => {
+        modal.remove();
+        mostraSchedaCompleta(struttura.id);
+      };
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = '🗑️';
+      removeBtn.title = 'Rimuovi dall\'elenco';
+      removeBtn.style.cssText = `
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 14px;
+      `;
+      removeBtn.onclick = () => {
+        rimuoviDallElenco(struttura.id);
+        modal.remove();
+        mostraGestioneElencoPersonale(); // Ricarica il modal
+      };
+      
+      actionsDiv.appendChild(viewBtn);
+      actionsDiv.appendChild(removeBtn);
+      
+      itemDiv.appendChild(infoDiv);
+      itemDiv.appendChild(actionsDiv);
+      listaContainer.appendChild(itemDiv);
+    });
+    
+    content.appendChild(listaContainer);
+  }
+  
+  // Footer con azioni
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+    gap: 10px;
+  `;
+  
+  const leftActions = document.createElement('div');
+  leftActions.style.cssText = `display: flex; gap: 10px;`;
+  
+  const clearAllBtn = document.createElement('button');
+  clearAllBtn.innerHTML = '🧹 Svuota Elenco';
+  clearAllBtn.style.cssText = `
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  clearAllBtn.onclick = () => {
+    if (confirm('Sei sicuro di voler svuotare completamente l\'elenco personale?')) {
+      elencoPersonale = [];
+      localStorage.setItem('elencoPersonale', JSON.stringify(elencoPersonale));
+      aggiornaContatoreElenco();
+      modal.remove();
+      mostraGestioneElencoPersonale();
+    }
+  };
+  
+  const rightActions = document.createElement('div');
+  rightActions.style.cssText = `display: flex; gap: 10px;`;
+  
+  const exportBtn = document.createElement('button');
+  exportBtn.innerHTML = '📤 Esporta';
+  exportBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  exportBtn.disabled = struttureElenco.length === 0;
+  exportBtn.onclick = () => {
+    if (struttureElenco.length > 0) {
+      modal.remove();
+      mostraMenuEsportazione(struttureElenco);
+    }
+  };
+  
+  const printBtn = document.createElement('button');
+  printBtn.innerHTML = '🖨️ Stampa';
+  printBtn.style.cssText = `
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  printBtn.disabled = struttureElenco.length === 0;
+  printBtn.onclick = () => {
+    if (struttureElenco.length > 0) {
+      stampaElenco(struttureElenco);
+      modal.remove();
+    }
+  };
+  
+  leftActions.appendChild(clearAllBtn);
+  rightActions.appendChild(printBtn);
+  rightActions.appendChild(exportBtn);
+  
+  footer.appendChild(leftActions);
+  footer.appendChild(rightActions);
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(content);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
 
-  // Crea menu di esportazione
+function mostraMenuEsportazione(struttureElenco) {
   const menu = document.createElement('div');
   menu.className = 'export-menu';
   menu.innerHTML = `
@@ -551,7 +831,6 @@ function esportaElencoPersonale() {
       <h3>Esporta Elenco Personale (${struttureElenco.length} elementi)</h3>
       <button onclick="esportaJSON()">📄 JSON</button>
       <button onclick="esportaCSV()">📊 CSV</button>
-      <button onclick="stampaElenco()">🖨️ Stampa</button>
       <button onclick="chiudiMenu()">❌ Chiudi</button>
     </div>
   `;
@@ -597,18 +876,17 @@ function esportaElencoPersonale() {
     chiudiMenu();
   };
   
-  window.stampaElenco = () => {
-    const printWindow = window.open('', '_blank');
-    const printContent = generaContenutoStampa(struttureElenco);
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
-    chiudiMenu();
-  };
-  
   window.chiudiMenu = () => {
     document.body.removeChild(menu);
   };
+}
+
+function stampaElenco(struttureElenco) {
+  const printWindow = window.open('', '_blank');
+  const printContent = generaContenutoStampa(struttureElenco);
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  printWindow.print();
 }
 
 function generaContenutoStampa(struttureElenco) {

@@ -71,9 +71,11 @@ main{padding:16px;}
 
 .contatore{background:var(--accent);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 
-/* Pulsante importazione */
+/* Pulsanti speciali */
 #importBtn{background:#ff9800;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
 #importBtn:hover{background:#f57c00;}
+#cleanupBtn{background:#e91e63;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
+#cleanupBtn:hover{background:#c2185b;}
 
 /* Barra di progresso */
 .progress-container{margin:20px 0;}

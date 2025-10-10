@@ -410,6 +410,113 @@ async function testFirestore() {
   }
 }
 
+// === Deduplicazione ===
+function rimuoviDuplicati(dati) {
+  console.log('🔍 Analisi duplicati in corso...');
+  
+  // Crea una mappa per tracciare i duplicati
+  const visti = new Map();
+  const duplicati = [];
+  const unici = [];
+  
+  dati.forEach((record, index) => {
+    // Crea una chiave unica basata su nome struttura + luogo + provincia
+    const chiave = `${(record.Struttura || '').toLowerCase().trim()}_${(record.Luogo || '').toLowerCase().trim()}_${(record.Prov || '').toLowerCase().trim()}`;
+    
+    if (visti.has(chiave)) {
+      // È un duplicato
+      duplicati.push({
+        index: index + 1,
+        record: record,
+        duplicatoDi: visti.get(chiave)
+      });
+      console.log(`🔄 Duplicato trovato: "${record.Struttura}" (riga ${index + 1})`);
+    } else {
+      // È unico
+      visti.set(chiave, index + 1);
+      unici.push(record);
+    }
+  });
+  
+  if (duplicati.length > 0) {
+    console.log(`🧹 Trovati ${duplicati.length} duplicati:`);
+    duplicati.forEach(dup => {
+      console.log(`  - "${dup.record.Struttura}" (riga ${dup.index}) duplicato di riga ${dup.duplicatoDi}`);
+    });
+  }
+  
+  console.log(`✅ Deduplicazione completata: ${unici.length} record unici, ${duplicati.length} duplicati rimossi`);
+  return unici;
+}
+
+// === Pulizia Duplicati Esistenti ===
+async function rimuoviDuplicatiEsistenti() {
+  if (!confirm('⚠️ ATTENZIONE: Questa operazione rimuoverà i duplicati esistenti in Firestore.\n\nProcedere?')) {
+    return;
+  }
+  
+  console.log('🧹 Inizio pulizia duplicati esistenti...');
+  
+  try {
+    // Carica tutti i dati da Firestore
+    const snapshot = await getDocs(colRef);
+    const tuttiDati = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    console.log(`📊 Trovati ${tuttiDati.length} documenti in Firestore`);
+    
+    // Trova duplicati
+    const duplicati = [];
+    const visti = new Map();
+    
+    tuttiDati.forEach(doc => {
+      const chiave = `${(doc.Struttura || '').toLowerCase().trim()}_${(doc.Luogo || '').toLowerCase().trim()}_${(doc.Prov || '').toLowerCase().trim()}`;
+      
+      if (visti.has(chiave)) {
+        duplicati.push({
+          id: doc.id,
+          struttura: doc.Struttura,
+          duplicatoDi: visti.get(chiave)
+        });
+      } else {
+        visti.set(chiave, doc.id);
+      }
+    });
+    
+    if (duplicati.length === 0) {
+      alert('✅ Nessun duplicato trovato in Firestore!');
+      return;
+    }
+    
+    console.log(`🔄 Trovati ${duplicati.length} duplicati da rimuovere`);
+    
+    // Mostra conferma con dettagli
+    const conferma = confirm(`Trovati ${duplicati.length} duplicati da rimuovere:\n\n${duplicati.slice(0, 5).map(d => `• ${d.struttura}`).join('\n')}${duplicati.length > 5 ? `\n... e altri ${duplicati.length - 5}` : ''}\n\nProcedere con la rimozione?`);
+    
+    if (!conferma) return;
+    
+    // Rimuovi duplicati
+    let rimossi = 0;
+    for (const duplicato of duplicati) {
+      try {
+        await deleteDoc(doc(db, "strutture", duplicato.id));
+        rimossi++;
+        console.log(`🗑️ Rimosso duplicato: ${duplicato.struttura} (${duplicato.id})`);
+      } catch (error) {
+        console.error(`❌ Errore rimozione ${duplicato.struttura}:`, error);
+      }
+    }
+    
+    alert(`✅ Pulizia completata!\n\n📊 Risultati:\n• ${rimossi} duplicati rimossi\n• ${tuttiDati.length - rimossi} documenti unici rimasti`);
+    
+    // Ricarica i dati
+    aggiornaLista();
+    
+  } catch (error) {
+    console.error('❌ Errore durante la pulizia:', error);
+    alert('❌ Errore durante la pulizia: ' + error.message);
+  }
+}
+
 // === Importazione Excel ===
 function avviaImportazioneExcel() {
   const fileInput = document.getElementById('excelFile');
@@ -587,6 +694,16 @@ async function mostraAnteprimaImportazione(dati) {
 
 async function importaInFirestore(dati) {
   console.log('📤 Inizio importazione in Firestore...');
+  
+  // Deduplicazione automatica
+  console.log('🔍 Controllo duplicati...');
+  const datiUnici = rimuoviDuplicati(dati);
+  const duplicatiRimossi = dati.length - datiUnici.length;
+  
+  if (duplicatiRimossi > 0) {
+    console.log(`🧹 Rimossi ${duplicatiRimossi} duplicati automaticamente`);
+  }
+  
   let successi = 0;
   let errori = 0;
   
@@ -610,7 +727,7 @@ async function importaInFirestore(dati) {
   const progressText = progressModal.querySelector('#progressText');
   
   try {
-    for (const [index, dato] of dati.entries()) {
+    for (const [index, dato] of datiUnici.entries()) {
       try {
         await addDoc(colRef, dato);
         successi++;
@@ -637,7 +754,8 @@ async function importaInFirestore(dati) {
     progressModal.remove();
     
     console.log(`📊 Importazione completata: ${successi} successi, ${errori} errori`);
-    alert(`✅ Importazione completata!\n\n📊 Risultati:\n• ${successi} strutture importate con successo\n• ${errori} errori\n\nL'app si ricaricherà automaticamente.`);
+    const messaggio = `✅ Importazione completata!\n\n📊 Risultati:\n• ${successi} strutture importate con successo\n• ${errori} errori${duplicatiRimossi > 0 ? `\n• ${duplicatiRimossi} duplicati rimossi automaticamente` : ''}\n\nL'app si ricaricherà automaticamente.`;
+    alert(messaggio);
     
     // Ricarica i dati
     aggiornaLista();
@@ -945,6 +1063,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
   document.getElementById("importBtn").addEventListener("click", avviaImportazioneExcel);
+  document.getElementById("cleanupBtn").addEventListener("click", rimuoviDuplicatiEsistenti);
   document.getElementById("excelFile").addEventListener("change", importaExcel);
   
   // Event listeners per il modale

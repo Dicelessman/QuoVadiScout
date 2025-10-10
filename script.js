@@ -32,7 +32,7 @@ async function caricaStrutture() {
     console.log('📊 Progetto:', firebaseConfig.projectId);
     console.log('📁 Collezione: strutture');
     
-    const snapshot = await getDocs(colRef);
+  const snapshot = await getDocs(colRef);
     console.log('✅ Connessione Firestore riuscita');
     console.log('📄 Documenti trovati:', snapshot.docs.length);
     
@@ -129,7 +129,7 @@ function renderStrutture(lista) {
 
     card.innerHTML = `
       <div class="card-header">
-        <h3>${s.Struttura || "Senza nome"}</h3>
+      <h3>${s.Struttura || "Senza nome"}</h3>
         <div class="card-actions">
           <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
             ${isInElenco ? '⭐' : '☆'}
@@ -423,7 +423,7 @@ async function salvaModifiche() {
   try {
     await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
     chiudiModale();
-    aggiornaLista();
+  aggiornaLista();
   } catch (error) {
     console.error('Errore nel salvataggio:', error);
     alert('Errore nel salvataggio delle modifiche');
@@ -885,10 +885,34 @@ async function aggiungiDatiTest() {
 
 // === Aggiungi nuova struttura ===
 async function aggiungiStruttura() {
-  const nome = prompt("Nome nuova struttura:");
-  if (!nome) return;
-  await addDoc(colRef, { Struttura: nome, Casa: false, Terreno: false });
-  aggiornaLista();
+  // Crea una struttura vuota per la nuova struttura
+  const nuovaStruttura = {
+    id: 'new_' + Date.now(), // ID temporaneo
+    Struttura: '',
+    Luogo: '',
+    Prov: '',
+    Indirizzo: '',
+    CAP: '',
+    Coordinate: '',
+    Referente: '',
+    Contatto: '',
+    Email: '',
+    Telefono: '',
+    Info: '',
+    Note: '',
+    Descrizione: '',
+    Casa: false,
+    Terreno: false,
+    Capacità: '',
+    Servizi: '',
+    Disponibilità: ''
+  };
+  
+  // Aggiungi la struttura temporanea all'array
+  strutture.push(nuovaStruttura);
+  
+  // Apri la scheda in modalità creazione
+  mostraSchedaCompleta(nuovaStruttura.id);
 }
 
 // === Elenco personale ===
@@ -1046,6 +1070,8 @@ function mostraSchedaCompleta(strutturaId) {
     return;
   }
   
+  const isNewStructure = strutturaId.startsWith('new_');
+  
   // Rimuovi modal esistente se presente
   if (modalScheda) {
     modalScheda.remove();
@@ -1091,7 +1117,7 @@ function mostraSchedaCompleta(strutturaId) {
   `;
   
   const title = document.createElement('h2');
-  title.textContent = `📋 Scheda: ${struttura.Struttura || 'Senza nome'}`;
+  title.textContent = isNewStructure ? '📋 Nuova Struttura' : `📋 Scheda: ${struttura.Struttura || 'Senza nome'}`;
   title.style.cssText = `
     margin: 0;
     color: #2f6b2f;
@@ -1106,7 +1132,7 @@ function mostraSchedaCompleta(strutturaId) {
   `;
   
   const editBtn = document.createElement('button');
-  editBtn.innerHTML = '✏️ Modifica';
+  editBtn.innerHTML = isNewStructure ? '✏️ Compila' : '✏️ Modifica';
   editBtn.style.cssText = `
     background: #007bff;
     color: white;
@@ -1119,7 +1145,7 @@ function mostraSchedaCompleta(strutturaId) {
   editBtn.onclick = () => toggleEditMode();
   
   const saveBtn = document.createElement('button');
-  saveBtn.innerHTML = '💾 Salva';
+  saveBtn.innerHTML = isNewStructure ? '💾 Crea' : '💾 Salva';
   saveBtn.style.cssText = `
     background: #28a745;
     color: white;
@@ -1144,7 +1170,18 @@ function mostraSchedaCompleta(strutturaId) {
     font-size: 14px;
     display: none;
   `;
-  cancelBtn.onclick = () => toggleEditMode();
+  cancelBtn.onclick = () => {
+    if (isNewStructure) {
+      // Rimuovi la struttura temporanea e chiudi il modal
+      const index = strutture.findIndex(s => s.id === strutturaId);
+      if (index !== -1) {
+        strutture.splice(index, 1);
+      }
+      modalScheda.remove();
+    } else {
+      toggleEditMode();
+    }
+  };
   
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
@@ -1161,7 +1198,16 @@ function mostraSchedaCompleta(strutturaId) {
     align-items: center;
     justify-content: center;
   `;
-  closeBtn.onclick = () => modalScheda.remove();
+  closeBtn.onclick = () => {
+    if (isNewStructure) {
+      // Rimuovi la struttura temporanea
+      const index = strutture.findIndex(s => s.id === strutturaId);
+      if (index !== -1) {
+        strutture.splice(index, 1);
+      }
+    }
+    modalScheda.remove();
+  };
   
   controls.appendChild(editBtn);
   controls.appendChild(saveBtn);
@@ -1379,20 +1425,46 @@ function mostraSchedaCompleta(strutturaId) {
     creaContenutoScheda();
   }
   
+  // Per le nuove strutture, inizia direttamente in modalità modifica
+  if (isNewStructure) {
+    isEditMode = true;
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    cancelBtn.style.display = 'inline-block';
+  }
+  
   // Funzione per salvare modifiche
   async function salvaModificheScheda(strutturaId) {
     try {
-      const docRef = doc(db, "strutture", strutturaId);
-      await updateDoc(docRef, struttura);
-      
-      // Aggiorna la struttura locale
-      const index = strutture.findIndex(s => s.id === strutturaId);
-      if (index !== -1) {
-        strutture[index] = { ...struttura };
+      if (isNewStructure) {
+        // Crea nuova struttura in Firestore
+        const docRef = await addDoc(colRef, struttura);
+        
+        // Aggiorna l'ID locale con quello di Firestore
+        struttura.id = docRef.id;
+        const index = strutture.findIndex(s => s.id === strutturaId);
+        if (index !== -1) {
+          strutture[index] = { ...struttura };
+        }
+        
+        alert('✅ Nuova struttura creata con successo!');
+        modalScheda.remove();
+  aggiornaLista();
+        
+      } else {
+        // Aggiorna struttura esistente
+        const docRef = doc(db, "strutture", strutturaId);
+        await updateDoc(docRef, struttura);
+        
+        // Aggiorna la struttura locale
+        const index = strutture.findIndex(s => s.id === strutturaId);
+        if (index !== -1) {
+          strutture[index] = { ...struttura };
+        }
+        
+        alert('✅ Modifiche salvate con successo!');
+        toggleEditMode();
       }
-      
-      alert('✅ Modifiche salvate con successo!');
-      toggleEditMode();
       
     } catch (error) {
       console.error('❌ Errore nel salvataggio:', error);
@@ -1411,6 +1483,13 @@ function mostraSchedaCompleta(strutturaId) {
   // Chiudi modal cliccando fuori
   modalScheda.addEventListener('click', (e) => {
     if (e.target === modalScheda) {
+      if (isNewStructure) {
+        // Rimuovi la struttura temporanea
+        const index = strutture.findIndex(s => s.id === strutturaId);
+        if (index !== -1) {
+          strutture.splice(index, 1);
+        }
+      }
       modalScheda.remove();
     }
   });
@@ -1464,8 +1543,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
   
   try {
-    strutture = await caricaStrutture();
-    renderStrutture(strutture);
+  strutture = await caricaStrutture();
+  renderStrutture(strutture);
     aggiornaContatoreElenco();
     
     // Mostra messaggio informativo se si usano dati locali

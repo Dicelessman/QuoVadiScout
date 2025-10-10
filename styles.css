@@ -71,6 +71,10 @@ main{padding:16px;}
 
 .contatore{background:var(--accent);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 
+/* Pulsante importazione */
+#importBtn{background:#ff9800;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:background 0.2s;}
+#importBtn:hover{background:#f57c00;}
+
 /* Menu di esportazione */
 .export-menu{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;}
 .export-options{background:white;padding:24px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:400px;width:90%;}

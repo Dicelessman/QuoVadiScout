@@ -354,6 +354,149 @@ async function testFirestore() {
   }
 }
 
+// === Importazione Excel ===
+function avviaImportazioneExcel() {
+  const fileInput = document.getElementById('excelFile');
+  fileInput.click();
+}
+
+async function importaExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  console.log('📊 Inizio importazione Excel:', file.name);
+  
+  try {
+    const data = await leggiFileExcel(file);
+    console.log('📋 Dati letti:', data.length, 'righe');
+    
+    if (data.length === 0) {
+      alert('❌ Nessun dato trovato nel file Excel');
+      return;
+    }
+    
+    // Mostra anteprima dei dati
+    const conferma = await mostraAnteprimaImportazione(data);
+    if (!conferma) return;
+    
+    // Importa in Firestore
+    await importaInFirestore(data);
+    
+  } catch (error) {
+    console.error('❌ Errore nell\'importazione:', error);
+    alert('❌ Errore nell\'importazione: ' + error.message);
+  }
+}
+
+function leggiFileExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Mappa i campi Excel ai campi dell'app
+        const datiMappati = jsonData.map((row, index) => ({
+          Struttura: row['Struttura'] || row['Nome'] || row['Nome Struttura'] || '',
+          Luogo: row['Luogo'] || row['Città'] || row['Città'] || '',
+          Prov: row['Prov'] || row['Provincia'] || row['Prov'] || '',
+          Casa: convertiBoolean(row['Casa'] || row['Ha Casa'] || row['Casa']),
+          Terreno: convertiBoolean(row['Terreno'] || row['Ha Terreno'] || row['Terreno']),
+          Referente: row['Referente'] || row['Contatto'] || row['Responsabile'] || '',
+          Contatto: row['Contatto'] || row['Telefono'] || row['Tel'] || '',
+          Email: row['Email'] || row['E-mail'] || row['Mail'] || '',
+          Info: row['Info'] || row['Informazioni'] || row['Note'] || row['Descrizione'] || '',
+          // Campi aggiuntivi
+          Indirizzo: row['Indirizzo'] || row['Via'] || '',
+          Cap: row['Cap'] || row['CAP'] || '',
+          Coordinate: row['Coordinate'] || row['GPS'] || '',
+          Capacita: row['Capacità'] || row['Posti'] || '',
+          Servizi: row['Servizi'] || row['Disponibilità'] || ''
+        }));
+        
+        resolve(datiMappati);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Errore nella lettura del file'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function convertiBoolean(valore) {
+  if (typeof valore === 'boolean') return valore;
+  if (typeof valore === 'string') {
+    const val = valore.toLowerCase().trim();
+    return val === 'sì' || val === 'si' || val === 'yes' || val === 'true' || val === '1' || val === 'x';
+  }
+  return false;
+}
+
+async function mostraAnteprimaImportazione(dati) {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 800px;">
+        <button class="close" onclick="this.closest('.modal').remove()">✕</button>
+        <h2>📊 Anteprima Importazione</h2>
+        <p><strong>${dati.length}</strong> strutture trovate nel file Excel</p>
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
+          ${dati.slice(0, 10).map((item, i) => `
+            <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
+              <strong>${i + 1}. ${item.Struttura || 'Senza nome'}</strong><br>
+              <small>📍 ${item.Luogo}, ${item.Prov} | 👤 ${item.Referente || 'N/A'}</small>
+            </div>
+          `).join('')}
+          ${dati.length > 10 ? `<div style="text-align: center; padding: 10px; color: #666;">... e altre ${dati.length - 10} strutture</div>` : ''}
+        </div>
+        <div class="modal-actions">
+          <button onclick="this.closest('.modal').remove(); window.importaInFirestore(${JSON.stringify(dati).replace(/"/g, '&quot;')}); resolve(true);" style="background: var(--accent); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">✅ Importa in Firestore</button>
+          <button onclick="this.closest('.modal').remove(); resolve(false);" style="background: #666; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">❌ Annulla</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Chiudi cliccando fuori
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+        resolve(false);
+      }
+    });
+  });
+}
+
+async function importaInFirestore(dati) {
+  console.log('📤 Inizio importazione in Firestore...');
+  let successi = 0;
+  let errori = 0;
+  
+  for (const [index, dato] of dati.entries()) {
+    try {
+      await addDoc(colRef, dato);
+      successi++;
+      console.log(`✅ ${index + 1}/${dati.length}: ${dato.Struttura}`);
+    } catch (error) {
+      errori++;
+      console.error(`❌ ${index + 1}/${dati.length}: ${dato.Struttura} - ${error.message}`);
+    }
+  }
+  
+  console.log(`📊 Importazione completata: ${successi} successi, ${errori} errori`);
+  alert(`✅ Importazione completata!\n\n📊 Risultati:\n• ${successi} strutture importate con successo\n• ${errori} errori\n\nL'app si ricaricherà automaticamente.`);
+  
+  // Ricarica i dati
+  aggiornaLista();
+}
+
 // === Aggiungi dati di test a Firestore ===
 async function aggiungiDatiTest() {
   const datiTest = [
@@ -647,6 +790,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("testFirestoreBtn").addEventListener("click", testFirestore);
   document.getElementById("addTestDataBtn").addEventListener("click", aggiungiDatiTest);
+  document.getElementById("importBtn").addEventListener("click", avviaImportazioneExcel);
+  document.getElementById("excelFile").addEventListener("change", importaExcel);
   
   // Event listeners per il modale
   document.getElementById("closeModal").addEventListener("click", chiudiModale);

@@ -140,23 +140,51 @@ function aggiornaStatisticheProvince() {
 
 // === Inizializzazione Mappa ===
 function initMap() {
-  map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 6,
-    center: { lat: 41.9028, lng: 12.4964 }, // Centro Italia
-    mapTypeId: 'roadmap'
-  });
+  console.log('🗺️ Inizializzazione Google Maps...');
   
-  // Aggiungi marker per ogni struttura
-  aggiungiMarkers();
-  
-  // Event listeners per i controlli
-  document.getElementById('showAllBtn').addEventListener('click', () => filtraMarkers('all'));
-  document.getElementById('showCaseBtn').addEventListener('click', () => filtraMarkers('casa'));
-  document.getElementById('showTerrenoBtn').addEventListener('click', () => filtraMarkers('terreno'));
-  document.getElementById('showEntrambeBtn').addEventListener('click', () => filtraMarkers('entrambe'));
+  try {
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 6,
+      center: { lat: 41.9028, lng: 12.4964 }, // Centro Italia
+      mapTypeId: 'roadmap'
+    });
+    
+    console.log('✅ Mappa Google Maps creata');
+    
+    // Aggiungi marker per ogni struttura
+    aggiungiMarkers();
+    
+    // Event listeners per i controlli
+    document.getElementById('showAllBtn').addEventListener('click', () => filtraMarkers('all'));
+    document.getElementById('showCaseBtn').addEventListener('click', () => filtraMarkers('casa'));
+    document.getElementById('showTerrenoBtn').addEventListener('click', () => filtraMarkers('terreno'));
+    document.getElementById('showEntrambeBtn').addEventListener('click', () => filtraMarkers('entrambe'));
+    
+    console.log('✅ Controlli mappa configurati');
+    
+  } catch (error) {
+    console.error('❌ Errore nell\'inizializzazione della mappa:', error);
+    document.getElementById('map').innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666;">
+        <div style="text-align: center;">
+          <h3>⚠️ Errore nel caricamento della mappa</h3>
+          <p>Impossibile caricare Google Maps</p>
+        </div>
+      </div>
+    `;
+  }
 }
 
+// Rendi initMap globale per il callback di Google Maps
+window.initMap = initMap;
+
 function aggiungiMarkers() {
+  if (!map) {
+    console.warn('⚠️ Mappa non inizializzata, impossibile aggiungere marker');
+    return;
+  }
+  
+  console.log('📍 Aggiunta marker per le strutture...');
   markers.forEach(marker => marker.setMap(null));
   markers = [];
   
@@ -211,6 +239,8 @@ function aggiungiMarkers() {
       markers.push(marker);
     }
   });
+  
+  console.log(`✅ Aggiunti ${markers.length} marker alla mappa`);
 }
 
 function getMarkerIcon(struttura) {
@@ -384,3 +414,20 @@ document.getElementById('refreshBtn').addEventListener('click', inizializzaDashb
 
 // === Avvio Dashboard ===
 window.addEventListener('DOMContentLoaded', inizializzaDashboard);
+
+// Fallback per Google Maps se non disponibile
+setTimeout(() => {
+  if (typeof google === 'undefined' || !google.maps) {
+    console.warn('⚠️ Google Maps non caricato, inizializzazione mappa fallita');
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+      mapContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666; flex-direction: column;">
+          <h3>🗺️ Mappa non disponibile</h3>
+          <p>Google Maps non è stato caricato correttamente</p>
+          <p style="font-size: 0.9rem; color: #999;">Le statistiche e i grafici sono comunque disponibili</p>
+        </div>
+      `;
+    }
+  }
+}, 5000); // Attendi 5 secondi per il caricamento di Google Maps

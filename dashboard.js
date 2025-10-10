@@ -234,6 +234,12 @@ function aggiungiMarkers() {
             <p style="margin: 4px 0;"><strong>📍 Luogo:</strong> ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</p>
             <p style="margin: 4px 0;"><strong>👤 Referente:</strong> ${struttura.Referente || 'N/A'}</p>
             <p style="margin: 4px 0;"><strong>📞 Contatto:</strong> ${struttura.Contatto || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>📧 Email:</strong> ${struttura.Email || 'N/A'}</p>
+            <p style="margin: 4px 0;"><strong>🌐 Sito:</strong> ${struttura.Sito || 'N/A'}</p>
+            ${struttura.Letti ? `<p style="margin: 4px 0;"><strong>🛏️ Letti:</strong> ${struttura.Letti}</p>` : ''}
+            ${struttura.Branco ? `<p style="margin: 4px 0;"><strong>🐺 Branco:</strong> ${struttura.Branco}</p>` : ''}
+            ${struttura.Reparto ? `<p style="margin: 4px 0;"><strong>🏕️ Reparto:</strong> ${struttura.Reparto}</p>` : ''}
+            ${struttura.Compagnia ? `<p style="margin: 4px 0;"><strong>🎯 Compagnia:</strong> ${struttura.Compagnia}</p>` : ''}
             ${struttura.Info ? `<p style="margin: 4px 0; font-size: 0.9rem; color: #666;">${struttura.Info}</p>` : ''}
             <div style="margin-top: 8px;">
               ${struttura.Casa ? '<span style="background: #1976d2; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-right: 4px;">🏠 Casa</span>' : ''}

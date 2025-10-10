@@ -129,7 +129,7 @@ function renderStrutture(lista) {
 
     card.innerHTML = `
       <div class="card-header">
-      <h3>${s.Struttura || "Senza nome"}</h3>
+        <h3>${s.Struttura || "Senza nome"}</h3>
         <div class="card-actions">
           <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
             ${isInElenco ? '⭐' : '☆'}
@@ -152,12 +152,31 @@ function renderStrutture(lista) {
           ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
         </div>
         
+        <div class="card-details">
+          ${s.Letti ? `<div class="detail-item"><strong>Letti:</strong> ${s.Letti}</div>` : ''}
+          ${s.Branco ? `<div class="detail-item"><strong>Branco:</strong> ${s.Branco}</div>` : ''}
+          ${s.Reparto ? `<div class="detail-item"><strong>Reparto:</strong> ${s.Reparto}</div>` : ''}
+          ${s.Compagnia ? `<div class="detail-item"><strong>Compagnia:</strong> ${s.Compagnia}</div>` : ''}
+        </div>
+        
         ${s.Referente ? `<div class="contact-info">
           <strong>Referente:</strong> ${s.Referente}
         </div>` : ''}
         
-        ${s.Contatto || s.Email ? `<div class="contact-info">
-          <strong>Contatti:</strong> ${s.Contatto || s.Email}
+        ${s.Email ? `<div class="contact-info">
+          <strong>Email:</strong> ${s.Email}
+        </div>` : ''}
+        
+        ${s.Sito ? `<div class="contact-info">
+          <strong>Sito:</strong> ${s.Sito}
+        </div>` : ''}
+        
+        ${s.Contatto ? `<div class="contact-info">
+          <strong>Contatto:</strong> ${s.Contatto}
+        </div>` : ''}
+        
+        ${s['Ultimo controllo'] ? `<div class="contact-info">
+          <strong>Ultimo controllo:</strong> ${s['Ultimo controllo']}
         </div>` : ''}
       </div>
       
@@ -890,22 +909,29 @@ async function aggiungiStruttura() {
     id: 'new_' + Date.now(), // ID temporaneo
     Struttura: '',
     Luogo: '',
-    Prov: '',
     Indirizzo: '',
-    CAP: '',
-    Coordinate: '',
-    Referente: '',
-    Contatto: '',
-    Email: '',
-    Telefono: '',
+    Prov: '',
     Info: '',
-    Note: '',
-    Descrizione: '',
-    Casa: false,
+    '€ notte': '',
+    Offerta: '',
+    Forfait: '',
     Terreno: false,
-    Capacità: '',
-    Servizi: '',
-    Disponibilità: ''
+    Casa: false,
+    Letti: '',
+    Cucina: '',
+    Spazi: '',
+    Fuochi: '',
+    Escursioni: '',
+    Trasporti: '',
+    Branco: '',
+    Reparto: '',
+    Compagnia: '',
+    Referente: '',
+    Email: '',
+    Sito: '',
+    Contatto: '',
+    IIcontatto: '',
+    'Ultimo controllo': ''
   };
   
   // Aggiungi la struttura temporanea all'array
@@ -1233,16 +1259,25 @@ function mostraSchedaCompleta(strutturaId) {
     // Organizza i campi per categoria
     const categorie = {
       'Informazioni Principali': [
-        'Struttura', 'Luogo', 'Prov', 'Indirizzo', 'CAP', 'Coordinate'
+        'Struttura', 'Luogo', 'Indirizzo', 'Prov', 'Info'
+      ],
+      'Prezzi e Offerte': [
+        '€ notte', 'Offerta', 'Forfait'
+      ],
+      'Caratteristiche Struttura': [
+        'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi'
+      ],
+      'Attività e Servizi': [
+        'Escursioni', 'Trasporti'
+      ],
+      'Gruppi Scout': [
+        'Branco', 'Reparto', 'Compagnia'
       ],
       'Contatti': [
-        'Referente', 'Contatto', 'Email', 'Telefono'
+        'Referente', 'Email', 'Sito', 'Contatto', 'IIcontatto'
       ],
-      'Caratteristiche': [
-        'Casa', 'Terreno', 'Capacità', 'Servizi', 'Disponibilità'
-      ],
-      'Informazioni Aggiuntive': [
-        'Info', 'Note', 'Descrizione'
+      'Gestione': [
+        'Ultimo controllo'
       ]
     };
     

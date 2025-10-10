@@ -13,6 +13,56 @@ body{margin:0;background:linear-gradient(180deg,var(--bg),#eef6ea);color:#1b1b1b
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;}
 .controls input[type="text"], .controls select, .controls input[type="search"]{padding:8px;border-radius:8px;border:1px solid #d8d8d8;}
 .controls button{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:white;cursor:pointer;}
+
+/* Pulsante Elenco Personale Unificato */
+.btn-elenco-personale{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:8px;
+  border:2px solid var(--accent);
+  background:white;
+  color:var(--accent);
+  cursor:pointer;
+  font-weight:500;
+  transition:all 0.2s;
+  min-width:180px;
+  justify-content:space-between;
+}
+
+.btn-elenco-personale:hover{
+  background:var(--accent);
+  color:white;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(47,107,47,0.2);
+}
+
+.elenco-icon{
+  font-size:16px;
+}
+
+.elenco-label{
+  font-size:14px;
+  flex:1;
+  text-align:left;
+}
+
+.elenco-counter{
+  background:var(--accent);
+  color:white;
+  padding:2px 8px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:600;
+  min-width:20px;
+  text-align:center;
+}
+
+.btn-elenco-personale:hover .elenco-counter{
+  background:white;
+  color:var(--accent);
+}
 .controls label{font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center;}
 
 main{padding:16px;}
@@ -74,7 +124,6 @@ main{padding:16px;}
 .info-banner button{background:none;border:none;color:#1976d2;cursor:pointer;font-size:16px;padding:0;margin-left:8px;}
 .info-banner button:hover{color:#0d47a1;}
 
-.contatore{background:var(--accent);color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 .contatore-risultati{background:#17a2b8;color:white;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-left:8px;}
 
 /* Pulsanti speciali */
@@ -158,7 +207,6 @@ small.helper{display:block;color:var(--muted);font-size:12px;margin-top:6px;}
   .modal-content{max-width:95%;margin:10px;}
   #editForm{grid-template-columns:1fr;}
   
-  .contatore{margin-left:0;margin-top:8px;align-self:center;}
 }
 
 @media (max-width: 480px) {

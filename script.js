@@ -530,7 +530,7 @@ function rimuoviDallElenco(id) {
 function aggiornaContatoreElenco() {
   const contatore = document.getElementById('contatore-elenco');
   if (contatore) {
-    contatore.textContent = `Elenco personale: ${elencoPersonale.length}`;
+    contatore.textContent = elencoPersonale.length;
   }
 }
 
@@ -588,7 +588,7 @@ function mostraGestioneElencoPersonale() {
   `;
   
   const title = document.createElement('h2');
-  title.textContent = `📋 Elenco Personale (${struttureElenco.length} strutture)`;
+  title.textContent = `📋 Elenco Personale`;
   title.style.cssText = `
     margin: 0;
     color: #2f6b2f;

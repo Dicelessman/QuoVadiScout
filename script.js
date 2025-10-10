@@ -239,6 +239,399 @@ function cambiaPagina(nuovaPagina) {
   renderStrutture(listaFiltrata);
 }
 
+// === Ricerca Avanzata ===
+function mostraRicercaAvanzata() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('ricercaAvanzataModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'ricercaAvanzataModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 800px;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '🔍 Ricerca Avanzata';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Form di ricerca
+  const form = document.createElement('form');
+  form.style.cssText = `
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  `;
+  
+  // Campi di ricerca organizzati per categoria
+  const categorie = {
+    'Informazioni Principali': [
+      { campo: 'Struttura', tipo: 'text', placeholder: 'Nome della struttura' },
+      { campo: 'Luogo', tipo: 'text', placeholder: 'Città o località' },
+      { campo: 'Indirizzo', tipo: 'text', placeholder: 'Indirizzo completo' },
+      { campo: 'Prov', tipo: 'text', placeholder: 'Sigla provincia (es. MI)' },
+      { campo: 'Info', tipo: 'textarea', placeholder: 'Informazioni generali' }
+    ],
+    'Prezzi e Offerte': [
+      { campo: '€ notte', tipo: 'text', placeholder: 'Prezzo per notte' },
+      { campo: 'Offerta', tipo: 'text', placeholder: 'Offerte speciali' },
+      { campo: 'Forfait', tipo: 'text', placeholder: 'Pacchetti forfait' }
+    ],
+    'Caratteristiche Struttura': [
+      { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
+      { campo: 'Casa', tipo: 'checkbox', placeholder: 'Disponibile casa' },
+      { campo: 'Letti', tipo: 'text', placeholder: 'Numero di letti' },
+      { campo: 'Cucina', tipo: 'text', placeholder: 'Tipo di cucina' },
+      { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili' },
+      { campo: 'Fuochi', tipo: 'text', placeholder: 'Disponibilità fuochi' }
+    ],
+    'Attività e Servizi': [
+      { campo: 'Escursioni', tipo: 'text', placeholder: 'Escursioni disponibili' },
+      { campo: 'Trasporti', tipo: 'text', placeholder: 'Servizi di trasporto' }
+    ],
+    'Gruppi Scout': [
+      { campo: 'Branco', tipo: 'checkbox', placeholder: 'Adatto per branco' },
+      { campo: 'Reparto', tipo: 'checkbox', placeholder: 'Adatto per reparto' },
+      { campo: 'Compagnia', tipo: 'checkbox', placeholder: 'Adatto per compagnia' }
+    ],
+    'Contatti': [
+      { campo: 'Referente', tipo: 'text', placeholder: 'Nome del referente' },
+      { campo: 'Email', tipo: 'email', placeholder: 'Indirizzo email' },
+      { campo: 'Sito', tipo: 'url', placeholder: 'Sito web' },
+      { campo: 'Contatto', tipo: 'tel', placeholder: 'Numero di telefono' },
+      { campo: 'IIcontatto', tipo: 'tel', placeholder: 'Secondo contatto' }
+    ],
+    'Gestione': [
+      { campo: 'Ultimo controllo', tipo: 'date', placeholder: 'Data ultimo controllo' },
+      { campo: 'Note', tipo: 'textarea', placeholder: 'Note aggiuntive' }
+    ]
+  };
+  
+  Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
+    const categoriaDiv = document.createElement('div');
+    categoriaDiv.style.cssText = `
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      border-left: 4px solid #2f6b2f;
+    `;
+    
+    const categoriaTitle = document.createElement('h3');
+    categoriaTitle.textContent = nomeCategoria;
+    categoriaTitle.style.cssText = `
+      margin: 0 0 15px 0;
+      color: #2f6b2f;
+      font-size: 1.1rem;
+    `;
+    categoriaDiv.appendChild(categoriaTitle);
+    
+    campi.forEach(({ campo, tipo, placeholder }) => {
+      const campoDiv = document.createElement('div');
+      campoDiv.style.cssText = `
+        margin-bottom: 12px;
+      `;
+      
+      const label = document.createElement('label');
+      label.textContent = campo;
+      label.style.cssText = `
+        display: block;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 4px;
+        font-size: 14px;
+      `;
+      
+      let input;
+      if (tipo === 'checkbox') {
+        input = document.createElement('input');
+        input.type = 'checkbox';
+        input.id = `search-${campo.replace(/\s+/g, '-')}`;
+        input.style.cssText = `
+          margin-right: 8px;
+          transform: scale(1.1);
+        `;
+        
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.style.cssText = `
+          display: flex;
+          align-items: center;
+        `;
+        checkboxDiv.appendChild(input);
+        checkboxDiv.appendChild(label);
+        campoDiv.appendChild(checkboxDiv);
+      } else if (tipo === 'textarea') {
+        input = document.createElement('textarea');
+        input.id = `search-${campo.replace(/\s+/g, '-')}`;
+        input.placeholder = placeholder;
+        input.rows = 3;
+        input.style.cssText = `
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+          font-family: inherit;
+          resize: vertical;
+        `;
+        
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(input);
+      } else {
+        input = document.createElement('input');
+        input.type = tipo;
+        input.id = `search-${campo.replace(/\s+/g, '-')}`;
+        input.placeholder = placeholder;
+        input.style.cssText = `
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+        `;
+        
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(input);
+      }
+      
+      categoriaDiv.appendChild(campoDiv);
+    });
+    
+    form.appendChild(categoriaDiv);
+  });
+  
+  // Footer con pulsanti
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+    gap: 10px;
+  `;
+  
+  const leftActions = document.createElement('div');
+  leftActions.style.cssText = `display: flex; gap: 10px;`;
+  
+  const clearBtn = document.createElement('button');
+  clearBtn.innerHTML = '🧹 Pulisci';
+  clearBtn.type = 'button';
+  clearBtn.style.cssText = `
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  clearBtn.onclick = () => {
+    form.reset();
+    // Pulisci anche i filtri attivi
+    document.getElementById('search').value = '';
+    document.getElementById('filter-prov').value = '';
+    document.getElementById('filter-casa').checked = false;
+    document.getElementById('filter-terreno').checked = false;
+    renderStrutture(filtra(strutture));
+  };
+  
+  const rightActions = document.createElement('div');
+  rightActions.style.cssText = `display: flex; gap: 10px;`;
+  
+  const searchBtn = document.createElement('button');
+  searchBtn.innerHTML = '🔍 Cerca';
+  searchBtn.type = 'button';
+  searchBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  searchBtn.onclick = () => {
+    const filtriAvanzati = raccogliFiltriAvanzati();
+    applicaRicercaAvanzata(filtriAvanzati);
+    modal.remove();
+  };
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerHTML = '❌ Annulla';
+  cancelBtn.type = 'button';
+  cancelBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  cancelBtn.onclick = () => modal.remove();
+  
+  leftActions.appendChild(clearBtn);
+  rightActions.appendChild(cancelBtn);
+  rightActions.appendChild(searchBtn);
+  
+  footer.appendChild(leftActions);
+  footer.appendChild(rightActions);
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(form);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+function raccogliFiltriAvanzati() {
+  const filtri = {};
+  
+  // Raccogli tutti i valori dai campi di ricerca avanzata
+  document.querySelectorAll('#ricercaAvanzataModal input, #ricercaAvanzataModal textarea').forEach(input => {
+    const campo = input.id.replace('search-', '').replace(/-/g, ' ');
+    
+    if (input.type === 'checkbox') {
+      if (input.checked) {
+        filtri[campo] = true;
+      }
+    } else if (input.value.trim() !== '') {
+      filtri[campo] = input.value.trim();
+    }
+  });
+  
+  return filtri;
+}
+
+function applicaRicercaAvanzata(filtriAvanzati) {
+  // Salva i filtri avanzati per usarli nella funzione filtra
+  window.filtriAvanzatiAttivi = filtriAvanzati;
+  
+  // Reset paginazione
+  paginaCorrente = 1;
+  
+  // Applica i filtri
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
+  
+  // Mostra indicatore di ricerca avanzata attiva
+  mostraIndicatoreRicercaAvanzata(Object.keys(filtriAvanzati).length);
+}
+
+function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
+  // Rimuovi indicatore esistente
+  const existingIndicator = document.getElementById('indicatore-ricerca-avanzata');
+  if (existingIndicator) {
+    existingIndicator.remove();
+  }
+  
+  if (numeroFiltri > 0) {
+    const indicator = document.createElement('div');
+    indicator.id = 'indicatore-ricerca-avanzata';
+    indicator.style.cssText = `
+      background: #17a2b8;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-left: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    `;
+    indicator.innerHTML = `
+      🔍 Ricerca avanzata attiva (${numeroFiltri} filtri)
+      <button onclick="rimuoviRicercaAvanzata()" style="background:none;border:none;color:white;cursor:pointer;font-size:14px;margin-left:4px;">✕</button>
+    `;
+    
+    document.querySelector('.controls').appendChild(indicator);
+  }
+}
+
+function rimuoviRicercaAvanzata() {
+  window.filtriAvanzatiAttivi = null;
+  
+  const indicator = document.getElementById('indicatore-ricerca-avanzata');
+  if (indicator) {
+    indicator.remove();
+  }
+  
+  // Ricarica i risultati senza filtri avanzati
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
+}
+
 // === Filtri e ricerca ===
 
 function filtra(lista) {
@@ -248,6 +641,7 @@ function filtra(lista) {
   const terreno = document.getElementById("filter-terreno").checked;
 
   let filtrata = lista.filter((s) => {
+    // Filtri base
     const matchTesto =
       s.Struttura?.toLowerCase().includes(q) ||
       s.Luogo?.toLowerCase().includes(q) ||
@@ -257,7 +651,23 @@ function filtra(lista) {
     const matchCasa = !casa || s.Casa === true;
     const matchTerreno = !terreno || s.Terreno === true;
     
-    return matchTesto && matchProv && matchCasa && matchTerreno;
+    // Filtri avanzati
+    let matchAvanzati = true;
+    if (window.filtriAvanzatiAttivi) {
+      for (const [campo, valore] of Object.entries(window.filtriAvanzatiAttivi)) {
+        if (valore === true) {
+          // Per checkbox, verifica che il valore sia true
+          matchAvanzati = matchAvanzati && s[campo] === true;
+        } else if (typeof valore === 'string') {
+          // Per campi di testo, verifica che contenga il valore (case insensitive)
+          matchAvanzati = matchAvanzati && 
+            s[campo] && 
+            s[campo].toString().toLowerCase().includes(valore.toLowerCase());
+        }
+      }
+    }
+    
+    return matchTesto && matchProv && matchCasa && matchTerreno && matchAvanzati;
   });
 
   // Applica ordinamento
@@ -1333,6 +1743,11 @@ function resetFiltri() {
   document.getElementById('filter-casa').checked = false;
   document.getElementById('filter-terreno').checked = false;
   
+  // Reset filtri avanzati
+  window.filtriAvanzatiAttivi = null;
+  const indicator = document.getElementById('indicatore-ricerca-avanzata');
+  if (indicator) indicator.remove();
+  
   // Reset contatore
   const contatore = document.getElementById('contatore-risultati');
   if (contatore) contatore.remove();
@@ -1426,6 +1841,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
+  document.getElementById("advancedSearchBtn").addEventListener("click", mostraRicercaAvanzata);
   
   // Event listeners per il modale
   document.getElementById("closeModal").addEventListener("click", chiudiModale);

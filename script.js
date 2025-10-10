@@ -1530,6 +1530,10 @@ function mostraSchedaCompleta(strutturaId) {
   });
 }
 
+// Rendi la funzione e le variabili globali per essere accessibili dalla dashboard
+window.mostraSchedaCompleta = mostraSchedaCompleta;
+window.strutture = strutture;
+
 // === Reset filtri ===
 function resetFiltri() {
   document.getElementById('search').value = '';

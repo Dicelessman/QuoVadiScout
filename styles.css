@@ -710,6 +710,205 @@ main{padding:16px;}
 }
 .btn-dashboard:hover{background:#512da8;}
 
+/* Toggle visualizzazione */
+.view-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.btn-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--accent);
+  background: white;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.btn-view-toggle:hover {
+  background: var(--accent);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(47,107,47,0.2);
+}
+
+.btn-view-toggle.active {
+  background: var(--accent);
+  color: white;
+}
+
+.view-icon {
+  font-size: 16px;
+}
+
+.view-label {
+  font-size: 14px;
+}
+
+/* Stili per modalità elenco */
+.list-view .cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.list-view .card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(20,50,20,0.06);
+  border-left: 4px solid var(--accent-2);
+  transition: all 0.2s;
+  min-height: 80px;
+}
+
+.list-view .card:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(20,50,20,0.1);
+}
+
+.list-view .card-header {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  border-bottom: none;
+  gap: 16px;
+}
+
+.list-view .card-header h3 {
+  font-size: 16px;
+  margin: 0;
+  flex: 1;
+}
+
+.list-view .card-content {
+  flex: 2;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-view .location {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.list-view .tags {
+  margin-bottom: 8px;
+}
+
+.list-view .contact-info {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.list-view .card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-view .toggle-elenco {
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 20px;
+}
+
+/* Responsive per modalità elenco */
+@media (max-width: 768px) {
+  .list-view .card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .list-view .card-header {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .list-view .card-content {
+    width: 100%;
+  }
+  
+  .list-view .card-actions {
+    align-self: flex-end;
+  }
+}
+
+/* Stili per elenco personale in modalità elenco */
+#gestioneElencoModal .lista-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#gestioneElencoModal .item-div {
+  transition: all 0.2s ease;
+}
+
+#gestioneElencoModal .item-div:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Stili per modalità schede nell'elenco personale */
+#gestioneElencoModal .item-div:not(.list-mode) {
+  background: #f8f9fa;
+  border-left: 4px solid var(--accent);
+}
+
+#gestioneElencoModal .item-div:not(.list-mode):hover {
+  background: #e9ecef;
+}
+
+/* Responsive per elenco personale */
+@media (max-width: 768px) {
+  #gestioneElencoModal .headerActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  #gestioneElencoModal .btn-view-toggle {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  #gestioneElencoModal .view-label {
+    display: none;
+  }
+  
+  #gestioneElencoModal .item-div {
+    padding: 12px !important;
+  }
+  
+  #gestioneElencoModal .actions-div {
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  
+  #gestioneElencoModal .actions-div button {
+    width: 100%;
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
 /* Filtri Rapidi */
 
 /* Barra di progresso */

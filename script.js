@@ -115,6 +115,9 @@ async function caricaStruttureLocali() {
 let paginaCorrente = 1;
 const elementiPerPagina = 20;
 
+// === Gestione modalità visualizzazione ===
+let isListViewMode = false;
+
 function renderStrutture(lista) {
   const container = document.getElementById("results");
   container.innerHTML = "";
@@ -140,60 +143,96 @@ function renderStrutture(lista) {
     card.className = "card";
     const isInElenco = elencoPersonale.includes(s.id);
 
-    card.innerHTML = `
-      <div class="card-header">
-      <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
-        <div class="card-actions">
-          <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
-            ${isInElenco ? '⭐' : '☆'}
-          </button>
-        </div>
-      </div>
-      
-      <div class="card-content">
-        <div class="location">
-          <span class="location-icon">📍</span>
-          <span>${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
+    if (isListViewMode) {
+      // Modalità elenco - layout orizzontale compatto
+      card.innerHTML = `
+        <div class="card-header">
+          <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
+          <div class="card-actions">
+            <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
+              ${isInElenco ? '⭐' : '☆'}
+            </button>
+          </div>
         </div>
         
-        ${s.Info ? `<div class="info-section">
-          <p>${s.Info}</p>
-        </div>` : ''}
-        
-        <div class="tags">
-          ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
-          ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+        <div class="card-content">
+          <div class="location">
+            <span class="location-icon">📍</span>
+            <span>${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
+          </div>
+          
+          <div class="tags">
+            ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
+            ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+          </div>
+          
+          <div class="contact-info">
+            ${s.Referente ? `<strong>Referente:</strong> ${s.Referente}` : ''}
+            ${s.Contatto ? ` | <strong>Contatto:</strong> ${s.Contatto}` : ''}
+          </div>
+          
+          ${s.Info ? `<div class="info-section" style="font-size: 13px; color: #666;">
+            ${s.Info.length > 100 ? s.Info.substring(0, 100) + '...' : s.Info}
+          </div>` : ''}
+        </div>
+      `;
+    } else {
+      // Modalità schede - layout verticale completo
+      card.innerHTML = `
+        <div class="card-header">
+          <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
+          <div class="card-actions">
+            <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
+              ${isInElenco ? '⭐' : '☆'}
+            </button>
+          </div>
         </div>
         
-        <div class="card-details">
-          ${s.Letti ? `<div class="detail-item"><strong>Letti:</strong> ${s.Letti}</div>` : ''}
-          ${s.Branco ? `<div class="detail-item"><strong>Branco:</strong> ${s.Branco}</div>` : ''}
-          ${s.Reparto ? `<div class="detail-item"><strong>Reparto:</strong> ${s.Reparto}</div>` : ''}
-          ${s.Compagnia ? `<div class="detail-item"><strong>Compagnia:</strong> ${s.Compagnia}</div>` : ''}
+        <div class="card-content">
+          <div class="location">
+            <span class="location-icon">📍</span>
+            <span>${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
+          </div>
+          
+          ${s.Info ? `<div class="info-section">
+            <p>${s.Info}</p>
+          </div>` : ''}
+          
+          <div class="tags">
+            ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
+            ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+          </div>
+          
+          <div class="card-details">
+            ${s.Letti ? `<div class="detail-item"><strong>Letti:</strong> ${s.Letti}</div>` : ''}
+            ${s.Branco ? `<div class="detail-item"><strong>Branco:</strong> ${s.Branco}</div>` : ''}
+            ${s.Reparto ? `<div class="detail-item"><strong>Reparto:</strong> ${s.Reparto}</div>` : ''}
+            ${s.Compagnia ? `<div class="detail-item"><strong>Compagnia:</strong> ${s.Compagnia}</div>` : ''}
+          </div>
+          
+          ${s.Referente ? `<div class="contact-info">
+            <strong>Referente:</strong> ${s.Referente}
+          </div>` : ''}
+          
+          ${s.Email ? `<div class="contact-info">
+            <strong>Email:</strong> ${s.Email}
+          </div>` : ''}
+          
+          ${s.Sito ? `<div class="contact-info">
+            <strong>Sito:</strong> ${s.Sito}
+          </div>` : ''}
+          
+          ${s.Contatto ? `<div class="contact-info">
+            <strong>Contatto:</strong> ${s.Contatto}
+          </div>` : ''}
+          
+          ${s['Ultimo controllo'] ? `<div class="contact-info">
+            <strong>Ultimo controllo:</strong> ${s['Ultimo controllo']}
+          </div>` : ''}
         </div>
-        
-        ${s.Referente ? `<div class="contact-info">
-          <strong>Referente:</strong> ${s.Referente}
-        </div>` : ''}
-        
-        ${s.Email ? `<div class="contact-info">
-          <strong>Email:</strong> ${s.Email}
-        </div>` : ''}
-        
-        ${s.Sito ? `<div class="contact-info">
-          <strong>Sito:</strong> ${s.Sito}
-        </div>` : ''}
-        
-        ${s.Contatto ? `<div class="contact-info">
-          <strong>Contatto:</strong> ${s.Contatto}
-        </div>` : ''}
-        
-        ${s['Ultimo controllo'] ? `<div class="contact-info">
-          <strong>Ultimo controllo:</strong> ${s['Ultimo controllo']}
-        </div>` : ''}
-      </div>
-      
-    `;
+      `;
+    }
+    
     container.appendChild(card);
   });
 
@@ -1644,6 +1683,23 @@ function mostraGestioneElencoPersonale() {
     font-size: 1.5rem;
   `;
   
+  // Toggle visualizzazione per elenco personale
+  const headerActions = document.createElement('div');
+  headerActions.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+  
+  const toggleBtn = document.createElement('button');
+  toggleBtn.id = 'modalViewToggle';
+  toggleBtn.className = 'btn-view-toggle';
+  toggleBtn.innerHTML = `
+    <span class="view-icon">📄</span>
+    <span class="view-label">Schede</span>
+  `;
+  toggleBtn.title = 'Cambia visualizzazione';
+  
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
   closeBtn.style.cssText = `
@@ -1661,8 +1717,11 @@ function mostraGestioneElencoPersonale() {
   `;
   closeBtn.onclick = () => modal.remove();
   
+  headerActions.appendChild(toggleBtn);
+  headerActions.appendChild(closeBtn);
+  
   header.appendChild(title);
-  header.appendChild(closeBtn);
+  header.appendChild(headerActions);
   
   // Contenuto principale
   const content = document.createElement('div');
@@ -1691,86 +1750,230 @@ function mostraGestioneElencoPersonale() {
       padding: 10px;
     `;
     
-    struttureElenco.forEach((struttura, index) => {
+    // Funzione per creare elementi dell'elenco
+    const createElencoItem = (struttura, isListMode) => {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'item-div';
-      itemDiv.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px;
-        margin-bottom: 8px;
-        background: #f8f9fa;
-        border-radius: 6px;
-        border: 1px solid #e9ecef;
-      `;
       
-      const infoDiv = document.createElement('div');
-      infoDiv.style.cssText = `flex: 1;`;
-      infoDiv.innerHTML = `
-        <div style="font-weight: bold; color: #2f6b2f; margin-bottom: 4px;">
-          ${struttura.Struttura || 'Senza nome'}
-        </div>
-        <div style="font-size: 0.9rem; color: #666;">
-          📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
-          ${struttura.Referente ? ` | 👤 ${struttura.Referente}` : ''}
-        </div>
-        <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">
-          ${struttura.Casa ? '🏠 Casa' : ''} ${struttura.Terreno ? '🌱 Terreno' : ''}
-          ${!struttura.Casa && !struttura.Terreno ? '❓ Senza categoria' : ''}
-        </div>
-      `;
+      if (isListMode) {
+        // Modalità elenco - layout compatto
+        itemDiv.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px;
+          margin-bottom: 8px;
+          background: #f8f9fa;
+          border-radius: 6px;
+          border: 1px solid #e9ecef;
+        `;
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `flex: 1;`;
+        infoDiv.innerHTML = `
+          <div style="font-weight: bold; color: #2f6b2f; margin-bottom: 4px;">
+            ${struttura.Struttura || 'Senza nome'}
+          </div>
+          <div style="font-size: 0.9rem; color: #666;">
+            📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+            ${struttura.Referente ? ` | 👤 ${struttura.Referente}` : ''}
+          </div>
+          <div style="font-size: 0.8rem; color: #888; margin-top: 4px;">
+            ${struttura.Casa ? '🏠 Casa' : ''} ${struttura.Terreno ? '🌱 Terreno' : ''}
+            ${!struttura.Casa && !struttura.Terreno ? '❓ Senza categoria' : ''}
+          </div>
+        `;
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'actions-div';
+        actionsDiv.style.cssText = `
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        `;
+        
+        const viewBtn = document.createElement('button');
+        viewBtn.innerHTML = '👁️';
+        viewBtn.title = 'Visualizza scheda completa';
+        viewBtn.style.cssText = `
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px 10px;
+          cursor: pointer;
+          font-size: 14px;
+        `;
+        viewBtn.onclick = () => {
+          modal.remove();
+          mostraSchedaCompleta(struttura.id);
+        };
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '🗑️';
+        removeBtn.title = 'Rimuovi dall\'elenco';
+        removeBtn.style.cssText = `
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px 10px;
+          cursor: pointer;
+          font-size: 14px;
+        `;
+        removeBtn.onclick = () => {
+          rimuoviDallElenco(struttura.id);
+          modal.remove();
+          mostraGestioneElencoPersonale();
+        };
+        
+        actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(removeBtn);
+        
+        itemDiv.appendChild(infoDiv);
+        itemDiv.appendChild(actionsDiv);
+        
+      } else {
+        // Modalità schede - layout verticale completo
+        itemDiv.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          padding: 16px;
+          margin-bottom: 12px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1px solid #e9ecef;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        `;
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        `;
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = `
+          font-weight: bold;
+          color: #2f6b2f;
+          font-size: 1.1rem;
+          cursor: pointer;
+        `;
+        titleDiv.textContent = struttura.Struttura || 'Senza nome';
+        titleDiv.onclick = () => {
+          modal.remove();
+          mostraSchedaCompleta(struttura.id);
+        };
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.cssText = `
+          display: flex;
+          gap: 8px;
+        `;
+        
+        const viewBtn = document.createElement('button');
+        viewBtn.innerHTML = '👁️ Visualizza';
+        viewBtn.title = 'Visualizza scheda completa';
+        viewBtn.style.cssText = `
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+        viewBtn.onclick = () => {
+          modal.remove();
+          mostraSchedaCompleta(struttura.id);
+        };
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '🗑️ Rimuovi';
+        removeBtn.title = 'Rimuovi dall\'elenco';
+        removeBtn.style.cssText = `
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+        removeBtn.onclick = () => {
+          rimuoviDallElenco(struttura.id);
+          modal.remove();
+          mostraGestioneElencoPersonale();
+        };
+        
+        actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(removeBtn);
+        
+        headerDiv.appendChild(titleDiv);
+        headerDiv.appendChild(actionsDiv);
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = `
+          <div style="margin-bottom: 8px; color: #666;">
+            📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+          </div>
+          ${struttura.Referente ? `<div style="margin-bottom: 8px; color: #666;">
+            👤 <strong>Referente:</strong> ${struttura.Referente}
+          </div>` : ''}
+          ${struttura.Contatto ? `<div style="margin-bottom: 8px; color: #666;">
+            📞 <strong>Contatto:</strong> ${struttura.Contatto}
+          </div>` : ''}
+          <div style="margin-bottom: 8px;">
+            ${struttura.Casa ? '<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px;">🏠 Casa</span>' : ''}
+            ${struttura.Terreno ? '<span style="background: #e8f5e8; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 12px;">🌱 Terreno</span>' : ''}
+          </div>
+          ${struttura.Info ? `<div style="font-size: 13px; color: #888; margin-top: 8px;">
+            ${struttura.Info.length > 150 ? struttura.Info.substring(0, 150) + '...' : struttura.Info}
+          </div>` : ''}
+        `;
+        
+        itemDiv.appendChild(headerDiv);
+        itemDiv.appendChild(contentDiv);
+      }
       
-      const actionsDiv = document.createElement('div');
-      actionsDiv.className = 'actions-div';
-      actionsDiv.style.cssText = `
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      `;
+      return itemDiv;
+    };
+    
+    // Variabile per tracciare la modalità corrente del modale
+    let modalListMode = false;
+    
+    // Genera gli elementi iniziali
+    const generateElencoItems = () => {
+      listaContainer.innerHTML = '';
+      struttureElenco.forEach(struttura => {
+        listaContainer.appendChild(createElencoItem(struttura, modalListMode));
+      });
+    };
+    
+    // Event listener per il toggle del modale
+    toggleBtn.addEventListener('click', () => {
+      modalListMode = !modalListMode;
       
-      const viewBtn = document.createElement('button');
-      viewBtn.innerHTML = '👁️';
-      viewBtn.title = 'Visualizza scheda completa';
-      viewBtn.style.cssText = `
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 6px 10px;
-        cursor: pointer;
-        font-size: 14px;
-      `;
-      viewBtn.onclick = () => {
-        modal.remove();
-        mostraSchedaCompleta(struttura.id);
-      };
+      const viewIcon = toggleBtn.querySelector('.view-icon');
+      const viewLabel = toggleBtn.querySelector('.view-label');
       
-      const removeBtn = document.createElement('button');
-      removeBtn.innerHTML = '🗑️';
-      removeBtn.title = 'Rimuovi dall\'elenco';
-      removeBtn.style.cssText = `
-        background: #dc3545;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 6px 10px;
-        cursor: pointer;
-        font-size: 14px;
-      `;
-      removeBtn.onclick = () => {
-        rimuoviDallElenco(struttura.id);
-        modal.remove();
-        mostraGestioneElencoPersonale(); // Ricarica il modal
-      };
+      if (modalListMode) {
+        viewIcon.textContent = '📄';
+        viewLabel.textContent = 'Schede';
+        toggleBtn.classList.add('active');
+      } else {
+        viewIcon.textContent = '📋';
+        viewLabel.textContent = 'Elenco';
+        toggleBtn.classList.remove('active');
+      }
       
-      actionsDiv.appendChild(viewBtn);
-      actionsDiv.appendChild(removeBtn);
-      
-      itemDiv.appendChild(infoDiv);
-      itemDiv.appendChild(actionsDiv);
-      listaContainer.appendChild(itemDiv);
+      generateElencoItems();
     });
+    
+    // Genera gli elementi iniziali
+    generateElencoItems();
     
     content.appendChild(listaContainer);
   }
@@ -2504,6 +2707,39 @@ function mostraSchedaCompleta(strutturaId) {
 // Rendi la funzione globale per essere accessibile dalla dashboard
 window.mostraSchedaCompleta = mostraSchedaCompleta;
 
+// === Toggle modalità visualizzazione ===
+function toggleViewMode() {
+  isListViewMode = !isListViewMode;
+  
+  // Aggiorna il toggle button
+  const toggleBtn = document.getElementById('viewToggle');
+  const viewIcon = toggleBtn.querySelector('.view-icon');
+  const viewLabel = toggleBtn.querySelector('.view-label');
+  
+  if (isListViewMode) {
+    viewIcon.textContent = '📄';
+    viewLabel.textContent = 'Schede';
+    toggleBtn.classList.add('active');
+    
+    // Aggiungi classe al body per stili CSS
+    document.body.classList.add('list-view');
+  } else {
+    viewIcon.textContent = '📋';
+    viewLabel.textContent = 'Elenco';
+    toggleBtn.classList.remove('active');
+    
+    // Rimuovi classe dal body
+    document.body.classList.remove('list-view');
+  }
+  
+  // Ricarica i risultati con la nuova modalità
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
+  
+  // Salva preferenza utente
+  localStorage.setItem('viewMode', isListViewMode ? 'list' : 'cards');
+}
+
 // === Reset filtri ===
 function resetFiltri() {
   document.getElementById('search').value = '';
@@ -2547,6 +2783,22 @@ function mostraCaricamento() {
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
+  
+  // Carica preferenza modalità visualizzazione
+  const savedViewMode = localStorage.getItem('viewMode');
+  if (savedViewMode === 'list') {
+    isListViewMode = true;
+    document.body.classList.add('list-view');
+    
+    // Aggiorna il toggle button
+    const toggleBtn = document.getElementById('viewToggle');
+    const viewIcon = toggleBtn.querySelector('.view-icon');
+    const viewLabel = toggleBtn.querySelector('.view-label');
+    
+    viewIcon.textContent = '📄';
+    viewLabel.textContent = 'Schede';
+    toggleBtn.classList.add('active');
+  }
   
   // Inizializza sistema autenticazione Firebase
   inizializzaAuth();
@@ -2612,6 +2864,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
   document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
+  
+  // Event listener per toggle visualizzazione
+  document.getElementById("viewToggle").addEventListener("click", toggleViewMode);
   
   // Event listener per ricerca avanzata
   const advancedSearchBtn = document.getElementById("advancedSearchBtn");

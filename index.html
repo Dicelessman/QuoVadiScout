@@ -25,7 +25,13 @@
           <label><input type="checkbox" id="filter-casa" /> Casa</label>
           <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <div class="view-toggle">
+            <button id="viewToggle" class="btn-view-toggle" title="Cambia visualizzazione">
+              <span class="view-icon">📋</span>
+              <span class="view-label">Elenco</span>
+            </button>
+          </div>
           <button id="add-btn">➕ Aggiungi</button>
           <button id="resetBtn">🔄 Reset</button>
         </div>

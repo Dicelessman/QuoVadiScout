@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes" />
 <title>Quovadiscout - Strutture & Terreni v1.1</title>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -10,28 +10,40 @@
   <header class="topbar">
     <h1>Quovadiscout - Strutture & Terreni v1.1</h1>
     <div class="controls">
-      <input id="search" placeholder="Cerca nome, luogo, referente..." />
-      <button id="advancedSearchBtn" title="Ricerca Avanzata">🔍+</button>
-      <select id="filter-prov"><option value="">Tutte le province</option></select>
-      <select id="sort-by">
-        <option value="struttura">Ordina per Nome</option>
-        <option value="luogo">Ordina per Luogo</option>
-        <option value="provincia">Ordina per Provincia</option>
-      </select>
-      <label><input type="checkbox" id="filter-casa" /> Casa</label>
-      <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
-      <button id="add-btn">Aggiungi</button>
-      <button id="resetBtn">Reset</button>
-      <button id="exportBtn" class="btn-elenco-personale">
-        <span class="elenco-icon">📋</span>
-        <span class="elenco-label">Elenco personale</span>
-        <span id="contatore-elenco" class="elenco-counter">0</span>
-      </button>
-      <button onclick="location.href='dashboard.html'" class="btn-dashboard">📈 Dashboard</button>
-      <button id="userBtn" class="btn-user">
-        <span class="user-icon">👤</span>
-        <span class="user-name">Accedi</span>
-      </button>
+      <div class="controls-primary">
+        <input id="search" placeholder="Cerca nome, luogo, referente..." />
+        <button id="advancedSearchBtn" title="Ricerca Avanzata">🔍+</button>
+        <select id="filter-prov"><option value="">Tutte le province</option></select>
+        <select id="sort-by">
+          <option value="struttura">Ordina per Nome</option>
+          <option value="luogo">Ordina per Luogo</option>
+          <option value="provincia">Ordina per Provincia</option>
+        </select>
+      </div>
+      <div class="controls-secondary">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <label><input type="checkbox" id="filter-casa" /> Casa</label>
+          <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="add-btn">➕ Aggiungi</button>
+          <button id="resetBtn">🔄 Reset</button>
+        </div>
+      </div>
+      <div class="controls-secondary">
+        <button id="exportBtn" class="btn-elenco-personale">
+          <span class="elenco-icon">📋</span>
+          <span class="elenco-label">Elenco personale</span>
+          <span id="contatore-elenco" class="elenco-counter">0</span>
+        </button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="location.href='dashboard.html'" class="btn-dashboard">📈 Dashboard</button>
+          <button id="userBtn" class="btn-user">
+            <span class="user-icon">👤</span>
+            <span class="user-name">Accedi</span>
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 

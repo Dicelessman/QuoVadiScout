@@ -278,12 +278,13 @@ function mostraRicercaAvanzata() {
     background: white;
     border-radius: 12px;
     padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
+    max-width: 95%;
+    max-height: 95%;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     position: relative;
-    min-width: 800px;
+    min-width: 320px;
+    width: 100%;
   `;
   
   // Header
@@ -329,7 +330,7 @@ function mostraRicercaAvanzata() {
   const form = document.createElement('form');
   form.style.cssText = `
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
     gap: 20px;
     margin-bottom: 20px;
   `;
@@ -380,6 +381,7 @@ function mostraRicercaAvanzata() {
   
   Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
     const categoriaDiv = document.createElement('div');
+    categoriaDiv.className = 'categoria-div';
     categoriaDiv.style.cssText = `
       background: #f8f9fa;
       border-radius: 8px;
@@ -388,6 +390,7 @@ function mostraRicercaAvanzata() {
     `;
     
     const categoriaTitle = document.createElement('h3');
+    categoriaTitle.className = 'categoria-title';
     categoriaTitle.textContent = nomeCategoria;
     categoriaTitle.style.cssText = `
       margin: 0 0 15px 0;
@@ -398,6 +401,7 @@ function mostraRicercaAvanzata() {
     
     campi.forEach(({ campo, tipo, placeholder }) => {
       const campoDiv = document.createElement('div');
+      campoDiv.className = 'campo-div';
       campoDiv.style.cssText = `
         margin-bottom: 12px;
       `;
@@ -423,6 +427,7 @@ function mostraRicercaAvanzata() {
         `;
         
         const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'checkbox-div';
         checkboxDiv.style.cssText = `
           display: flex;
           align-items: center;
@@ -843,8 +848,9 @@ async function eliminaStrutturaConConferma(id) {
     background: white;
     border-radius: 12px;
     padding: 30px;
-    max-width: 500px;
+    max-width: 95%;
     width: 90%;
+    min-width: 320px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     text-align: center;
   `;
@@ -1097,8 +1103,9 @@ function mostraSchermataLogin() {
     background: white;
     border-radius: 16px;
     padding: 40px;
-    max-width: 450px;
+    max-width: 95%;
     width: 90%;
+    min-width: 320px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     text-align: center;
   `;
@@ -1474,8 +1481,9 @@ function mostraConfermaLogout() {
     background: white;
     border-radius: 12px;
     padding: 30px;
-    max-width: 400px;
+    max-width: 95%;
     width: 90%;
+    min-width: 320px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     text-align: center;
   `;
@@ -1608,12 +1616,13 @@ function mostraGestioneElencoPersonale() {
     background: white;
     border-radius: 12px;
     padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
+    max-width: 95%;
+    max-height: 95%;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     position: relative;
-    min-width: 600px;
+    min-width: 320px;
+    width: 100%;
   `;
   
   // Header
@@ -1673,6 +1682,7 @@ function mostraGestioneElencoPersonale() {
   } else {
     // Lista strutture
     const listaContainer = document.createElement('div');
+    listaContainer.className = 'lista-container';
     listaContainer.style.cssText = `
       max-height: 400px;
       overflow-y: auto;
@@ -1683,6 +1693,7 @@ function mostraGestioneElencoPersonale() {
     
     struttureElenco.forEach((struttura, index) => {
       const itemDiv = document.createElement('div');
+      itemDiv.className = 'item-div';
       itemDiv.style.cssText = `
         display: flex;
         justify-content: space-between;
@@ -1711,6 +1722,7 @@ function mostraGestioneElencoPersonale() {
       `;
       
       const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'actions-div';
       actionsDiv.style.cssText = `
         display: flex;
         gap: 8px;
@@ -2013,6 +2025,8 @@ function mostraSchedaCompleta(strutturaId) {
     padding: 20px;
     max-width: 95%;
     max-height: 95%;
+    min-width: 320px;
+    width: 100%;
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     position: relative;

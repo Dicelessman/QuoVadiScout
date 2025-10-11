@@ -195,7 +195,6 @@ function renderStrutture(lista) {
       
       <div class="card-footer">
         <button class="btn-view" data-id="${s.id}">📋 Visualizza/Modifica</button>
-        <button class="btn-delete" data-id="${s.id}">🗑️ Elimina</button>
       </div>
     `;
     container.appendChild(card);
@@ -204,9 +203,6 @@ function renderStrutture(lista) {
   // Eventi pulsanti
   document.querySelectorAll(".btn-view").forEach((btn) => {
     btn.addEventListener("click", () => mostraSchedaCompleta(btn.dataset.id));
-  });
-  document.querySelectorAll(".btn-delete").forEach((btn) => {
-    btn.addEventListener("click", () => eliminaStruttura(btn.dataset.id));
   });
   document.querySelectorAll(".toggle-elenco").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -812,6 +808,150 @@ async function eliminaStruttura(id) {
     await deleteDoc(doc(db, "strutture", id));
     aggiornaLista();
   }
+}
+
+async function eliminaStrutturaConConferma(id) {
+  const struttura = strutture.find(s => s.id === id);
+  if (!struttura) {
+    console.error('Struttura non trovata:', id);
+    return;
+  }
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('confirmDeleteModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'confirmDeleteModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10003;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+  `;
+  
+  modalContent.innerHTML = `
+    <div style="margin-bottom: 20px;">
+      <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+      <h2 style="color: #dc3545; margin: 0 0 10px 0;">Conferma Eliminazione</h2>
+      <p style="color: #666; margin: 0;">
+        Sei sicuro di voler eliminare la struttura:
+      </p>
+    </div>
+    
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
+      <h3 style="margin: 0 0 8px 0; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</h3>
+      <p style="margin: 0; color: #666; font-size: 14px;">
+        📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+        ${struttura.Referente ? `<br>👤 Referente: ${struttura.Referente}` : ''}
+      </p>
+    </div>
+    
+    <div style="background: #fff5f5; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+      <p style="margin: 0; color: #721c24; font-size: 14px; font-weight: bold;">
+        ⚠️ ATTENZIONE: Questa azione non può essere annullata!
+      </p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="cancelDeleteBtn" 
+              style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+        ❌ Annulla
+      </button>
+      <button id="confirmDeleteBtn" 
+              style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">
+        🗑️ Elimina Definitivamente
+      </button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Event listeners
+  document.getElementById('cancelDeleteBtn').onclick = () => {
+    modal.remove();
+  };
+  
+  document.getElementById('confirmDeleteBtn').onclick = async () => {
+    try {
+      modal.remove();
+      // Chiudi anche la scheda completa se aperta
+      if (modalScheda) {
+        modalScheda.remove();
+      }
+      await deleteDoc(doc(db, "strutture", id));
+      aggiornaLista();
+      
+      // Mostra messaggio di successo
+      const successModal = document.createElement('div');
+      successModal.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10004;
+        animation: slideIn 0.3s ease-out;
+      `;
+      successModal.innerHTML = '✅ Struttura eliminata con successo!';
+      
+      // Aggiungi CSS per animazione
+      if (!document.getElementById('deleteSuccessStyles')) {
+        const style = document.createElement('style');
+        style.id = 'deleteSuccessStyles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      document.body.appendChild(successModal);
+      
+      // Rimuovi messaggio dopo 3 secondi
+      setTimeout(() => {
+        if (successModal.parentNode) {
+          successModal.remove();
+        }
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Errore nell\'eliminazione:', error);
+      alert('❌ Errore nell\'eliminazione: ' + error.message);
+    }
+  };
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
 }
 
 
@@ -1959,16 +2099,15 @@ function mostraSchedaCompleta(strutturaId) {
   };
   
   const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '✕';
+  closeBtn.innerHTML = '← Indietro';
   closeBtn.style.cssText = `
-    background: #dc3545;
+    background: #6c757d;
     color: white;
     border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    border-radius: 6px;
+    padding: 8px 16px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2207,6 +2346,58 @@ function mostraSchedaCompleta(strutturaId) {
     
     noteDiv.appendChild(campoDiv);
     content.appendChild(noteDiv);
+    
+    // Aggiungi bottone Elimina solo se non è una nuova struttura
+    if (!isNewStructure) {
+      const deleteSection = document.createElement('div');
+      deleteSection.style.cssText = `
+        background: #fff5f5;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid #dc3545;
+        grid-column: 1 / -1;
+        text-align: center;
+      `;
+      
+      const deleteTitle = document.createElement('h3');
+      deleteTitle.textContent = 'Zona Pericolosa';
+      deleteTitle.style.cssText = `
+        margin: 0 0 15px 0;
+        color: #dc3545;
+        font-size: 1.1rem;
+      `;
+      deleteSection.appendChild(deleteTitle);
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '🗑️ Elimina Struttura';
+      deleteBtn.style.cssText = `
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 12px 24px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        transition: background-color 0.2s;
+      `;
+      
+      deleteBtn.onmouseover = () => {
+        deleteBtn.style.background = '#c82333';
+      };
+      
+      deleteBtn.onmouseout = () => {
+        deleteBtn.style.background = '#dc3545';
+      };
+      
+      deleteBtn.onclick = () => {
+        eliminaStrutturaConConferma(strutturaId);
+      };
+      
+      deleteSection.appendChild(deleteBtn);
+      content.appendChild(deleteSection);
+    }
   }
   
   // Funzione per alternare modalità

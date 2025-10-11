@@ -142,7 +142,7 @@ function renderStrutture(lista) {
 
     card.innerHTML = `
       <div class="card-header">
-      <h3>${s.Struttura || "Senza nome"}</h3>
+      <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
         <div class="card-actions">
           <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
             ${isInElenco ? '⭐' : '☆'}
@@ -193,17 +193,17 @@ function renderStrutture(lista) {
         </div>` : ''}
       </div>
       
-      <div class="card-footer">
-        <button class="btn-view" data-id="${s.id}">📋 Visualizza/Modifica</button>
-      </div>
     `;
     container.appendChild(card);
   });
 
   // Eventi pulsanti
-  document.querySelectorAll(".btn-view").forEach((btn) => {
-    btn.addEventListener("click", () => mostraSchedaCompleta(btn.dataset.id));
+  document.querySelectorAll(".clickable-title").forEach((title) => {
+    title.addEventListener("click", () => {
+      mostraSchedaCompleta(title.dataset.id);
+    });
   });
+  
   document.querySelectorAll(".toggle-elenco").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.id;

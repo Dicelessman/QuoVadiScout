@@ -74,6 +74,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Ignora richieste da estensioni Chrome
+  if (url.protocol === 'chrome-extension:') {
+    return;
+  }
+  
+  // Ignora richieste POST (non supportate dal cache)
+  if (request.method !== 'GET') {
+    return;
+  }
+  
   // Strategia per risorse statiche
   if (isStaticAsset(request)) {
     event.respondWith(
@@ -115,6 +125,11 @@ self.addEventListener('fetch', (event) => {
 // Strategia Cache First (per risorse statiche)
 async function cacheFirst(request) {
   try {
+    // Verifica se la richiesta è cachabile
+    if (!isCacheableRequest(request)) {
+      return fetch(request);
+    }
+    
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       console.log('📦 Service Worker: Risposta da cache:', request.url);
@@ -145,6 +160,11 @@ async function cacheFirst(request) {
 // Strategia Network First (per API dinamiche)
 async function networkFirst(request) {
   try {
+    // Verifica se la richiesta è cachabile
+    if (!isCacheableRequest(request)) {
+      return fetch(request);
+    }
+    
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
@@ -200,6 +220,35 @@ function isFirebaseRequest(request) {
 function isImageRequest(request) {
   return request.destination === 'image' ||
          /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(request.url);
+}
+
+function isCacheableRequest(request) {
+  // Verifica se la richiesta può essere cachata
+  const url = new URL(request.url);
+  
+  // Non cachare richieste da estensioni
+  if (url.protocol === 'chrome-extension:' || 
+      url.protocol === 'moz-extension:' ||
+      url.protocol === 'safari-extension:') {
+    return false;
+  }
+  
+  // Non cachare richieste POST, PUT, DELETE
+  if (request.method !== 'GET') {
+    return false;
+  }
+  
+  // Non cachare richieste con credenziali
+  if (request.credentials === 'include') {
+    return false;
+  }
+  
+  // Non cachare richieste a domini esterni non sicuri
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    return false;
+  }
+  
+  return true;
 }
 
 // Gestione messaggi dal client

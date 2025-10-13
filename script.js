@@ -4685,12 +4685,16 @@ function mostraCaricamento() {
 
 // Inizializzazione nuova UI mobile-first
 function initializeNewUI() {
+  console.log('🎨 Inizializzazione UI mobile-first...');
+  
   // Menu toggle
   const menuToggle = document.getElementById('menuToggle');
   const mainMenu = document.getElementById('mainMenu');
   
   if (menuToggle && mainMenu) {
+    console.log('📱 Menu toggle trovato, aggiungo event listener');
     menuToggle.addEventListener('click', () => {
+      console.log('📱 Toggle menu clicked');
       const isOpen = !mainMenu.classList.contains('hidden');
       mainMenu.classList.toggle('hidden');
       menuToggle.setAttribute('aria-expanded', !isOpen);
@@ -4700,20 +4704,31 @@ function initializeNewUI() {
     // Chiudi menu cliccando fuori
     mainMenu.addEventListener('click', (e) => {
       if (e.target === mainMenu) {
+        console.log('📱 Menu chiuso cliccando fuori');
         mainMenu.classList.add('hidden');
         menuToggle.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
       }
     });
+  } else {
+    console.warn('⚠️ Menu toggle o main menu non trovati');
   }
   
   // Theme toggle
   const themeToggle = document.getElementById('themeToggle');
   if (themeToggle) {
+    console.log('🌙 Theme toggle trovato, aggiungo event listener');
     themeToggle.addEventListener('click', () => {
-      const themeManager = new ThemeManager();
-      themeManager.toggleTheme();
+      console.log('🌙 Toggle theme clicked');
+      if (typeof window.toggleTheme === 'function') {
+        window.toggleTheme();
+      } else {
+        const themeManager = new ThemeManager();
+        themeManager.toggleTheme();
+      }
     });
+  } else {
+    console.warn('⚠️ Theme toggle non trovato');
   }
   
   // Empty state button
@@ -6166,42 +6181,7 @@ function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
 }
 
 // === UI Initialization Functions ===
-function initializeNewUI() {
-  console.log('🎨 Inizializzazione UI mobile-first...');
-  
-  // Menu toggle functionality
-  const menuBtn = document.getElementById('menuBtn');
-  const mainMenu = document.getElementById('mainMenu');
-  
-  if (menuBtn && mainMenu) {
-    menuBtn.addEventListener('click', () => {
-      console.log('📱 Toggle menu clicked');
-      mainMenu.classList.toggle('hidden');
-    });
-  }
-  
-  // Theme toggle functionality
-  const themeBtn = document.getElementById('themeBtn');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-      console.log('🌙 Toggle theme clicked');
-      if (typeof window.toggleTheme === 'function') {
-        window.toggleTheme();
-      }
-    });
-  }
-  
-  // Empty state button
-  const emptyStateBtn = document.getElementById('emptyStateBtn');
-  if (emptyStateBtn) {
-    emptyStateBtn.addEventListener('click', () => {
-      console.log('➕ Empty state button clicked');
-      if (typeof window.aggiungiStruttura === 'function') {
-        window.aggiungiStruttura();
-      }
-    });
-  }
-}
+// Funzione initializeNewUI già definita sopra alla linea 4687
 
 function initializeUIEventListeners() {
   console.log('🎯 Inizializzazione event listeners UI...');

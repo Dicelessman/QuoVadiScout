@@ -167,6 +167,7 @@ function renderStrutture(lista) {
           <div class="tags">
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+            ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
           </div>
           
           <div class="contact-info">
@@ -204,7 +205,7 @@ function renderStrutture(lista) {
           <div class="tags">
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
-            ${s.stato ? `<span class="tag stato ${s.stato}">${getStatoIcon(s.stato)} ${getStatoLabel(s.stato)}</span>` : ''}
+            ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
           </div>
           
           <div class="card-details">
@@ -627,6 +628,23 @@ function mostraRicercaAvanzata() {
   const rightActions = document.createElement('div');
   rightActions.style.cssText = `display: flex; gap: 10px;`;
   
+  const saveBtn = document.createElement('button');
+  saveBtn.innerHTML = '💾 Salva Filtri';
+  saveBtn.type = 'button';
+  saveBtn.style.cssText = `
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  saveBtn.onclick = () => {
+    salvaFiltriAvanzati();
+  };
+  
   const searchBtn = document.createElement('button');
   searchBtn.innerHTML = '🔍 Cerca';
   searchBtn.type = 'button';
@@ -662,6 +680,7 @@ function mostraRicercaAvanzata() {
   cancelBtn.onclick = () => modal.remove();
   
   leftActions.appendChild(clearBtn);
+  rightActions.appendChild(saveBtn);
   rightActions.appendChild(cancelBtn);
   rightActions.appendChild(searchBtn);
   
@@ -723,6 +742,99 @@ function applicaRicercaAvanzata(filtriAvanzati) {
   
   // Mostra indicatore di ricerca avanzata attiva
   mostraIndicatoreRicercaAvanzata(Object.keys(filtriAvanzati).length);
+}
+
+// === Gestione Filtri Salvati ===
+async function salvaFiltriAvanzati() {
+  const filtri = raccogliFiltriAvanzati();
+  
+  if (Object.keys(filtri).length === 0) {
+    alert('Non ci sono filtri da salvare!');
+    return;
+  }
+  
+  const nomeFiltro = prompt('Inserisci un nome per questi filtri:');
+  if (!nomeFiltro || nomeFiltro.trim() === '') {
+    return;
+  }
+  
+  try {
+    if (!utenteCorrente) {
+      alert('Devi essere loggato per salvare i filtri!');
+      return;
+    }
+    
+    const filtroData = {
+      userId: utenteCorrente.uid,
+      nome: nomeFiltro.trim(),
+      filtri: filtri,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await addDoc(collection(db, "user_filters"), filtroData);
+    
+    // Log attività
+    await logActivity('filter_saved', nomeFiltro, utenteCorrente.uid, {
+      filterCount: Object.keys(filtri).length
+    });
+    
+    alert('✅ Filtri salvati con successo!');
+    console.log('✅ Filtri salvati:', nomeFiltro);
+  } catch (error) {
+    console.error('❌ Errore nel salvataggio filtri:', error);
+    alert('Errore nel salvataggio dei filtri');
+  }
+}
+
+async function caricaFiltriSalvati() {
+  try {
+    if (!utenteCorrente) return [];
+    
+    const filtersRef = collection(db, "user_filters");
+    const q = query(
+      filtersRef, 
+      where("userId", "==", utenteCorrente.uid),
+      orderBy("updatedAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Errore nel caricamento filtri salvati:', error);
+    return [];
+  }
+}
+
+async function applicaFiltriSalvati(filtroId) {
+  try {
+    const filtroDoc = await getDoc(doc(db, "user_filters", filtroId));
+    if (!filtroDoc.exists()) {
+      alert('Filtro non trovato!');
+      return;
+    }
+    
+    const filtroData = filtroDoc.data();
+    window.filtriAvanzatiAttivi = filtroData.filtri;
+    
+    // Reset paginazione
+    paginaCorrente = 1;
+    
+    // Applica i filtri
+    const listaFiltrata = filtra(strutture);
+    renderStrutture(listaFiltrata);
+    
+    // Mostra indicatore
+    mostraIndicatoreRicercaAvanzata(Object.keys(filtroData.filtri).length);
+    
+    console.log('✅ Filtri applicati:', filtroData.nome);
+  } catch (error) {
+    console.error('Errore nell\'applicazione filtri salvati:', error);
+    alert('Errore nell\'applicazione dei filtri');
+  }
 }
 
 function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
@@ -3471,4 +3583,1035 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("modal").addEventListener("click", (e) => {
     if (e.target.id === "modal") chiudiModale();
   });
+  
+  // Carica filtri salvati
+  await caricaFiltriSalvatiDropdown();
 });
+
+// === Gestione Filtri Salvati Dropdown ===
+async function caricaFiltriSalvatiDropdown() {
+  try {
+    const filtriSalvati = await caricaFiltriSalvati();
+    const dropdown = document.getElementById('saved-filters');
+    
+    if (!dropdown) return;
+    
+    // Pulisci dropdown
+    dropdown.innerHTML = '<option value="">Filtri salvati</option>';
+    
+    if (filtriSalvati.length > 0) {
+      filtriSalvati.forEach(filtro => {
+        const option = document.createElement('option');
+        option.value = filtro.id;
+        option.textContent = `${filtro.nome} (${Object.keys(filtro.filtri).length} filtri)`;
+        dropdown.appendChild(option);
+      });
+    }
+    
+    // Event listener per applicare filtri salvati
+    dropdown.addEventListener('change', async (e) => {
+      if (e.target.value) {
+        await applicaFiltriSalvati(e.target.value);
+        e.target.value = ''; // Reset dropdown
+      }
+    });
+    
+  } catch (error) {
+    console.error('Errore nel caricamento filtri salvati:', error);
+  }
+}
+
+// === Modale Opzioni Esportazione ===
+function mostraOpzioniEsportazioneGenerale() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('exportOptionsModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'exportOptionsModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 400px;
+    width: 100%;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '📊 Opzioni Esportazione';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Form opzioni
+  const form = document.createElement('form');
+  form.style.cssText = `
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  `;
+  
+  // Tipo di esportazione
+  const tipoDiv = document.createElement('div');
+  tipoDiv.style.cssText = `
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #2f6b2f;
+  `;
+  
+  const tipoTitle = document.createElement('h3');
+  tipoTitle.textContent = 'Tipo di Esportazione';
+  tipoTitle.style.cssText = `
+    margin: 0 0 15px 0;
+    color: #2f6b2f;
+    font-size: 1.1rem;
+  `;
+  tipoDiv.appendChild(tipoTitle);
+  
+  const tipoOptions = document.createElement('div');
+  tipoOptions.style.cssText = `
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  `;
+  
+  const excelOption = document.createElement('label');
+  excelOption.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 150px;
+  `;
+  excelOption.innerHTML = `
+    <input type="radio" name="exportType" value="excel" checked>
+    <span>📊 Excel</span>
+  `;
+  
+  const pdfOption = document.createElement('label');
+  pdfOption.style.cssText = `
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 150px;
+  `;
+  pdfOption.innerHTML = `
+    <input type="radio" name="exportType" value="pdf">
+    <span>📄 PDF</span>
+  `;
+  
+  tipoOptions.appendChild(excelOption);
+  tipoOptions.appendChild(pdfOption);
+  tipoDiv.appendChild(tipoOptions);
+  
+  // Layout
+  const layoutDiv = document.createElement('div');
+  layoutDiv.style.cssText = `
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #17a2b8;
+  `;
+  
+  const layoutTitle = document.createElement('h3');
+  layoutTitle.textContent = 'Layout';
+  layoutTitle.style.cssText = `
+    margin: 0 0 15px 0;
+    color: #17a2b8;
+    font-size: 1.1rem;
+  `;
+  layoutDiv.appendChild(layoutTitle);
+  
+  const layoutSelect = document.createElement('select');
+  layoutSelect.id = 'exportLayout';
+  layoutSelect.style.cssText = `
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  `;
+  
+  const layoutOptions = [
+    { value: 'completo', text: 'Completo - Tutti i campi' },
+    { value: 'compatto', text: 'Compatto - Campi essenziali' },
+    { value: 'contatti', text: 'Solo Contatti' },
+    { value: 'categorie', text: 'Per Categorie (Excel)' }
+  ];
+  
+  layoutOptions.forEach(option => {
+    const optionElement = document.createElement('option');
+    optionElement.value = option.value;
+    optionElement.textContent = option.text;
+    layoutSelect.appendChild(optionElement);
+  });
+  
+  layoutDiv.appendChild(layoutSelect);
+  
+  // Opzioni aggiuntive
+  const optionsDiv = document.createElement('div');
+  optionsDiv.style.cssText = `
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #28a745;
+  `;
+  
+  const optionsTitle = document.createElement('h3');
+  optionsTitle.textContent = 'Opzioni Aggiuntive';
+  optionsTitle.style.cssText = `
+    margin: 0 0 15px 0;
+    color: #28a745;
+    font-size: 1.1rem;
+  `;
+  optionsDiv.appendChild(optionsTitle);
+  
+  const checkboxes = [
+    { id: 'includeImages', label: 'Includi immagini', description: 'Aggiungi link alle immagini' },
+    { id: 'includeNotes', label: 'Includi note', description: 'Note generali delle strutture' },
+    { id: 'includePersonalNotes', label: 'Includi note personali', description: 'Le tue note personali' },
+    { id: 'onlyPersonalList', label: 'Solo elenco personale', description: 'Esporta solo le strutture nell\'elenco personale' }
+  ];
+  
+  checkboxes.forEach(checkbox => {
+    const checkboxDiv = document.createElement('div');
+    checkboxDiv.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    `;
+    
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = checkbox.id;
+    input.style.cssText = `
+      transform: scale(1.1);
+    `;
+    
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.style.cssText = `
+      cursor: pointer;
+      flex: 1;
+    `;
+    label.innerHTML = `
+      <strong>${checkbox.label}</strong><br>
+      <small style="color: #666;">${checkbox.description}</small>
+    `;
+    
+    checkboxDiv.appendChild(input);
+    checkboxDiv.appendChild(label);
+    optionsDiv.appendChild(checkboxDiv);
+  });
+  
+  // Footer con pulsanti
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+    gap: 10px;
+  `;
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.innerHTML = '❌ Annulla';
+  cancelBtn.type = 'button';
+  cancelBtn.style.cssText = `
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  cancelBtn.onclick = () => modal.remove();
+  
+  const exportBtn = document.createElement('button');
+  exportBtn.innerHTML = '📊 Esporta';
+  exportBtn.type = 'button';
+  exportBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  exportBtn.onclick = () => {
+    eseguiEsportazione();
+    modal.remove();
+  };
+  
+  footer.appendChild(cancelBtn);
+  footer.appendChild(exportBtn);
+  
+  // Assembla il modal
+  form.appendChild(tipoDiv);
+  form.appendChild(layoutDiv);
+  form.appendChild(optionsDiv);
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(form);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+function eseguiEsportazione() {
+  const exportType = document.querySelector('input[name="exportType"]:checked').value;
+  const layout = document.getElementById('exportLayout').value;
+  const includeImages = document.getElementById('includeImages').checked;
+  const includeNotes = document.getElementById('includeNotes').checked;
+  const includePersonalNotes = document.getElementById('includePersonalNotes').checked;
+  const onlyPersonalList = document.getElementById('onlyPersonalList').checked;
+  
+  const options = {
+    layout,
+    includeImages,
+    includeNotes,
+    includePersonalNotes,
+    onlyPersonalList
+  };
+  
+  try {
+    if (exportType === 'excel') {
+      if (typeof esportaExcel === 'function') {
+        esportaExcel(strutture, options);
+      } else {
+        alert('Funzione esportazione Excel non disponibile');
+      }
+    } else if (exportType === 'pdf') {
+      if (typeof esportaPDF === 'function') {
+        esportaPDF(strutture, options);
+      } else {
+        alert('Funzione esportazione PDF non disponibile');
+      }
+    }
+  } catch (error) {
+    console.error('Errore durante esportazione:', error);
+    alert('Errore durante l\'esportazione: ' + error.message);
+  }
+}
+
+// === Feed Attività ===
+async function mostraFeedAttivita() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('feedAttivitaModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'feedAttivitaModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95%;
+    max-height: 95%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 400px;
+    width: 100%;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '📋 Feed Attività';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Filtri
+  const filtriDiv = document.createElement('div');
+  filtriDiv.style.cssText = `
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  `;
+  
+  const tipoSelect = document.createElement('select');
+  tipoSelect.id = 'filtroTipo';
+  tipoSelect.style.cssText = `
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  `;
+  tipoSelect.innerHTML = `
+    <option value="">Tutti i tipi</option>
+    <option value="structure_created">Struttura creata</option>
+    <option value="structure_updated">Struttura modificata</option>
+    <option value="structure_deleted">Struttura eliminata</option>
+    <option value="note_created">Nota creata</option>
+    <option value="note_deleted">Nota eliminata</option>
+    <option value="filter_saved">Filtro salvato</option>
+  `;
+  
+  const periodoSelect = document.createElement('select');
+  periodoSelect.id = 'filtroPeriodo';
+  periodoSelect.style.cssText = `
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  `;
+  periodoSelect.innerHTML = `
+    <option value="today">Oggi</option>
+    <option value="week">Ultima settimana</option>
+    <option value="month">Ultimo mese</option>
+    <option value="all">Tutto</option>
+  `;
+  
+  const refreshBtn = document.createElement('button');
+  refreshBtn.innerHTML = '🔄 Aggiorna';
+  refreshBtn.style.cssText = `
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  refreshBtn.onclick = () => caricaAttivita();
+  
+  filtriDiv.appendChild(document.createElement('label')).textContent = 'Tipo:';
+  filtriDiv.appendChild(tipoSelect);
+  filtriDiv.appendChild(document.createElement('label')).textContent = 'Periodo:';
+  filtriDiv.appendChild(periodoSelect);
+  filtriDiv.appendChild(refreshBtn);
+  
+  // Contenuto attività
+  const contentDiv = document.createElement('div');
+  contentDiv.id = 'attivitaContent';
+  contentDiv.style.cssText = `
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px;
+  `;
+  
+  // Assembla il modal
+  modalContent.appendChild(header);
+  modalContent.appendChild(filtriDiv);
+  modalContent.appendChild(contentDiv);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Carica attività iniziali
+  await caricaAttivita();
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+async function caricaAttivita() {
+  try {
+    const contentDiv = document.getElementById('attivitaContent');
+    if (!contentDiv) return;
+    
+    contentDiv.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Caricamento attività...</div>';
+    
+    const tipoFiltro = document.getElementById('filtroTipo')?.value || '';
+    const periodoFiltro = document.getElementById('filtroPeriodo')?.value || 'week';
+    
+    // Calcola data limite
+    let dataLimite = new Date();
+    switch (periodoFiltro) {
+      case 'today':
+        dataLimite.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        dataLimite.setDate(dataLimite.getDate() - 7);
+        break;
+      case 'month':
+        dataLimite.setMonth(dataLimite.getMonth() - 1);
+        break;
+      case 'all':
+        dataLimite = null;
+        break;
+    }
+    
+    // Carica attività da Firestore
+    const activitiesRef = collection(db, "activity_log");
+    let q = query(activitiesRef, orderBy("timestamp", "desc"));
+    
+    if (dataLimite) {
+      q = query(activitiesRef, where("timestamp", ">=", dataLimite), orderBy("timestamp", "desc"));
+    }
+    
+    const snapshot = await getDocs(q);
+    let attivita = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Filtra per tipo se specificato
+    if (tipoFiltro) {
+      attivita = attivita.filter(a => a.action === tipoFiltro);
+    }
+    
+    // Limita a 50 attività
+    attivita = attivita.slice(0, 50);
+    
+    if (attivita.length === 0) {
+      contentDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Nessuna attività trovata</div>';
+      return;
+    }
+    
+    // Renderizza attività
+    contentDiv.innerHTML = attivita.map(attivita => {
+      const icona = getAttivitaIcona(attivita.action);
+      const descrizione = getAttivitaDescrizione(attivita);
+      const data = new Date(attivita.timestamp).toLocaleString('it-IT');
+      
+      return `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+          <div style="font-size: 24px;">${icona}</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 500; margin-bottom: 4px;">${descrizione}</div>
+            <div style="font-size: 12px; color: #666;">${data}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (error) {
+    console.error('Errore nel caricamento attività:', error);
+    const contentDiv = document.getElementById('attivitaContent');
+    if (contentDiv) {
+      contentDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Errore nel caricamento delle attività</div>';
+    }
+  }
+}
+
+function getAttivitaIcona(action) {
+  const icone = {
+    'structure_created': '➕',
+    'structure_updated': '✏️',
+    'structure_deleted': '🗑️',
+    'note_created': '📝',
+    'note_deleted': '🗑️',
+    'filter_saved': '💾'
+  };
+  return icone[action] || '📋';
+}
+
+function getAttivitaDescrizione(attivita) {
+  const descrizioni = {
+    'structure_created': 'Nuova struttura creata',
+    'structure_updated': 'Struttura modificata',
+    'structure_deleted': 'Struttura eliminata',
+    'note_created': 'Nota personale creata',
+    'note_deleted': 'Nota personale eliminata',
+    'filter_saved': 'Filtro salvato'
+  };
+  
+  let descrizione = descrizioni[attivita.action] || 'Attività sconosciuta';
+  
+  if (attivita.details && attivita.details.structureName) {
+    descrizione += `: ${attivita.details.structureName}`;
+  }
+  
+  return descrizione;
+}
+
+// === Geocoding Automatico ===
+async function geocodificaStruttura(struttura) {
+  try {
+    if (!struttura.Indirizzo && !struttura.Luogo) {
+      console.log('⚠️ Nessun indirizzo disponibile per geocoding');
+      return null;
+    }
+    
+    // Costruisci query di ricerca
+    let query = '';
+    if (struttura.Indirizzo) {
+      query = `${struttura.Indirizzo}, ${struttura.Luogo || ''}, ${struttura.Prov || ''}, Italia`;
+    } else if (struttura.Luogo) {
+      query = `${struttura.Luogo}, ${struttura.Prov || ''}, Italia`;
+    }
+    
+    query = query.replace(/,\s*,/g, ',').replace(/,$/, '').trim();
+    
+    console.log(`🔍 Geocoding per: ${query}`);
+    
+    // Usa Nominatim (OpenStreetMap) per geocoding gratuito
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=it`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      const result = data[0];
+      const coordinates = {
+        lat: parseFloat(result.lat),
+        lng: parseFloat(result.lon)
+      };
+      
+      console.log(`✅ Coordinate trovate: ${coordinates.lat}, ${coordinates.lng}`);
+      return coordinates;
+    } else {
+      console.log('❌ Nessun risultato trovato per:', query);
+      return null;
+    }
+    
+  } catch (error) {
+    console.error('❌ Errore nel geocoding:', error);
+    return null;
+  }
+}
+
+async function geocodificaTutteStrutture() {
+  console.log('🌍 Avvio geocoding di tutte le strutture...');
+  
+  const strutture = window.strutture || [];
+  let processed = 0;
+  let success = 0;
+  
+  for (const struttura of strutture) {
+    // Salta se già ha coordinate
+    if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
+      console.log(`⏭️ Struttura ${struttura.Struttura} già ha coordinate`);
+      continue;
+    }
+    
+    const coordinates = await geocodificaStruttura(struttura);
+    
+    if (coordinates) {
+      try {
+        // Aggiorna la struttura su Firestore
+        await updateDoc(doc(db, "strutture", struttura.id), {
+          coordinate: coordinates,
+          lastModified: new Date(),
+          lastModifiedBy: utenteCorrente?.uid || null
+        });
+        
+        // Aggiorna anche l'array locale
+        struttura.coordinate = coordinates;
+        success++;
+        
+        console.log(`✅ Coordinate salvate per: ${struttura.Struttura}`);
+      } catch (error) {
+        console.error(`❌ Errore nel salvataggio coordinate per ${struttura.Struttura}:`, error);
+      }
+    }
+    
+    processed++;
+    
+    // Pausa per evitare rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  
+  console.log(`🏁 Geocoding completato: ${success} successi su ${processed} strutture processate`);
+  
+  // Mostra notifica di completamento
+  if (success > 0) {
+    alert(`✅ Geocoding completato!\n${success} strutture aggiornate con coordinate GPS`);
+  } else {
+    alert('⚠️ Nessuna struttura è stata aggiornata con coordinate GPS');
+  }
+}
+
+// Funzione per geocoding manuale di una singola struttura
+async function geocodificaSingolaStruttura(strutturaId) {
+  const struttura = strutture.find(s => s.id === strutturaId);
+  if (!struttura) {
+    alert('Struttura non trovata!');
+    return;
+  }
+  
+  console.log(`🔍 Geocoding manuale per: ${struttura.Struttura}`);
+  
+  const coordinates = await geocodificaStruttura(struttura);
+  
+  if (coordinates) {
+    try {
+      // Aggiorna la struttura su Firestore
+      await updateDoc(doc(db, "strutture", strutturaId), {
+        coordinate: coordinates,
+        lastModified: new Date(),
+        lastModifiedBy: utenteCorrente?.uid || null
+      });
+      
+      // Aggiorna anche l'array locale
+      struttura.coordinate = coordinates;
+      
+      alert(`✅ Coordinate aggiornate per: ${struttura.Struttura}\nLat: ${coordinates.lat}, Lng: ${coordinates.lng}`);
+      
+      // Log attività
+      await logActivity('geocoding_updated', strutturaId, utenteCorrente?.uid, {
+        coordinates: coordinates
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore nel salvataggio coordinate:', error);
+      alert('Errore nel salvataggio delle coordinate');
+    }
+  } else {
+    alert('❌ Impossibile trovare coordinate per questa struttura');
+  }
+}
+
+// === Geolocalizzazione Utente ===
+async function trovaVicinoAMe() {
+  try {
+    console.log('📍 Richiesta geolocalizzazione utente...');
+    
+    // Verifica se la geolocalizzazione è supportata
+    if (!navigator.geolocation) {
+      alert('❌ La geolocalizzazione non è supportata dal tuo browser');
+      return;
+    }
+    
+    // Richiedi permesso per la geolocalizzazione
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minuti
+      });
+    });
+    
+    const userLat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+    
+    console.log(`✅ Posizione utente: ${userLat}, ${userLng}`);
+    
+    // Calcola distanze per tutte le strutture
+    const struttureConDistanza = strutture
+      .filter(struttura => struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng)
+      .map(struttura => {
+        const distanza = calcolaDistanza(userLat, userLng, struttura.coordinate.lat, struttura.coordinate.lng);
+        return {
+          ...struttura,
+          distanza: distanza
+        };
+      })
+      .sort((a, b) => a.distanza - b.distanza);
+    
+    if (struttureConDistanza.length === 0) {
+      alert('❌ Nessuna struttura con coordinate GPS disponibile');
+      return;
+    }
+    
+    // Mostra le prime 10 strutture più vicine
+    const struttureVicine = struttureConDistanza.slice(0, 10);
+    
+    // Crea modale con risultati
+    mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng);
+    
+  } catch (error) {
+    console.error('❌ Errore nella geolocalizzazione:', error);
+    
+    if (error.code === error.PERMISSION_DENIED) {
+      alert('❌ Permesso geolocalizzazione negato. Abilita la geolocalizzazione per utilizzare questa funzione.');
+    } else if (error.code === error.POSITION_UNAVAILABLE) {
+      alert('❌ Posizione non disponibile. Verifica la connessione GPS.');
+    } else if (error.code === error.TIMEOUT) {
+      alert('❌ Timeout nella geolocalizzazione. Riprova più tardi.');
+    } else {
+      alert('❌ Errore nella geolocalizzazione: ' + error.message);
+    }
+  }
+}
+
+function calcolaDistanza(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Raggio della Terra in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('vicinoAMeModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'vicinoAMeModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 400px;
+    width: 100%;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '📍 Strutture Vicino a Te';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Lista strutture
+  const listaDiv = document.createElement('div');
+  listaDiv.style.cssText = `
+    max-height: 400px;
+    overflow-y: auto;
+  `;
+  
+  if (struttureVicine.length === 0) {
+    listaDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Nessuna struttura trovata nelle vicinanze</div>';
+  } else {
+    listaDiv.innerHTML = struttureVicine.map((struttura, index) => `
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;" onclick="mostraSchedaCompleta('${struttura.id}')">
+        <div style="font-size: 24px; color: #2f6b2f; font-weight: bold;">${index + 1}</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 500; margin-bottom: 4px; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</div>
+          <div style="font-size: 0.9rem; color: #666; margin-bottom: 4px;">
+            📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+          </div>
+          <div style="font-size: 0.8rem; color: #888;">
+            ${struttura.Casa ? '🏠 Casa' : ''} ${struttura.Terreno ? '🌱 Terreno' : ''}
+            ${!struttura.Casa && !struttura.Terreno ? '❓ Senza categoria' : ''}
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 1.2rem; font-weight: bold; color: #2f6b2f;">${struttura.distanza.toFixed(1)} km</div>
+          <div style="font-size: 0.8rem; color: #666;">distanza</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Footer
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+  `;
+  
+  const mapBtn = document.createElement('button');
+  mapBtn.innerHTML = '🗺️ Visualizza su Mappa';
+  mapBtn.style.cssText = `
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  mapBtn.onclick = () => {
+    modal.remove();
+    // Apri dashboard con filtri per strutture vicine
+    window.open(`dashboard.html?filter=nearby&lat=${userLat}&lng=${userLng}`, '_blank');
+  };
+  
+  footer.appendChild(mapBtn);
+  
+  // Assembla il modal
+  modalContent.appendChild(header);
+  modalContent.appendChild(listaDiv);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}

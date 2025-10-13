@@ -1692,3 +1692,48 @@ button:focus,
     padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
+
+/* Badge di stato strutture */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 4px 0;
+}
+
+.status-badge.attiva {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-badge.temporaneamente_non_attiva {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-badge.non_piu_attiva {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Icone per stati */
+.status-badge.attiva::before {
+  content: "🟢";
+}
+
+.status-badge.temporaneamente_non_attiva::before {
+  content: "🟡";
+}
+
+.status-badge.non_piu_attiva::before {
+  content: "🔴";
+}

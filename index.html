@@ -24,6 +24,9 @@
         <input id="search" placeholder="Cerca nome, luogo, referente..." />
         <button id="advancedSearchBtn" title="Ricerca Avanzata">🔍+</button>
         <select id="filter-prov"><option value="">Tutte le province</option></select>
+        <select id="saved-filters" title="Filtri Salvati">
+          <option value="">Filtri salvati</option>
+        </select>
         <select id="sort-by">
           <option value="struttura">Ordina per Nome</option>
           <option value="luogo">Ordina per Luogo</option>
@@ -59,6 +62,9 @@
           <span id="contatore-elenco" class="elenco-counter">0</span>
         </button>
         <div style="display:flex;gap:8px;">
+          <button onclick="mostraFeedAttivita()" class="btn-activity" title="Feed Attività">📋</button>
+          <button onclick="trovaVicinoAMe()" class="btn-location" title="Trova Vicino a Me">📍</button>
+          <button onclick="geocodificaTutteStrutture()" class="btn-geocoding" title="Geocoding Automatico">🌍</button>
           <button onclick="mostraOpzioniEsportazioneGenerale()" class="btn-export">📊 Export</button>
           <button onclick="location.href='dashboard.html'" class="btn-dashboard">📈 Dashboard</button>
           <button id="userBtn" class="btn-user">

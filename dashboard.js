@@ -25,6 +25,7 @@ const colRef = collection(db, "strutture");
 let map;
 let markers = [];
 let currentFilter = 'all';
+let markerCluster;
 
 // === Caricamento Dati ===
 async function caricaStrutture() {
@@ -145,16 +146,19 @@ function aggiornaStatisticheProvince() {
 
 // === Inizializzazione Mappa ===
 function initMap() {
-  console.log('🗺️ Inizializzazione Google Maps...');
+  console.log('🗺️ Inizializzazione Leaflet Map...');
   
   try {
-    map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 6,
-      center: { lat: 41.9028, lng: 12.4964 }, // Centro Italia
-      mapTypeId: 'roadmap'
-    });
+    // Inizializza la mappa Leaflet
+    map = L.map('map').setView([41.9028, 12.4964], 6); // Centro Italia
     
-    console.log('✅ Mappa Google Maps creata');
+    // Aggiungi layer OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+    
+    console.log('✅ Mappa Leaflet creata');
     
     // Aggiungi marker per ogni struttura
     aggiungiMarkers();
@@ -173,7 +177,7 @@ function initMap() {
       <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666;">
         <div style="text-align: center;">
           <h3>⚠️ Errore nel caricamento della mappa</h3>
-          <p>Impossibile caricare Google Maps</p>
+          <p>Impossibile caricare Leaflet Map</p>
         </div>
       </div>
     `;
@@ -190,7 +194,8 @@ function aggiungiMarkers() {
   }
   
   console.log('📍 Aggiunta marker per le strutture...');
-  markers.forEach(marker => marker.setMap(null));
+  // Rimuovi marker esistenti
+  markers.forEach(marker => map.removeLayer(marker));
   markers = [];
   
   let markerCount = 0;
@@ -202,14 +207,11 @@ function aggiungiMarkers() {
     // Prova a estrarre coordinate se disponibili
     let lat, lng;
     
-    if (struttura.Coordinate) {
-      const coords = struttura.Coordinate.split(',');
-      if (coords.length === 2) {
-        lat = parseFloat(coords[0].trim());
-        lng = parseFloat(coords[1].trim());
-        if (!isNaN(lat) && !isNaN(lng)) {
-          coordinateCount++;
-        }
+    if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
+      lat = struttura.coordinate.lat;
+      lng = struttura.coordinate.lng;
+      if (!isNaN(lat) && !isNaN(lng)) {
+        coordinateCount++;
       }
     }
     
@@ -224,46 +226,41 @@ function aggiungiMarkers() {
     }
     
     if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-      const marker = new google.maps.Marker({
-        position: { lat, lng },
-        map: map,
-        title: struttura.Struttura || 'Struttura senza nome',
-        icon: getMarkerIcon(struttura),
-        // Aggiungi dati della struttura al marker per i filtri
-        struttura: struttura
+      const marker = L.marker([lat, lng], {
+        title: struttura.Struttura || 'Struttura senza nome'
       });
       
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 10px; max-width: 300px;">
-            <h4 style="margin: 0 0 8px 0; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</h4>
-            <p style="margin: 4px 0;"><strong>📍 Luogo:</strong> ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>👤 Referente:</strong> ${struttura.Referente || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>📞 Contatto:</strong> ${struttura.Contatto || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>📧 Email:</strong> ${struttura.Email || 'N/A'}</p>
-            <p style="margin: 4px 0;"><strong>🌐 Sito:</strong> ${struttura.Sito || 'N/A'}</p>
-            ${struttura.Letti ? `<p style="margin: 4px 0;"><strong>🛏️ Letti:</strong> ${struttura.Letti}</p>` : ''}
-            ${struttura.Branco ? `<p style="margin: 4px 0;"><strong>🐺 Branco:</strong> ${struttura.Branco}</p>` : ''}
-            ${struttura.Reparto ? `<p style="margin: 4px 0;"><strong>🏕️ Reparto:</strong> ${struttura.Reparto}</p>` : ''}
-            ${struttura.Compagnia ? `<p style="margin: 4px 0;"><strong>🎯 Compagnia:</strong> ${struttura.Compagnia}</p>` : ''}
-            ${struttura.Info ? `<p style="margin: 4px 0; font-size: 0.9rem; color: #666;">${struttura.Info}</p>` : ''}
-            <div style="margin-top: 8px;">
-              ${struttura.Casa ? '<span style="background: #1976d2; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-right: 4px;">🏠 Casa</span>' : ''}
-              ${struttura.Terreno ? '<span style="background: #4caf50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">🌱 Terreno</span>' : ''}
-              ${!struttura.Casa && !struttura.Terreno ? '<span style="background: #9e9e9e; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">❓ Senza categoria</span>' : ''}
-            </div>
-            <div style="margin-top: 10px; text-align: center;">
-              <button onclick="mostraSchedaCompleta('${struttura.id || index}')" style="background: #2f6b2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                📋 Visualizza/Modifica
-              </button>
-            </div>
+      const popupContent = `
+        <div style="padding: 10px; max-width: 300px;">
+          <h4 style="margin: 0 0 8px 0; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</h4>
+          <p style="margin: 4px 0;"><strong>📍 Luogo:</strong> ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</p>
+          <p style="margin: 4px 0;"><strong>👤 Referente:</strong> ${struttura.Referente || 'N/A'}</p>
+          <p style="margin: 4px 0;"><strong>📞 Contatto:</strong> ${struttura.Contatto || 'N/A'}</p>
+          <p style="margin: 4px 0;"><strong>📧 Email:</strong> ${struttura.Email || 'N/A'}</p>
+          <p style="margin: 4px 0;"><strong>🌐 Sito:</strong> ${struttura.Sito || 'N/A'}</p>
+          ${struttura.Letti ? `<p style="margin: 4px 0;"><strong>🛏️ Letti:</strong> ${struttura.Letti}</p>` : ''}
+          ${struttura.Branco ? `<p style="margin: 4px 0;"><strong>🐺 Branco:</strong> ${struttura.Branco}</p>` : ''}
+          ${struttura.Reparto ? `<p style="margin: 4px 0;"><strong>🏕️ Reparto:</strong> ${struttura.Reparto}</p>` : ''}
+          ${struttura.Compagnia ? `<p style="margin: 4px 0;"><strong>🎯 Compagnia:</strong> ${struttura.Compagnia}</p>` : ''}
+          ${struttura.Info ? `<p style="margin: 4px 0; font-size: 0.9rem; color: #666;">${struttura.Info}</p>` : ''}
+          <div style="margin-top: 8px;">
+            ${struttura.Casa ? '<span style="background: #1976d2; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px; margin-right: 4px;">🏠 Casa</span>' : ''}
+            ${struttura.Terreno ? '<span style="background: #4caf50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">🌱 Terreno</span>' : ''}
+            ${!struttura.Casa && !struttura.Terreno ? '<span style="background: #9e9e9e; color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">❓ Senza categoria</span>' : ''}
           </div>
-        `
-      });
+          <div style="margin-top: 10px; text-align: center;">
+            <button onclick="mostraSchedaCompleta('${struttura.id || index}')" style="background: #2f6b2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+              📋 Visualizza/Modifica
+            </button>
+          </div>
+        </div>
+      `;
       
-      marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-      });
+      marker.bindPopup(popupContent);
+      marker.addTo(map);
+      
+      // Aggiungi dati della struttura al marker per i filtri
+      marker.struttura = struttura;
       
       markers.push(marker);
       markerCount++;
@@ -313,7 +310,7 @@ function filtraMarkers(tipo) {
     const struttura = marker.struttura;
     
     if (!struttura) {
-      marker.setVisible(false);
+      map.removeLayer(marker);
       return;
     }
     
@@ -333,8 +330,16 @@ function filtraMarkers(tipo) {
         break;
     }
     
-    marker.setVisible(show);
-    if (show) visibleCount++;
+    if (show) {
+      if (!map.hasLayer(marker)) {
+        marker.addTo(map);
+      }
+      visibleCount++;
+    } else {
+      if (map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      }
+    }
   });
   
   console.log(`✅ Filtro applicato: ${visibleCount} marker visibili su ${markers.length} totali`);

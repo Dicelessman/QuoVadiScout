@@ -1668,8 +1668,11 @@ async function eliminaNota(notaId) {
   }
 }
 
-// Rendi la funzione accessibile globalmente
+// Rendi le funzioni accessibili globalmente
 window.eliminaNota = eliminaNota;
+window.mostraFeedAttivita = mostraFeedAttivita;
+window.trovaVicinoAMe = trovaVicinoAMe;
+window.geocodificaTutteStrutture = geocodificaTutteStrutture;
 
 // === Gestione Utenti Firebase ===
 let utenteCorrente = null;

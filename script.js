@@ -2382,6 +2382,23 @@ function mostraGestioneElencoPersonale() {
           mostraSchedaCompleta(struttura.id);
         };
         
+        const notesBtn = document.createElement('button');
+        notesBtn.innerHTML = '📝 Note';
+        notesBtn.title = 'Note personali';
+        notesBtn.style.cssText = `
+          background: #6f42c1;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 12px;
+          cursor: pointer;
+          font-size: 12px;
+        `;
+        notesBtn.onclick = () => {
+          modal.remove();
+          mostraNotePersonali(struttura.id);
+        };
+        
         const removeBtn = document.createElement('button');
         removeBtn.innerHTML = '🗑️ Rimuovi';
         removeBtn.title = 'Rimuovi dall\'elenco';
@@ -2401,6 +2418,7 @@ function mostraGestioneElencoPersonale() {
         };
         
         actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(notesBtn);
         actionsDiv.appendChild(removeBtn);
         
         headerDiv.appendChild(titleDiv);

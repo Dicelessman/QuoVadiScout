@@ -950,6 +950,8 @@ async function applicaFiltriSalvati(filtroId) {
 }
 
 function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
+  console.log('🔍 Mostra indicatore ricerca avanzata:', numeroFiltri);
+  
   // Rimuovi indicatore esistente
   const existingIndicator = document.getElementById('indicatore-ricerca-avanzata');
   if (existingIndicator) {
@@ -966,10 +968,12 @@ function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
       border-radius: 20px;
       font-size: 12px;
       font-weight: 500;
-      margin-left: 8px;
+      margin: 8px auto;
       display: flex;
       align-items: center;
       gap: 6px;
+      justify-content: center;
+      max-width: 300px;
     `;
     indicator.innerHTML = `
       🔍 Ricerca avanzata attiva (${numeroFiltri} filtri)
@@ -978,18 +982,47 @@ function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
     
     // Trova un elemento appropriato nella nuova UI per mostrare l'indicatore
     const searchSection = document.querySelector('.search-section');
-    const quickFilters = document.querySelector('.quick-filters');
     const resultsHeader = document.querySelector('.results-header');
+    const mainContent = document.querySelector('.main-content');
     
-    if (resultsHeader) {
-      resultsHeader.appendChild(indicator);
-    } else if (quickFilters) {
-      quickFilters.appendChild(indicator);
-    } else if (searchSection) {
-      searchSection.appendChild(indicator);
+    // Prova diversi elementi in ordine di priorità
+    let targetElement = null;
+    
+    if (searchSection) {
+      // Aggiungi dopo la search section
+      targetElement = searchSection.parentNode;
+      indicator.style.margin = '8px 0';
+    } else if (resultsHeader) {
+      targetElement = resultsHeader;
+    } else if (mainContent) {
+      targetElement = mainContent;
     } else {
       // Fallback: aggiungi al body
-      document.body.appendChild(indicator);
+      targetElement = document.body;
+      indicator.style.position = 'fixed';
+      indicator.style.top = '70px';
+      indicator.style.left = '50%';
+      indicator.style.transform = 'translateX(-50%)';
+      indicator.style.zIndex = '999';
+    }
+    
+    if (targetElement) {
+      try {
+        if (searchSection && targetElement === searchSection.parentNode) {
+          // Inserisci dopo search section
+          searchSection.parentNode.insertBefore(indicator, searchSection.nextSibling);
+        } else {
+          // Aggiungi come primo elemento
+          targetElement.insertBefore(indicator, targetElement.firstChild);
+        }
+        console.log('✅ Indicatore aggiunto con successo');
+      } catch (error) {
+        console.error('❌ Errore nell\'aggiunta dell\'indicatore:', error);
+        // Fallback sicuro
+        document.body.appendChild(indicator);
+      }
+    } else {
+      console.error('❌ Nessun elemento target trovato per l\'indicatore');
     }
   }
 }

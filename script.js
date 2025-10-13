@@ -1386,10 +1386,20 @@ async function ripristinaVersione(strutturaId, version) {
 
 async function logActivity(action, entity, userId, details = {}) {
   try {
+    // Ottieni informazioni utente correnti
+    const userInfo = utenteCorrente ? {
+      userName: utenteCorrente.displayName || utenteCorrente.email?.split('@')[0] || 'Utente',
+      userEmail: utenteCorrente.email || 'N/A'
+    } : {
+      userName: 'Utente sconosciuto',
+      userEmail: 'N/A'
+    };
+    
     const activityData = {
       action,
       entity,
       userId,
+      ...userInfo,
       details,
       timestamp: new Date(),
       userAgent: navigator.userAgent,
@@ -4237,14 +4247,35 @@ async function caricaAttivita() {
     contentDiv.innerHTML = attivita.map(attivita => {
       const icona = getAttivitaIcona(attivita.action);
       const descrizione = getAttivitaDescrizione(attivita);
-      const data = new Date(attivita.timestamp).toLocaleString('it-IT');
+      
+      // Gestione corretta delle date Firestore
+      let data;
+      try {
+        if (attivita.timestamp && attivita.timestamp.toDate) {
+          // Timestamp Firestore
+          data = attivita.timestamp.toDate().toLocaleString('it-IT');
+        } else if (attivita.timestamp) {
+          // Stringa o numero
+          data = new Date(attivita.timestamp).toLocaleString('it-IT');
+        } else {
+          data = 'Data non disponibile';
+        }
+      } catch (error) {
+        console.warn('Errore nel parsing data:', error);
+        data = 'Data non disponibile';
+      }
+      
+      // Informazioni utente
+      const utente = attivita.userName || attivita.userEmail || 'Utente sconosciuto';
       
       return `
         <div style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #f0f0f0;">
           <div style="font-size: 24px;">${icona}</div>
           <div style="flex: 1;">
             <div style="font-weight: 500; margin-bottom: 4px;">${descrizione}</div>
-            <div style="font-size: 12px; color: #666;">${data}</div>
+            <div style="font-size: 12px; color: #666;">
+              📅 ${data} | 👤 ${utente}
+            </div>
           </div>
         </div>
       `;

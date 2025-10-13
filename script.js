@@ -1444,15 +1444,24 @@ async function caricaNotePersonali(strutturaId) {
     const q = query(
       notesRef, 
       where("userId", "==", utenteCorrente.uid),
-      where("strutturaId", "==", strutturaId),
-      orderBy("createdAt", "desc")
+      where("strutturaId", "==", strutturaId)
     );
     const snapshot = await getDocs(q);
     
-    return snapshot.docs.map(doc => ({
+    const note = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    
+    // Ordina localmente per data di creazione (più recenti prima)
+    note.sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.toDate() - a.createdAt.toDate();
+      }
+      return 0;
+    });
+    
+    return note;
   } catch (error) {
     console.error('Errore nel caricamento note:', error);
     return [];

@@ -213,7 +213,7 @@ function createCategorizedSheets(wb, strutture) {
 }
 
 // === PDF Export Functions ===
-function esportaPDF(strutture, options = {}) {
+async function esportaPDF(strutture, options = {}) {
   try {
     const {
       layout = 'completo',
@@ -230,6 +230,13 @@ function esportaPDF(strutture, options = {}) {
     
     if (onlyPersonalList && window.elencoPersonale) {
       dataToExport = strutture.filter(s => window.elencoPersonale.includes(s.id));
+    }
+
+    // Carica note personali se richieste
+    if (includePersonalNotes && window.utenteCorrente) {
+      console.log('📝 Caricamento note personali per export...');
+      await loadPersonalNotesForStructures(dataToExport);
+      console.log('✅ Note personali caricate');
     }
 
     const { jsPDF } = window.jspdf;
@@ -253,6 +260,46 @@ function esportaPDF(strutture, options = {}) {
     console.error('❌ Errore export PDF:', error);
     alert('Errore durante l\'export PDF: ' + error.message);
     return false;
+  }
+}
+
+// Funzione per caricare note personali per tutte le strutture
+async function loadPersonalNotesForStructures(strutture) {
+  if (!window.utenteCorrente) return;
+  
+  try {
+    const { collection, query, where, getDocs } = window.firebase.firestore;
+    const db = window.db;
+    
+    // Carica tutte le note personali dell'utente
+    const notesRef = collection(db, "user_notes");
+    const q = query(notesRef, where("userId", "==", window.utenteCorrente.uid));
+    const snapshot = await getDocs(q);
+    
+    const noteMap = {};
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (!noteMap[data.strutturaId]) {
+        noteMap[data.strutturaId] = [];
+      }
+      noteMap[data.strutturaId].push({
+        id: doc.id,
+        ...data
+      });
+    });
+    
+    // Aggiungi le note alle strutture
+    strutture.forEach(struttura => {
+      if (noteMap[struttura.id]) {
+        struttura.personalNotes = noteMap[struttura.id];
+        console.log(`📝 Note trovate per ${struttura.Struttura}:`, struttura.personalNotes.length);
+      } else {
+        struttura.personalNotes = [];
+      }
+    });
+    
+  } catch (error) {
+    console.error('Errore nel caricamento note personali:', error);
   }
 }
 
@@ -324,6 +371,23 @@ function createDefaultPDF(doc, strutture, options) {
       yPosition += infoText.length * 4;
     }
 
+    // Note personali
+    if (options.includePersonalNotes && struttura.personalNotes && struttura.personalNotes.length > 0) {
+      console.log(`📝 Aggiungendo ${struttura.personalNotes.length} note per ${struttura.Struttura}`);
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('📝 Note personali:', margin, yPosition);
+      yPosition += 5;
+      
+      struttura.personalNotes.forEach(nota => {
+        const notaText = doc.splitTextToSize(`• ${nota.nota}`, 160);
+        doc.text(notaText, margin + 5, yPosition);
+        yPosition += notaText.length * 3.5;
+      });
+      
+      doc.setTextColor(0, 0, 0); // Reset colore
+    }
+
     yPosition += 10; // Spazio tra strutture
   });
 }
@@ -374,6 +438,18 @@ function createMinimalPDF(doc, strutture, options) {
   strutture.forEach(struttura => {
     doc.text(`${struttura.Struttura || 'N/A'} - ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}`, 20, yPosition);
     yPosition += 6;
+    
+    // Note personali in formato minimale
+    if (options.includePersonalNotes && struttura.personalNotes && struttura.personalNotes.length > 0) {
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      struttura.personalNotes.forEach(nota => {
+        doc.text(`  • ${nota.nota}`, 20, yPosition);
+        yPosition += 4;
+      });
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+    }
   });
 }
 

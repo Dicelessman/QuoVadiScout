@@ -5373,16 +5373,57 @@ async function trovaVicinoAMe() {
   } catch (error) {
     console.error('❌ Errore nella geolocalizzazione:', error);
     
+    let errorMessage = '❌ Errore nella geolocalizzazione: ';
+    
     if (error.code === error.PERMISSION_DENIED) {
-      alert('❌ Permesso geolocalizzazione negato. Abilita la geolocalizzazione per utilizzare questa funzione.');
+      errorMessage = '❌ Permesso geolocalizzazione negato.\n\nPer utilizzare questa funzione:\n1. Clicca sull\'icona del lucchetto nella barra degli indirizzi\n2. Abilita "Posizione"\n3. Ricarica la pagina e riprova';
     } else if (error.code === error.POSITION_UNAVAILABLE) {
-      alert('❌ Posizione non disponibile. Verifica la connessione GPS.');
+      errorMessage = '❌ Posizione non disponibile.\n\nVerifica che:\n- Il GPS sia attivo\n- La connessione internet sia stabile\n- Il browser abbia accesso ai servizi di localizzazione';
     } else if (error.code === error.TIMEOUT) {
-      alert('❌ Timeout nella geolocalizzazione. Riprova più tardi.');
+      errorMessage = '❌ Timeout nella geolocalizzazione.\n\nLa richiesta ha impiegato troppo tempo.\nRiprova in un momento con migliore connessione.';
     } else {
-      alert('❌ Errore nella geolocalizzazione: ' + error.message);
+      errorMessage += error.message;
+    }
+    
+    // Mostra modale invece di alert per messaggi più lunghi
+    if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
+      mostraModaleErroreGeolocalizzazione(errorMessage);
+    } else {
+      alert(errorMessage);
     }
   }
+}
+
+function mostraModaleErroreGeolocalizzazione(message) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'block';
+  
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>📍 Geolocalizzazione</h2>
+        <button class="close" onclick="this.closest('.modal').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="white-space: pre-line; line-height: 1.6;">
+          ${message}
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+          <strong>💡 Suggerimento:</strong><br>
+          Puoi comunque utilizzare la funzione "Trova Vicino a Me" selezionando manualmente una posizione sulla mappa.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Chiudi</button>
+        <button class="btn btn-primary" onclick="this.closest('.modal').remove(); mostraMappa();">
+          🗺️ Apri Mappa
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
 }
 
 function calcolaDistanza(lat1, lng1, lat2, lng2) {

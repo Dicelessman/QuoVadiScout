@@ -908,7 +908,21 @@ function mostraIndicatoreRicercaAvanzata(numeroFiltri) {
       <button onclick="rimuoviRicercaAvanzata()" style="background:none;border:none;color:white;cursor:pointer;font-size:14px;margin-left:4px;">✕</button>
     `;
     
-    document.querySelector('.controls').appendChild(indicator);
+    // Trova un elemento appropriato nella nuova UI per mostrare l'indicatore
+    const searchSection = document.querySelector('.search-section');
+    const quickFilters = document.querySelector('.quick-filters');
+    const resultsHeader = document.querySelector('.results-header');
+    
+    if (resultsHeader) {
+      resultsHeader.appendChild(indicator);
+    } else if (quickFilters) {
+      quickFilters.appendChild(indicator);
+    } else if (searchSection) {
+      searchSection.appendChild(indicator);
+    } else {
+      // Fallback: aggiungi al body
+      document.body.appendChild(indicator);
+    }
   }
 }
 
@@ -1942,8 +1956,14 @@ async function voteStructure(strutturaId, rating) {
     });
 
     // Aggiorna la scheda se è aperta
-    if (modalScheda && modalScheda.id === 'schedaCompletaModal') {
-      creaContenutoScheda();
+    const modalScheda = document.getElementById('schedaCompletaModal');
+    if (modalScheda) {
+      // Chiudi e riapri la scheda per mostrare il rating aggiornato
+      modalScheda.remove();
+      // Ri-apri la scheda con i dati aggiornati
+      setTimeout(() => {
+        mostraSchedaCompleta(strutturaId);
+      }, 100);
     }
 
     // Aggiorna la lista

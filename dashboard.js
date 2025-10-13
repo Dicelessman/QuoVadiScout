@@ -566,3 +566,8 @@ setTimeout(() => {
     }
   }
 }, 5000); // Attendi 5 secondi per il caricamento di Google Maps
+
+// Rendi le funzioni accessibili globalmente
+window.initMap = initMap;
+window.aggiungiMarkers = aggiungiMarkers;
+window.filtraMarkers = filtraMarkers;

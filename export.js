@@ -640,3 +640,7 @@ function getStatoLabel(stato) {
     default: return 'Stato sconosciuto';
   }
 }
+
+// Rendi le funzioni accessibili globalmente
+window.esportaExcel = esportaExcel;
+window.esportaPDF = esportaPDF;

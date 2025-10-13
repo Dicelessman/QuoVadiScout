@@ -1683,6 +1683,20 @@ window.eliminaNota = eliminaNota;
 window.mostraFeedAttivita = mostraFeedAttivita;
 window.trovaVicinoAMe = trovaVicinoAMe;
 window.geocodificaTutteStrutture = geocodificaTutteStrutture;
+window.loginWithEmail = loginWithEmail;
+window.registerWithEmail = registerWithEmail;
+window.loginWithGoogle = loginWithGoogle;
+window.logoutUser = logoutUser;
+window.aggiungiStruttura = aggiungiStruttura;
+window.modificaStruttura = modificaStruttura;
+window.eliminaStruttura = eliminaStruttura;
+window.eliminaStrutturaConConferma = eliminaStrutturaConConferma;
+window.filtra = filtra;
+window.mostraRicercaAvanzata = mostraRicercaAvanzata;
+window.esportaElencoPersonale = esportaElencoPersonale;
+window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
+window.mostraNotePersonali = mostraNotePersonali;
+window.salvaNotaPersonale = salvaNotaPersonale;
 
 // === Gestione Utenti Firebase ===
 let utenteCorrente = null;

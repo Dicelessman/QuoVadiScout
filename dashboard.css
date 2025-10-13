@@ -265,3 +265,22 @@
     height: 300px;
   }
 }
+
+/* Link province */
+.province-link {
+  color: #2f6b2f;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.province-link:hover {
+  color: #1e4d1e;
+  text-decoration: underline;
+}
+
+.province-link:focus {
+  outline: 2px solid #2f6b2f;
+  outline-offset: 2px;
+  border-radius: 2px;
+}

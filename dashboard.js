@@ -123,15 +123,15 @@ function aggiornaStatisticheProvince() {
           <strong>${stats.totali}</strong>
         </div>
         <div class="province-stat">
-          <span>🏠 Case:</span>
+          <span>🏠 <a href="index.html?filtro=casa&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca case in ${provincia}">Case:</a></span>
           <span>${stats.case}</span>
         </div>
         <div class="province-stat">
-          <span>🌱 Terreni:</span>
+          <span>🌱 <a href="index.html?filtro=terreno&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca terreni in ${provincia}">Terreni:</a></span>
           <span>${stats.terreni}</span>
         </div>
         <div class="province-stat">
-          <span>🏢🌱 Entrambe:</span>
+          <span>🏢🌱 <a href="index.html?filtro=entrambe&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca strutture con case e terreni in ${provincia}">Entrambe:</a></span>
           <span>${stats.entrambe}</span>
         </div>
         <div class="province-stat">

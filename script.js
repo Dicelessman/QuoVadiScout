@@ -3526,6 +3526,17 @@ function mostraCaricamento() {
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
   
+  // Gestisci parametri URL dalla dashboard
+  const urlParams = new URLSearchParams(window.location.search);
+  const filtro = urlParams.get('filtro');
+  const provincia = urlParams.get('provincia');
+  
+  if (filtro && provincia) {
+    console.log(`🔍 Filtro dalla dashboard: ${filtro} in ${provincia}`);
+    // Applica il filtro automaticamente dopo il caricamento
+    window.dashboardFilter = { filtro, provincia };
+  }
+  
   // Inizializza push notifications
   if (window.pushManager) {
     await window.initializePushNotifications();
@@ -3554,6 +3565,57 @@ window.addEventListener("DOMContentLoaded", async () => {
   strutture = await caricaStrutture();
   renderStrutture(strutture);
     aggiornaContatoreElenco();
+    
+    // Applica filtro dalla dashboard se presente
+    if (window.dashboardFilter) {
+      const { filtro, provincia } = window.dashboardFilter;
+      console.log(`🔍 Applicando filtro dashboard: ${filtro} in ${provincia}`);
+      
+      // Imposta i filtri nell'UI
+      if (filtro === 'casa') {
+        document.getElementById('filter-casa').checked = true;
+      } else if (filtro === 'terreno') {
+        document.getElementById('filter-terreno').checked = true;
+      } else if (filtro === 'entrambe') {
+        document.getElementById('filter-casa').checked = true;
+        document.getElementById('filter-terreno').checked = true;
+      }
+      
+      // Imposta la provincia
+      const provSelect = document.getElementById('filter-prov');
+      if (provSelect) {
+        provSelect.value = provincia;
+      }
+      
+      // Applica il filtro
+      const struttureFiltrate = filtra(strutture);
+      renderStrutture(struttureFiltrate);
+      
+      // Mostra messaggio informativo
+      const container = document.getElementById("results");
+      if (container) {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+          background: #e8f5e8;
+          border: 1px solid #2f6b2f;
+          border-radius: 6px;
+          padding: 12px;
+          margin-bottom: 20px;
+          color: #2f6b2f;
+          font-weight: 500;
+        `;
+        infoDiv.innerHTML = `
+          🔍 <strong>Filtro applicato dalla dashboard:</strong> 
+          ${filtro === 'casa' ? 'Case' : filtro === 'terreno' ? 'Terreni' : 'Case e Terreni'} 
+          in provincia di ${provincia}
+          <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: #2f6b2f; cursor: pointer; font-size: 16px;">✕</button>
+        `;
+        container.insertBefore(infoDiv, container.firstChild);
+      }
+      
+      // Pulisci il filtro dashboard
+      delete window.dashboardFilter;
+    }
     
     // Mostra messaggio informativo se si usano dati locali
     if (strutture.length > 0 && strutture[0].id.startsWith('demo-')) {

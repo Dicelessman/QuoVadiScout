@@ -2569,7 +2569,7 @@ function mostraMenuEsportazione(struttureElenco) {
       <h3>Esporta Elenco Personale (${struttureElenco.length} elementi)</h3>
       <button onclick="esportaJSON()">📄 JSON</button>
       <button onclick="esportaCSV()">📊 CSV</button>
-      <button onclick="mostraOpzioniEsportazione(struttureElenco)">📊 Export Avanzato</button>
+      <button onclick="mostraOpzioniEsportazioneAvanzata()">📊 Export Avanzato</button>
       <button onclick="chiudiMenu()">❌ Chiudi</button>
     </div>
   `;
@@ -2618,6 +2618,29 @@ function mostraMenuEsportazione(struttureElenco) {
   window.chiudiMenu = () => {
     document.body.removeChild(menu);
   };
+  
+  // Wrapper per export avanzato
+  window.mostraOpzioniEsportazioneAvanzata = () => {
+    // Chiudi il menu corrente
+    chiudiMenu();
+    // Mostra le opzioni di export avanzato con i dati dell'elenco personale
+    if (typeof window.mostraOpzioniEsportazione === 'function') {
+      window.mostraOpzioniEsportazione(struttureElenco);
+    } else {
+      console.error('Funzione mostraOpzioniEsportazione non trovata');
+      alert('Funzione di export avanzato non disponibile');
+    }
+  };
+}
+
+// Funzione per export generale (tutte le strutture)
+window.mostraOpzioniEsportazioneGenerale = () => {
+  if (typeof window.mostraOpzioniEsportazione === 'function') {
+    window.mostraOpzioniEsportazione(strutture);
+  } else {
+    console.error('Funzione mostraOpzioniEsportazione non trovata');
+    alert('Funzione di export avanzato non disponibile');
+  }
 }
 
 function stampaElenco(struttureElenco) {

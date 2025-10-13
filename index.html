@@ -24,71 +24,199 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>Quovadiscout - Strutture & Terreni v1.1</h1>
-    <div class="controls">
-      <div class="controls-primary">
-        <input id="search" placeholder="Cerca nome, luogo, referente..." />
-        <button id="advancedSearchBtn" title="Ricerca Avanzata">🔍+</button>
-        <select id="filter-prov"><option value="">Tutte le province</option></select>
-        <select id="saved-filters" title="Filtri Salvati">
-          <option value="">Filtri salvati</option>
-        </select>
-        <select id="sort-by">
-          <option value="struttura">Ordina per Nome</option>
-          <option value="luogo">Ordina per Luogo</option>
-          <option value="provincia">Ordina per Provincia</option>
-        </select>
+  <!-- Mobile-First Header -->
+  <header class="app-header">
+    <div class="header-main">
+      <div class="header-brand">
+        <h1 class="app-title">🏕️ QuoVadiScout</h1>
+        <span class="app-version">v1.2</span>
       </div>
-      <div class="controls-secondary">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <label><input type="checkbox" id="filter-casa" /> Casa</label>
-          <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
-          <select id="filter-stato">
-            <option value="">Tutti gli stati</option>
-            <option value="attiva">🟢 Attiva</option>
-            <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
-            <option value="non_piu_attiva">🔴 Non più attiva</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <div class="view-toggle">
-            <button id="viewToggle" class="btn-view-toggle" title="Cambia visualizzazione">
-              <span class="view-icon">📋</span>
-              <span class="view-label">Elenco</span>
-            </button>
-          </div>
-          <button id="add-btn">➕ Aggiungi</button>
-          <button id="resetBtn">🔄 Reset</button>
-        </div>
-      </div>
-      <div class="controls-secondary">
-        <button id="exportBtn" class="btn-elenco-personale">
-          <span class="elenco-icon">📋</span>
-          <span class="elenco-label">Elenco personale</span>
-          <span id="contatore-elenco" class="elenco-counter">0</span>
+      <div class="header-actions">
+        <button id="menuToggle" class="btn-menu" aria-label="Menu principale">
+          <span class="hamburger"></span>
         </button>
-        <div style="display:flex;gap:8px;">
-          <button onclick="mostraFeedAttivita()" class="btn-activity" title="Feed Attività">📋</button>
-          <button onclick="trovaVicinoAMe()" class="btn-location" title="Trova Vicino a Me">📍</button>
-          <button onclick="geocodificaTutteStrutture()" class="btn-geocoding" title="Geocoding Automatico">🌍</button>
-          <button onclick="mostraOpzioniEsportazioneGenerale()" class="btn-export">📊 Export</button>
-          <button onclick="mostraMappa()" class="btn-map" title="Visualizza mappa">🗺️ Mappa</button>
-          <button onclick="location.href='dashboard.html'" class="btn-dashboard">📈 Dashboard</button>
-          <button id="themeToggle" class="theme-toggle" title="Cambia tema">
-            <span class="sun-icon">☀️</span>
-          </button>
-          <button id="userBtn" class="btn-user">
-            <span class="user-icon">👤</span>
-            <span class="user-name">Accedi</span>
-          </button>
-        </div>
+        <button id="themeToggle" class="btn-theme" aria-label="Cambia tema">
+          <span class="theme-icon">☀️</span>
+        </button>
+        <button id="userBtn" class="btn-user" aria-label="Account utente">
+          <span class="user-avatar">👤</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-section">
+      <div class="search-container">
+        <input id="search" class="search-input" placeholder="Cerca strutture..." />
+        <button id="advancedSearchBtn" class="btn-search-advanced" aria-label="Ricerca avanzata">
+          <span class="search-icon">🔍</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <div class="filter-group">
+        <select id="filter-prov" class="filter-select">
+          <option value="">Tutte le province</option>
+        </select>
+        <select id="filter-stato" class="filter-select">
+          <option value="">Tutti gli stati</option>
+          <option value="attiva">🟢 Attiva</option>
+          <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
+          <option value="non_piu_attiva">🔴 Non più attiva</option>
+        </select>
+      </div>
+      <div class="filter-toggles">
+        <label class="filter-toggle">
+          <input type="checkbox" id="filter-casa" />
+          <span class="toggle-label">🏠 Casa</span>
+        </label>
+        <label class="filter-toggle">
+          <input type="checkbox" id="filter-terreno" />
+          <span class="toggle-label">🌲 Terreno</span>
+        </label>
       </div>
     </div>
   </header>
 
-  <main>
-    <section id="results" class="cards"></section>
+  <!-- Main Navigation Menu -->
+  <nav id="mainMenu" class="main-menu hidden">
+    <div class="menu-sections">
+      <!-- Search & Filters -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">🔍 Ricerca & Filtri</h3>
+        <div class="menu-items">
+          <button class="menu-item" onclick="mostraRicercaAvanzata()">
+            <span class="menu-icon">🔍</span>
+            <span class="menu-label">Ricerca Avanzata</span>
+          </button>
+          <button class="menu-item" id="savedFiltersBtn">
+            <span class="menu-icon">💾</span>
+            <span class="menu-label">Filtri Salvati</span>
+            <select id="saved-filters" class="menu-select">
+              <option value="">Seleziona filtro...</option>
+            </select>
+          </button>
+          <button class="menu-item" id="sortMenuBtn">
+            <span class="menu-icon">📊</span>
+            <span class="menu-label">Ordina per</span>
+            <select id="sort-by" class="menu-select">
+              <option value="struttura">Nome</option>
+              <option value="luogo">Luogo</option>
+              <option value="provincia">Provincia</option>
+            </select>
+          </button>
+        </div>
+      </section>
+
+      <!-- Personal Lists -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">📋 Le Mie Liste</h3>
+        <div class="menu-items">
+          <button id="exportBtn" class="menu-item menu-item-primary">
+            <span class="menu-icon">📋</span>
+            <span class="menu-label">Elenco Personale</span>
+            <span id="contatore-elenco" class="menu-badge">0</span>
+          </button>
+          <button class="menu-item" onclick="mostraGestioneElencoPersonale()">
+            <span class="menu-icon">⚙️</span>
+            <span class="menu-label">Gestisci Liste</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Maps & Location -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">🗺️ Mappe & Posizione</h3>
+        <div class="menu-items">
+          <button class="menu-item" onclick="mostraMappa()">
+            <span class="menu-icon">🗺️</span>
+            <span class="menu-label">Visualizza Mappa</span>
+          </button>
+          <button class="menu-item" onclick="trovaVicinoAMe()">
+            <span class="menu-icon">📍</span>
+            <span class="menu-label">Trova Vicino a Me</span>
+          </button>
+          <button class="menu-item" onclick="geocodificaTutteStrutture()">
+            <span class="menu-icon">🌍</span>
+            <span class="menu-label">Geocoding Automatico</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Data Management -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">📊 Gestione Dati</h3>
+        <div class="menu-items">
+          <button class="menu-item" onclick="mostraOpzioniEsportazioneGenerale()">
+            <span class="menu-icon">📤</span>
+            <span class="menu-label">Esporta Dati</span>
+          </button>
+          <button class="menu-item" onclick="mostraFeedAttivita()">
+            <span class="menu-icon">📋</span>
+            <span class="menu-label">Feed Attività</span>
+          </button>
+          <button class="menu-item" onclick="location.href='dashboard.html'">
+            <span class="menu-icon">📈</span>
+            <span class="menu-label">Dashboard</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">⚡ Azioni Rapide</h3>
+        <div class="menu-items">
+          <button id="add-btn" class="menu-item menu-item-accent">
+            <span class="menu-icon">➕</span>
+            <span class="menu-label">Aggiungi Struttura</span>
+          </button>
+          <button id="resetBtn" class="menu-item">
+            <span class="menu-icon">🔄</span>
+            <span class="menu-label">Reset Filtri</span>
+          </button>
+          <div class="view-toggle menu-item">
+            <span class="menu-icon">👁️</span>
+            <span class="menu-label">Visualizzazione</span>
+            <button id="viewToggle" class="view-switch">
+              <span class="view-icon">📋</span>
+              <span class="view-label">Elenco</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Results Counter -->
+    <div class="results-header">
+      <div class="results-info">
+        <span id="resultsCount" class="results-count">0 strutture</span>
+        <span id="resultsStatus" class="results-status"></span>
+      </div>
+    </div>
+    
+    <!-- Results Grid -->
+    <section id="results" class="results-container">
+      <!-- Cards will be dynamically inserted here -->
+    </section>
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator hidden">
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Caricamento...</span>
+    </div>
+    
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state hidden">
+      <div class="empty-icon">🔍</div>
+      <h3 class="empty-title">Nessuna struttura trovata</h3>
+      <p class="empty-description">Prova a modificare i filtri o aggiungi una nuova struttura</p>
+      <button id="addBtnEmpty" class="btn-primary">➕ Aggiungi Struttura</button>
+    </div>
   </main>
 
   <!-- Modale di modifica -->

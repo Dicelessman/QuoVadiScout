@@ -123,16 +123,33 @@ let isListViewMode = false;
 
 function renderStrutture(lista) {
   const container = document.getElementById("results");
-  container.innerHTML = "";
+  const loadingIndicator = document.getElementById("loadingIndicator");
+  const emptyState = document.getElementById("emptyState");
+  const resultsCount = document.getElementById("resultsCount");
+  
+  // Nascondi loading indicator
+  if (loadingIndicator) {
+    loadingIndicator.classList.add('hidden');
+  }
+  
+  // Aggiorna contatore risultati
+  if (resultsCount) {
+    resultsCount.textContent = `${lista.length} strutture`;
+  }
+  
+  if (container) {
+    container.innerHTML = "";
+  }
 
   if (lista.length === 0) {
-    container.innerHTML = `
-      <div class="no-results">
-        <h3>🔍 Nessuna struttura trovata</h3>
-        <p>Prova a modificare i filtri di ricerca</p>
-      </div>
-    `;
+    if (emptyState) {
+      emptyState.classList.remove('hidden');
+    }
     return;
+  } else {
+    if (emptyState) {
+      emptyState.classList.add('hidden');
+    }
   }
 
   // Calcola paginazione
@@ -150,38 +167,40 @@ function renderStrutture(lista) {
       // Modalità elenco - layout orizzontale compatto
       card.innerHTML = `
         <div class="card-header">
-          <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
+          <h3 class="card-title clickable-title" data-id="${s.id}">${s.Struttura || "Suggerisci nome"}</h3>
           <div class="card-actions">
-            <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
+            <button class="btn btn-ghost toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
               ${isInElenco ? '⭐' : '☆'}
             </button>
-            <button class="notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
+            <button class="btn btn-ghost notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
               📝
             </button>
           </div>
         </div>
         
         <div class="card-content">
-          <div class="location">
-            <span class="location-icon">📍</span>
-            <span>${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
+          <div class="card-field">
+            <span class="card-field-icon">📍</span>
+            <span class="card-field-value">${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
           </div>
           
-          <div class="tags">
-            ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
-            ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+          <div class="card-badges">
+            ${s.Casa ? '<span class="badge badge-primary">🏠 Casa</span>' : ''}
+            ${s.Terreno ? '<span class="badge badge-primary">🌲 Terreno</span>' : ''}
             ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
             ${s.rating?.average ? `<span class="rating-badge">⭐ ${s.rating.average.toFixed(1)}</span>` : ''}
             ${s.segnalazioni?.length ? `<span class="reports-badge">⚠️ ${s.segnalazioni.length}</span>` : ''}
           </div>
           
-          <div class="contact-info">
-            ${s.Referente ? `<strong>Referente:</strong> ${s.Referente}` : ''}
-            ${s.Contatto ? ` | <strong>Contatto:</strong> ${s.Contatto}` : ''}
-          </div>
+          ${s.Referente || s.Contatto ? `
+          <div class="card-field">
+            <span class="card-field-icon">👤</span>
+            <span class="card-field-value">${s.Referente || ''} ${s.Contatto ? `• ${s.Contatto}` : ''}</span>
+          </div>` : ''}
           
-          ${s.Info ? `<div class="info-section" style="font-size: 13px; color: #666;">
-            ${s.Info.length > 100 ? s.Info.substring(0, 100) + '...' : s.Info}
+          ${s.Info ? `<div class="card-field">
+            <span class="card-field-icon">ℹ️</span>
+            <span class="card-field-value">${s.Info.length > 100 ? s.Info.substring(0, 100) + '...' : s.Info}</span>
           </div>` : ''}
         </div>
       `;
@@ -189,60 +208,70 @@ function renderStrutture(lista) {
       // Modalità schede - layout verticale completo
       card.innerHTML = `
         <div class="card-header">
-          <h3 class="clickable-title" data-id="${s.id}" style="cursor: pointer; color: #007bff; text-decoration: underline;">${s.Struttura || "Suggerisci nome"}</h3>
+          <h3 class="card-title clickable-title" data-id="${s.id}">${s.Struttura || "Suggerisci nome"}</h3>
           <div class="card-actions">
-            <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
+            <button class="btn btn-ghost toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
               ${isInElenco ? '⭐' : '☆'}
             </button>
-            <button class="notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
+            <button class="btn btn-ghost notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
               📝
             </button>
           </div>
         </div>
         
         <div class="card-content">
-          <div class="location">
-            <span class="location-icon">📍</span>
-            <span>${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
+          <div class="card-field">
+            <span class="card-field-icon">📍</span>
+            <span class="card-field-value">${s.Luogo || "Luogo non specificato"}, ${s.Prov || "Provincia non specificata"}</span>
           </div>
           
-          ${s.Info ? `<div class="info-section">
-            <p>${s.Info}</p>
+          ${s.Info ? `<div class="card-field">
+            <span class="card-field-icon">ℹ️</span>
+            <span class="card-field-value">${s.Info}</span>
           </div>` : ''}
           
-          <div class="tags">
-            ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
-            ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+          <div class="card-badges">
+            ${s.Casa ? '<span class="badge badge-primary">🏠 Casa</span>' : ''}
+            ${s.Terreno ? '<span class="badge badge-primary">🌲 Terreno</span>' : ''}
             ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
             ${s.rating?.average ? `<span class="rating-badge">⭐ ${s.rating.average.toFixed(1)}</span>` : ''}
             ${s.segnalazioni?.length ? `<span class="reports-badge">⚠️ ${s.segnalazioni.length}</span>` : ''}
           </div>
           
-          <div class="card-details">
-            ${s.Letti ? `<div class="detail-item"><strong>Letti:</strong> ${s.Letti}</div>` : ''}
-            ${s.Branco ? `<div class="detail-item"><strong>Branco:</strong> ${s.Branco}</div>` : ''}
-            ${s.Reparto ? `<div class="detail-item"><strong>Reparto:</strong> ${s.Reparto}</div>` : ''}
-            ${s.Compagnia ? `<div class="detail-item"><strong>Compagnia:</strong> ${s.Compagnia}</div>` : ''}
-          </div>
-          
-          ${s.Referente ? `<div class="contact-info">
-            <strong>Referente:</strong> ${s.Referente}
+          ${s.Letti || s.Branco || s.Reparto || s.Compagnia ? `
+          <div class="card-field">
+            <span class="card-field-icon">🏕️</span>
+            <span class="card-field-value">
+              ${s.Letti ? `Letti: ${s.Letti}` : ''}
+              ${s.Branco ? ` • Branco: ${s.Branco}` : ''}
+              ${s.Reparto ? ` • Reparto: ${s.Reparto}` : ''}
+              ${s.Compagnia ? ` • Compagnia: ${s.Compagnia}` : ''}
+            </span>
           </div>` : ''}
           
-          ${s.Email ? `<div class="contact-info">
-            <strong>Email:</strong> ${s.Email}
+          ${s.Referente ? `<div class="card-field">
+            <span class="card-field-icon">👤</span>
+            <span class="card-field-value">${s.Referente}</span>
           </div>` : ''}
           
-          ${s.Sito ? `<div class="contact-info">
-            <strong>Sito:</strong> ${s.Sito}
+          ${s.Email ? `<div class="card-field">
+            <span class="card-field-icon">📧</span>
+            <span class="card-field-value">${s.Email}</span>
           </div>` : ''}
           
-          ${s.Contatto ? `<div class="contact-info">
-            <strong>Contatto:</strong> ${s.Contatto}
+          ${s.Sito ? `<div class="card-field">
+            <span class="card-field-icon">🌐</span>
+            <span class="card-field-value">${s.Sito}</span>
           </div>` : ''}
           
-          ${s['Ultimo controllo'] ? `<div class="contact-info">
-            <strong>Ultimo controllo:</strong> ${s['Ultimo controllo']}
+          ${s.Contatto ? `<div class="card-field">
+            <span class="card-field-icon">📞</span>
+            <span class="card-field-value">${s.Contatto}</span>
+          </div>` : ''}
+          
+          ${s['Ultimo controllo'] ? `<div class="card-field">
+            <span class="card-field-icon">📅</span>
+            <span class="card-field-value">Ultimo controllo: ${s['Ultimo controllo']}</span>
           </div>` : ''}
         </div>
       `;
@@ -4289,18 +4318,151 @@ async function aggiornaLista() {
 
 // === Indicatore di caricamento ===
 function mostraCaricamento() {
-  const container = document.getElementById("results");
-  container.innerHTML = `
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Caricamento strutture...</p>
-    </div>
-  `;
+  const resultsContainer = document.getElementById('results');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  
+  if (resultsContainer) {
+    resultsContainer.innerHTML = '';
+  }
+  
+  if (loadingIndicator) {
+    loadingIndicator.classList.remove('hidden');
+  }
+}
+
+// Inizializzazione nuova UI mobile-first
+function initializeNewUI() {
+  // Menu toggle
+  const menuToggle = document.getElementById('menuToggle');
+  const mainMenu = document.getElementById('mainMenu');
+  
+  if (menuToggle && mainMenu) {
+    menuToggle.addEventListener('click', () => {
+      const isOpen = !mainMenu.classList.contains('hidden');
+      mainMenu.classList.toggle('hidden');
+      menuToggle.setAttribute('aria-expanded', !isOpen);
+      document.body.style.overflow = !isOpen ? 'hidden' : '';
+    });
+    
+    // Chiudi menu cliccando fuori
+    mainMenu.addEventListener('click', (e) => {
+      if (e.target === mainMenu) {
+        mainMenu.classList.add('hidden');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+  
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const themeManager = new ThemeManager();
+      themeManager.toggleTheme();
+    });
+  }
+  
+  // Empty state button
+  const addBtnEmpty = document.getElementById('addBtnEmpty');
+  const addBtn = document.getElementById('add-btn');
+  if (addBtnEmpty && addBtn) {
+    addBtnEmpty.addEventListener('click', () => {
+      addBtn.click();
+    });
+  }
+  
+  console.log('✅ Nuova UI inizializzata');
+}
+
+// Inizializzazione event listeners per la nuova UI
+function initializeUIEventListeners() {
+  // Search functionality
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      paginaCorrente = 1;
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  // Filter selects
+  const filterSelects = ['filter-prov', 'filter-stato', 'sort-by'];
+  filterSelects.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener('change', () => {
+        paginaCorrente = 1;
+        renderStrutture(filtra(strutture));
+      });
+    }
+  });
+  
+  // Filter checkboxes
+  const filterCheckboxes = ['filter-casa', 'filter-terreno'];
+  filterCheckboxes.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener('change', () => {
+        paginaCorrente = 1;
+        renderStrutture(filtra(strutture));
+      });
+    }
+  });
+  
+  // Main action buttons
+  const addBtn = document.getElementById('add-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', aggiungiStruttura);
+  }
+  
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', resetFiltri);
+  }
+  
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', esportaElencoPersonale);
+  }
+  
+  // View toggle
+  const viewToggle = document.getElementById('viewToggle');
+  if (viewToggle) {
+    viewToggle.addEventListener('click', toggleViewMode);
+  }
+  
+  // Advanced search
+  const advancedSearchBtn = document.getElementById('advancedSearchBtn');
+  if (advancedSearchBtn) {
+    advancedSearchBtn.addEventListener('click', mostraRicercaAvanzata);
+  }
+  
+  // User button
+  const userBtn = document.getElementById('userBtn');
+  if (userBtn) {
+    userBtn.addEventListener('click', cambiaUtente);
+  }
+  
+  // Saved filters
+  const savedFilters = document.getElementById('saved-filters');
+  if (savedFilters) {
+    savedFilters.addEventListener('change', (e) => {
+      if (e.target.value) {
+        applicaFiltriSalvati(e.target.value);
+      }
+    });
+  }
+  
+  console.log('✅ UI Event listeners inizializzati');
 }
 
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
+  
+  // Inizializza nuova UI mobile-first
+  initializeNewUI();
   
   // Gestisci parametri URL dalla dashboard
   const urlParams = new URLSearchParams(window.location.search);
@@ -4326,13 +4488,18 @@ window.addEventListener("DOMContentLoaded", async () => {
     
     // Aggiorna il toggle button
     const toggleBtn = document.getElementById('viewToggle');
-    const viewIcon = toggleBtn.querySelector('.view-icon');
-    const viewLabel = toggleBtn.querySelector('.view-label');
-    
-    viewIcon.textContent = '📄';
-    viewLabel.textContent = 'Schede';
-    toggleBtn.classList.add('active');
+    if (toggleBtn) {
+      const viewIcon = toggleBtn.querySelector('.view-icon');
+      const viewLabel = toggleBtn.querySelector('.view-label');
+      
+      if (viewIcon) viewIcon.textContent = '📄';
+      if (viewLabel) viewLabel.textContent = 'Schede';
+      toggleBtn.classList.add('active');
+    }
   }
+  
+  // Inizializza UI event listeners
+  initializeUIEventListeners();
   
   // Inizializza sistema autenticazione Firebase
   inizializzaAuth();

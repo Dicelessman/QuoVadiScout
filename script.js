@@ -2812,15 +2812,47 @@ function hideError() {
 
 // Funzioni rimosse - ora gestite da Firebase Auth
 
+// === Gestione Errori UI ===
+function safeUpdateElement(elementId, updateFunction) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    try {
+      updateFunction(element);
+    } catch (error) {
+      console.warn(`⚠️ Errore aggiornamento elemento ${elementId}:`, error.message);
+    }
+  } else {
+    console.warn(`⚠️ Elemento ${elementId} non trovato`);
+  }
+}
+
+function safeQuerySelector(selector, updateFunction) {
+  const element = document.querySelector(selector);
+  if (element) {
+    try {
+      updateFunction(element);
+    } catch (error) {
+      console.warn(`⚠️ Errore aggiornamento elemento ${selector}:`, error.message);
+    }
+  } else {
+    console.warn(`⚠️ Elemento ${selector} non trovato`);
+  }
+}
+
 function aggiornaUIUtente() {
   const userBtn = document.getElementById('userBtn');
-  const userIcon = userBtn.querySelector('.user-icon');
+  if (!userBtn) {
+    console.warn('⚠️ Pulsante utente non trovato');
+    return;
+  }
+  
+  const userIcon = userBtn.querySelector('.user-icon') || userBtn.querySelector('.user-avatar');
   const userName = userBtn.querySelector('.user-name');
   
   if (utenteCorrente) {
     const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
-    userName.textContent = displayName;
-    userIcon.textContent = '👤';
+    if (userName) userName.textContent = displayName;
+    if (userIcon) userIcon.textContent = '👤';
     userBtn.title = `Utente: ${displayName} (${elencoPersonale.length} strutture) - Clicca per disconnetterti`;
     
     // Aggiungi stile per utente autenticato
@@ -2828,8 +2860,8 @@ function aggiornaUIUtente() {
     userBtn.style.color = 'white';
     userBtn.style.borderColor = '#28a745';
   } else {
-    userName.textContent = 'Accedi';
-    userIcon.textContent = '🔑';
+    if (userName) userName.textContent = 'Accedi';
+    if (userIcon) userIcon.textContent = '🔑';
     userBtn.title = 'Accedi o registrati';
     
     // Stile per utente non autenticato
@@ -2996,10 +3028,15 @@ function rimuoviDallElenco(id) {
 }
 
 function aggiornaContatoreElenco() {
-  const contatore = document.getElementById('contatore-elenco');
-  if (contatore) {
-    contatore.textContent = elencoPersonale.length;
-  }
+  // Aggiorna contatore principale
+  safeUpdateElement('contatore-elenco', (element) => {
+    element.textContent = elencoPersonale.length;
+  });
+  
+  // Aggiorna badge nel menu
+  safeQuerySelector('.menu-badge', (element) => {
+    element.textContent = elencoPersonale.length;
+  });
   
   // Aggiorna anche l'UI utente per riflettere il nuovo numero di strutture
   aggiornaUIUtente();
@@ -5348,6 +5385,13 @@ function getAttivitaDescrizione(attivita) {
 }
 
 // === Geocoding Automatico ===
+// Cache per geocoding
+const geocodingCache = new Map();
+let geocodingQueue = [];
+let isProcessingGeocoding = false;
+let lastGeocodingRequest = 0;
+const GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
+
 async function geocodificaStruttura(struttura) {
   try {
     if (!struttura.Indirizzo && !struttura.Luogo) {
@@ -5365,12 +5409,41 @@ async function geocodificaStruttura(struttura) {
     
     query = query.replace(/,\s*,/g, ',').replace(/,$/, '').trim();
     
+    // Controlla cache
+    if (geocodingCache.has(query)) {
+      const cached = geocodingCache.get(query);
+      if (cached) {
+        console.log(`📋 Geocoding da cache per: ${query}`);
+        return cached;
+      } else {
+        console.log(`❌ Geocoding fallito in precedenza per: ${query}`);
+        return null;
+      }
+    }
+    
     console.log(`🔍 Geocoding per: ${query}`);
     
-    // Usa Nominatim (OpenStreetMap) per geocoding gratuito
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=it`
-    );
+    // Rate limiting
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastGeocodingRequest;
+    if (timeSinceLastRequest < GEOCODING_DELAY) {
+      await new Promise(resolve => 
+        setTimeout(resolve, GEOCODING_DELAY - timeSinceLastRequest)
+      );
+    }
+    
+    // Usa proxy CORS per evitare errori
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+    const targetUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=it`;
+    
+    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    lastGeocodingRequest = Date.now();
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -5385,15 +5458,37 @@ async function geocodificaStruttura(struttura) {
         lng: parseFloat(result.lon)
       };
       
+      // Valida coordinate
+      if (isNaN(coordinates.lat) || isNaN(coordinates.lng) || 
+          coordinates.lat < -90 || coordinates.lat > 90 || 
+          coordinates.lng < -180 || coordinates.lng > 180) {
+        console.warn('⚠️ Coordinate non valide per:', query);
+        geocodingCache.set(query, null);
+        return null;
+      }
+      
+      // Salva in cache
+      geocodingCache.set(query, coordinates);
+      
       console.log(`✅ Coordinate trovate: ${coordinates.lat}, ${coordinates.lng}`);
       return coordinates;
     } else {
       console.log('❌ Nessun risultato trovato per:', query);
+      // Salva fallimento in cache per evitare richieste ripetute
+      geocodingCache.set(query, null);
       return null;
     }
     
   } catch (error) {
     console.error('❌ Errore nel geocoding:', error);
+    
+    // Gestione errori specifici
+    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+      console.warn('⚠️ Errore CORS, geocoding non disponibile');
+    } else if (error.message.includes('HTTP')) {
+      console.warn('⚠️ Errore server geocoding:', error.message);
+    }
+    
     return null;
   }
 }
@@ -5435,8 +5530,8 @@ async function geocodificaTutteStrutture() {
     
     processed++;
     
-    // Pausa per evitare rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Pausa per evitare rate limiting (già gestito nella funzione geocodificaStruttura)
+    // await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
   console.log(`🏁 Geocoding completato: ${success} successi su ${processed} strutture processate`);

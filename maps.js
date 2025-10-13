@@ -196,12 +196,79 @@ class MapsManager {
     console.log(`📍 ${strutture.length} marker aggiornati sulla mappa`);
   }
 
-  async geocodeStructure(struttura) {
-    try {
-      const address = struttura.Indirizzo || `${struttura.Luogo}, ${struttura.Prov}, Italia`;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+  // Cache per geocoding
+  static geocodingCache = new Map();
+  static geocodingQueue = [];
+  static isProcessingGeocoding = false;
+  static lastGeocodingRequest = 0;
+  static readonly GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
 
-      const response = await fetch(url);
+  async geocodeStructure(struttura) {
+    const address = struttura.Indirizzo || `${struttura.Luogo}, ${struttura.Prov}, Italia`;
+    
+    // Controlla cache
+    if (MapsManager.geocodingCache.has(address)) {
+      const cached = MapsManager.geocodingCache.get(address);
+      if (cached) {
+        struttura.coordinate = cached;
+        this.addStructureMarker(struttura);
+        console.log(`📋 Geocoding da cache per: ${struttura.Struttura}`);
+        return;
+      }
+    }
+
+    // Aggiungi alla coda
+    MapsManager.geocodingQueue.push({ struttura, address });
+    await this.processGeocodingQueue();
+  }
+
+  async processGeocodingQueue() {
+    if (MapsManager.isProcessingGeocoding || MapsManager.geocodingQueue.length === 0) {
+      return;
+    }
+
+    MapsManager.isProcessingGeocoding = true;
+
+    while (MapsManager.geocodingQueue.length > 0) {
+      const { struttura, address } = MapsManager.geocodingQueue.shift();
+      
+      try {
+        await this.performGeocoding(struttura, address);
+      } catch (error) {
+        console.warn(`⚠️ Geocoding fallito per: ${struttura.Struttura}`, error.message);
+      }
+
+      // Rate limiting
+      const now = Date.now();
+      const timeSinceLastRequest = now - MapsManager.lastGeocodingRequest;
+      if (timeSinceLastRequest < MapsManager.GEOCODING_DELAY) {
+        await new Promise(resolve => 
+          setTimeout(resolve, MapsManager.GEOCODING_DELAY - timeSinceLastRequest)
+        );
+      }
+      MapsManager.lastGeocodingRequest = Date.now();
+    }
+
+    MapsManager.isProcessingGeocoding = false;
+  }
+
+  async performGeocoding(struttura, address) {
+    try {
+      // Usa un proxy CORS per evitare errori CORS
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const targetUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+      
+      const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (data && data.length > 0) {
@@ -209,26 +276,59 @@ class MapsManager {
         const lat = parseFloat(result.lat);
         const lng = parseFloat(result.lon);
 
-        // Aggiorna coordinate della struttura
-        if (struttura.coordinate) {
-          struttura.coordinate.lat = lat;
-          struttura.coordinate.lng = lng;
-        } else {
-          struttura.coordinate = { lat, lng };
+        // Valida coordinate
+        if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          throw new Error('Coordinate non valide');
         }
 
-        // Salva su Firestore
-        await this.saveCoordinatesToFirestore(struttura.id, lat, lng);
+        const coordinates = { lat, lng };
+        
+        // Aggiorna struttura
+        struttura.coordinate = coordinates;
+        
+        // Salva in cache
+        MapsManager.geocodingCache.set(address, coordinates);
+        
+        // Salva su Firestore (opzionale, non bloccante)
+        this.saveCoordinatesToFirestore(struttura.id, lat, lng).catch(err => 
+          console.warn('⚠️ Errore salvataggio coordinate:', err.message)
+        );
 
         // Aggiungi marker alla mappa
         this.addStructureMarker(struttura);
 
         console.log(`🌍 Geocoding completato per: ${struttura.Struttura}`);
+        return coordinates;
       } else {
-        console.warn('⚠️ Geocoding fallito per:', struttura.Struttura);
+        // Salva fallimento in cache per evitare richieste ripetute
+        MapsManager.geocodingCache.set(address, null);
+        console.warn(`⚠️ Nessun risultato per: ${struttura.Struttura}`);
       }
     } catch (error) {
-      console.error('❌ Errore geocoding:', error);
+      // Gestione errori specifici
+      if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+        console.warn(`⚠️ Errore CORS per: ${struttura.Struttura}, provo servizio alternativo`);
+        return await this.fallbackGeocoding(struttura, address);
+      }
+      
+      throw error;
+    }
+  }
+
+  async fallbackGeocoding(struttura, address) {
+    try {
+      // Servizio alternativo: MapBox (richiede API key)
+      // Per ora usiamo un approccio semplificato
+      console.log(`🔄 Tentativo geocoding alternativo per: ${struttura.Struttura}`);
+      
+      // Salva fallimento in cache
+      MapsManager.geocodingCache.set(address, null);
+      
+      // Per ora, non facciamo nulla, ma in futuro potremmo usare altri servizi
+      return null;
+    } catch (error) {
+      console.warn(`⚠️ Fallback geocoding fallito per: ${struttura.Struttura}`);
+      return null;
     }
   }
 

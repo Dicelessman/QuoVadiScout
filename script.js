@@ -1441,6 +1441,7 @@ async function mostraNotePersonali(strutturaId) {
   
   const modal = document.createElement('div');
   modal.id = 'noteModal';
+  modal.setAttribute('data-struttura-id', strutturaId);
   modal.style.cssText = `
     position: fixed;
     top: 0;
@@ -1560,17 +1561,20 @@ async function caricaNotePersonali(strutturaId) {
     );
     const snapshot = await getDocs(q);
     
-    const note = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const note = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Converti timestamp Firestore in Date JavaScript
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
+        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt)) : new Date()
+      };
+    });
     
     // Ordina localmente per data di creazione (più recenti prima)
     note.sort((a, b) => {
-      if (a.createdAt && b.createdAt) {
-        return b.createdAt.toDate() - a.createdAt.toDate();
-      }
-      return 0;
+      return b.createdAt - a.createdAt;
     });
     
     return note;
@@ -1611,28 +1615,56 @@ async function salvaNotaPersonale(strutturaId, nota) {
 
 async function eliminaNota(notaId) {
   try {
-    if (!utenteCorrente) return;
+    if (!utenteCorrente) {
+      alert('Devi essere loggato per eliminare note');
+      return;
+    }
+    
+    if (!confirm('Sei sicuro di voler eliminare questa nota?')) {
+      return;
+    }
     
     await deleteDoc(doc(db, "user_notes", notaId));
     
     // Log attività
     await logActivity('note_deleted', notaId, utenteCorrente.uid);
     
-    // Ricarica il modal
+    // Ricarica il modal delle note
     const modal = document.getElementById('noteModal');
     if (modal) {
-      modal.remove();
       // Trova la strutturaId dal modal per ricaricare
       const strutturaId = modal.querySelector('[data-struttura-id]')?.dataset.strutturaId;
       if (strutturaId) {
-        mostraNotePersonali(strutturaId);
+        // Ricarica le note
+        const noteEsistenti = await caricaNotePersonali(strutturaId);
+        const noteContainer = document.getElementById('noteEsistenti');
+        if (noteContainer) {
+          noteContainer.innerHTML = noteEsistenti.length > 0 ? 
+            noteEsistenti.map(nota => `
+              <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+                  📅 ${nota.createdAt.toLocaleString('it-IT')}
+                </div>
+                <div style="white-space: pre-wrap;">${nota.nota}</div>
+                <button onclick="eliminaNota('${nota.id}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 5px;">
+                  🗑️ Elimina
+                </button>
+              </div>
+            `).join('') : 
+            '<div style="text-align: center; color: #666; padding: 20px;">Nessuna nota personale salvata</div>';
+        }
       }
     }
+    
+    console.log('✅ Nota eliminata con successo');
   } catch (error) {
     console.error('Errore nell\'eliminazione nota:', error);
     alert('Errore nell\'eliminazione della nota');
   }
 }
+
+// Rendi la funzione accessibile globalmente
+window.eliminaNota = eliminaNota;
 
 // === Gestione Utenti Firebase ===
 let utenteCorrente = null;

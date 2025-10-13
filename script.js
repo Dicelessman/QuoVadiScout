@@ -1862,6 +1862,14 @@ async function mostraMappa() {
   
   // Inizializza mappa
   try {
+    // Debug: verifica se la funzione esiste
+    if (typeof window.initializeMap !== 'function') {
+      console.error('❌ window.initializeMap non è disponibile');
+      console.log('🔍 Funzioni disponibili su window:', Object.keys(window).filter(key => key.includes('Map')));
+      console.log('🔍 window.mapsManager disponibile:', typeof window.mapsManager);
+      throw new Error('Funzione initializeMap non disponibile');
+    }
+    
     await window.initializeMap('map');
     
     // Mostra tutte le strutture sulla mappa

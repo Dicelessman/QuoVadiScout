@@ -27,7 +27,24 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('📦 Service Worker: Caching risorse statiche...');
-        return cache.addAll(STATIC_ASSETS);
+        // Cache ogni asset individualmente per gestire errori singoli
+        const cachePromises = STATIC_ASSETS.map(asset => {
+          return fetch(asset)
+            .then(response => {
+              if (response.ok) {
+                return cache.put(asset, response);
+              } else {
+                console.warn(`⚠️ Service Worker: Impossibile cachare ${asset}: ${response.status}`);
+                return Promise.resolve();
+              }
+            })
+            .catch(error => {
+              console.warn(`⚠️ Service Worker: Errore caching ${asset}:`, error.message);
+              return Promise.resolve();
+            });
+        });
+        
+        return Promise.all(cachePromises);
       })
       .then(() => {
         console.log('✅ Service Worker: Installazione completata');
@@ -35,6 +52,8 @@ self.addEventListener('install', (event) => {
       })
       .catch((error) => {
         console.error('❌ Service Worker: Errore durante installazione:', error);
+        // Non bloccare l'installazione per errori di cache
+        return self.skipWaiting();
       })
   );
 });

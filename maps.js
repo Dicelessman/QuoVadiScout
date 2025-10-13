@@ -1,12 +1,7 @@
 // Maps integration for QuoVadiScout
 // Leaflet + OpenStreetMap implementation
 
-// Cache per geocoding (proprietà statiche della classe)
-MapsManager.geocodingCache = new Map();
-MapsManager.geocodingQueue = [];
-MapsManager.isProcessingGeocoding = false;
-MapsManager.lastGeocodingRequest = 0;
-MapsManager.GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
+console.log('🗺️ Maps.js caricato correttamente');
 
 class MapsManager {
   constructor() {
@@ -467,6 +462,13 @@ class MapsManager {
   }
 }
 
+// Cache per geocoding (proprietà statiche della classe)
+MapsManager.geocodingCache = new Map();
+MapsManager.geocodingQueue = [];
+MapsManager.isProcessingGeocoding = false;
+MapsManager.lastGeocodingRequest = 0;
+MapsManager.GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
+
 // Inizializza il manager delle mappe
 const mapsManager = new MapsManager();
 
@@ -481,6 +483,13 @@ window.initializeMap = async (containerId) => {
 window.showStructuresOnMap = (strutture) => {
   mapsManager.updateMarkers(strutture);
 };
+
+console.log('🗺️ Funzioni mappa esportate su window:', {
+  initializeMap: typeof window.initializeMap,
+  showStructuresOnMap: typeof window.showStructuresOnMap,
+  centerMapOnUser: typeof window.centerMapOnUser,
+  findNearbyStructures: typeof window.findNearbyStructures
+});
 
 window.centerMapOnUser = async () => {
   try {

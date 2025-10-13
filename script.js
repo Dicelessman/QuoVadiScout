@@ -116,7 +116,7 @@ async function caricaStruttureLocali() {
 
 // === Paginazione ===
 let paginaCorrente = 1;
-const elementiPerPagina = 20;
+let elementiPerPagina = 20;
 
 // === Gestione modalità visualizzazione ===
 let isListViewMode = false;
@@ -303,32 +303,99 @@ function renderStrutture(lista) {
   });
 
   // Aggiungi controlli di paginazione
-  if (totalePagine > 1) {
-    const paginazione = document.createElement('div');
-    paginazione.className = 'paginazione';
-    paginazione.innerHTML = `
-      <div class="pagination-info">
-        Mostrando ${inizio + 1}-${Math.min(fine, lista.length)} di ${lista.length} strutture
-      </div>
-      <div class="pagination-controls">
-        <button ${paginaCorrente === 1 ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente - 1})">« Precedente</button>
-        <span class="pagination-numbers">
-          ${Array.from({length: Math.min(5, totalePagine)}, (_, i) => {
-            const num = Math.max(1, Math.min(totalePagine, paginaCorrente - 2 + i));
-            return `<button class="${num === paginaCorrente ? 'active' : ''}" onclick="cambiaPagina(${num})">${num}</button>`;
-          }).join('')}
-        </span>
-        <button ${paginaCorrente === totalePagine ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente + 1})">Successiva »</button>
-      </div>
-    `;
-    container.appendChild(paginazione);
-  }
+  const paginazione = document.createElement('div');
+  paginazione.className = 'paginazione';
+  
+  // Selettore elementi per pagina
+  const itemsPerPageSelector = `
+    <div class="pagination-items-per-page">
+      <label for="items-per-page">Elementi per pagina:</label>
+      <select id="items-per-page" onchange="cambiaElementiPerPagina(this.value)">
+        <option value="20" ${elementiPerPagina === 20 ? 'selected' : ''}>20</option>
+        <option value="50" ${elementiPerPagina === 50 ? 'selected' : ''}>50</option>
+        <option value="100" ${elementiPerPagina === 100 ? 'selected' : ''}>100</option>
+        <option value="${lista.length}" ${elementiPerPagina === lista.length ? 'selected' : ''}>Tutte (${lista.length})</option>
+      </select>
+    </div>
+  `;
+  
+  // Controlli di paginazione (solo se ci sono più pagine)
+  const paginationControls = totalePagine > 1 ? `
+    <div class="pagination-info">
+      Mostrando ${inizio + 1}-${Math.min(fine, lista.length)} di ${lista.length} strutture
+    </div>
+    <div class="pagination-controls">
+      <button ${paginaCorrente === 1 ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente - 1})">« Precedente</button>
+      <span class="pagination-numbers">
+        ${generaNumeriPagina(totalePagine, paginaCorrente)}
+      </span>
+      <button ${paginaCorrente === totalePagine ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente + 1})">Successiva »</button>
+    </div>
+  ` : `
+    <div class="pagination-info">
+      Mostrando tutte le ${lista.length} strutture
+    </div>
+  `;
+  
+  paginazione.innerHTML = itemsPerPageSelector + paginationControls;
+  container.appendChild(paginazione);
 }
 
 function cambiaPagina(nuovaPagina) {
   paginaCorrente = Math.max(1, nuovaPagina);
   const listaFiltrata = filtra(strutture);
   renderStrutture(listaFiltrata);
+}
+
+function cambiaElementiPerPagina(nuovoValore) {
+  elementiPerPagina = parseInt(nuovoValore);
+  paginaCorrente = 1; // Reset alla prima pagina
+  const listaFiltrata = filtra(strutture);
+  renderStrutture(listaFiltrata);
+}
+
+function generaNumeriPagina(totalePagine, paginaCorrente) {
+  const numeri = [];
+  const maxNumeri = 5; // Numero massimo di numeri da mostrare
+  
+  if (totalePagine <= maxNumeri) {
+    // Se ci sono poche pagine, mostra tutte
+    for (let i = 1; i <= totalePagine; i++) {
+      numeri.push(`<button class="${i === paginaCorrente ? 'active' : ''}" onclick="cambiaPagina(${i})">${i}</button>`);
+    }
+  } else {
+    // Logica per pagine multiple
+    let inizio = Math.max(1, paginaCorrente - 2);
+    let fine = Math.min(totalePagine, inizio + maxNumeri - 1);
+    
+    // Aggiusta l'inizio se siamo vicini alla fine
+    if (fine - inizio < maxNumeri - 1) {
+      inizio = Math.max(1, fine - maxNumeri + 1);
+    }
+    
+    // Aggiungi "..." se necessario
+    if (inizio > 1) {
+      numeri.push(`<button onclick="cambiaPagina(1)">1</button>`);
+      if (inizio > 2) {
+        numeri.push(`<span class="pagination-dots">...</span>`);
+      }
+    }
+    
+    // Aggiungi i numeri centrali
+    for (let i = inizio; i <= fine; i++) {
+      numeri.push(`<button class="${i === paginaCorrente ? 'active' : ''}" onclick="cambiaPagina(${i})">${i}</button>`);
+    }
+    
+    // Aggiungi "..." se necessario
+    if (fine < totalePagine) {
+      if (fine < totalePagine - 1) {
+        numeri.push(`<span class="pagination-dots">...</span>`);
+      }
+      numeri.push(`<button onclick="cambiaPagina(${totalePagine})">${totalePagine}</button>`);
+    }
+  }
+  
+  return numeri.join('');
 }
 
 
@@ -5881,6 +5948,7 @@ function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
 // === Esposizione Funzioni Globali ===
 // Esponi tutte le funzioni necessarie per compatibilità con HTML onclick
 window.cambiaPagina = cambiaPagina;
+window.cambiaElementiPerPagina = cambiaElementiPerPagina;
 window.mostraRicercaAvanzata = mostraRicercaAvanzata;
 window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
 window.mostraMappa = mostraMappa;

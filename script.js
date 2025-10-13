@@ -6132,6 +6132,167 @@ function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
   });
 }
 
+// === UI Initialization Functions ===
+function initializeNewUI() {
+  console.log('🎨 Inizializzazione UI mobile-first...');
+  
+  // Menu toggle functionality
+  const menuBtn = document.getElementById('menuBtn');
+  const mainMenu = document.getElementById('mainMenu');
+  
+  if (menuBtn && mainMenu) {
+    menuBtn.addEventListener('click', () => {
+      console.log('📱 Toggle menu clicked');
+      mainMenu.classList.toggle('hidden');
+    });
+  }
+  
+  // Theme toggle functionality
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      console.log('🌙 Toggle theme clicked');
+      if (typeof window.toggleTheme === 'function') {
+        window.toggleTheme();
+      }
+    });
+  }
+  
+  // Empty state button
+  const emptyStateBtn = document.getElementById('emptyStateBtn');
+  if (emptyStateBtn) {
+    emptyStateBtn.addEventListener('click', () => {
+      console.log('➕ Empty state button clicked');
+      if (typeof window.aggiungiStruttura === 'function') {
+        window.aggiungiStruttura();
+      }
+    });
+  }
+}
+
+function initializeUIEventListeners() {
+  console.log('🎯 Inizializzazione event listeners UI...');
+  
+  // Search functionality
+  const searchInput = document.getElementById('search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = strutture.filter(s => 
+        s.Struttura?.toLowerCase().includes(query) ||
+        s.Luogo?.toLowerCase().includes(query) ||
+        s.Provincia?.toLowerCase().includes(query)
+      );
+      renderStrutture(filtered);
+    });
+  }
+  
+  // Filter functionality (now in menu)
+  const filterProv = document.getElementById('filter-prov');
+  const filterStato = document.getElementById('filter-stato');
+  const filterCasa = document.getElementById('filter-casa');
+  const filterTerreno = document.getElementById('filter-terreno');
+  
+  if (filterProv) {
+    filterProv.addEventListener('change', () => {
+      paginaCorrente = 1;
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  if (filterStato) {
+    filterStato.addEventListener('change', () => {
+      paginaCorrente = 1;
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  if (filterCasa) {
+    filterCasa.addEventListener('change', () => {
+      paginaCorrente = 1;
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  if (filterTerreno) {
+    filterTerreno.addEventListener('change', () => {
+      paginaCorrente = 1;
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  // Action buttons
+  const addBtn = document.getElementById('add-btn');
+  const resetBtn = document.getElementById('resetBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      if (typeof window.aggiungiStruttura === 'function') {
+        window.aggiungiStruttura();
+      }
+    });
+  }
+  
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      if (typeof window.resetFiltri === 'function') {
+        window.resetFiltri();
+      }
+    });
+  }
+  
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      if (typeof window.esportaElencoPersonale === 'function') {
+        window.esportaElencoPersonale();
+      }
+    });
+  }
+  
+  // View toggle
+  const viewToggle = document.getElementById('viewToggle');
+  if (viewToggle) {
+    viewToggle.addEventListener('click', () => {
+      if (typeof window.toggleViewMode === 'function') {
+        window.toggleViewMode();
+      }
+    });
+  }
+  
+  // Advanced search
+  const advancedSearchBtn = document.getElementById('advancedSearchBtn');
+  if (advancedSearchBtn) {
+    advancedSearchBtn.addEventListener('click', () => {
+      if (typeof window.mostraRicercaAvanzata === 'function') {
+        window.mostraRicercaAvanzata();
+      }
+    });
+  }
+  
+  // User button
+  const userBtn = document.getElementById('userBtn');
+  if (userBtn) {
+    userBtn.addEventListener('click', () => {
+      if (typeof window.mostraGestioneElencoPersonale === 'function') {
+        window.mostraGestioneElencoPersonale();
+      }
+    });
+  }
+  
+  // Saved filters dropdown
+  const savedFiltersSelect = document.getElementById('savedFiltersSelect');
+  if (savedFiltersSelect) {
+    savedFiltersSelect.addEventListener('change', (e) => {
+      if (e.target.value) {
+        if (typeof window.applicaFiltriSalvati === 'function') {
+          window.applicaFiltriSalvati(e.target.value);
+        }
+      }
+    });
+  }
+}
+
 // === Esposizione Funzioni Globali ===
 // Esponi tutte le funzioni necessarie per compatibilità con HTML onclick
 window.cambiaPagina = cambiaPagina;
@@ -6145,3 +6306,14 @@ window.mostraOpzioniEsportazioneGenerale = mostraOpzioniEsportazioneGenerale;
 window.mostraFeedAttivita = mostraFeedAttivita;
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
+
+// === DOM Ready Initialization ===
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🚀 Inizializzazione applicazione...');
+  
+  // Initialize new UI
+  initializeNewUI();
+  initializeUIEventListeners();
+  
+  console.log('✅ Inizializzazione UI completata');
+});

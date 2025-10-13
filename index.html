@@ -54,30 +54,6 @@
       </div>
     </div>
     
-    <!-- Quick Filters -->
-    <div class="quick-filters">
-      <div class="filter-group">
-        <select id="filter-prov" class="filter-select">
-          <option value="">Tutte le province</option>
-        </select>
-        <select id="filter-stato" class="filter-select">
-          <option value="">Tutti gli stati</option>
-          <option value="attiva">🟢 Attiva</option>
-          <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
-          <option value="non_piu_attiva">🔴 Non più attiva</option>
-        </select>
-      </div>
-      <div class="filter-toggles">
-        <label class="filter-toggle">
-          <input type="checkbox" id="filter-casa" />
-          <span class="toggle-label">🏠 Casa</span>
-        </label>
-        <label class="filter-toggle">
-          <input type="checkbox" id="filter-terreno" />
-          <span class="toggle-label">🌲 Terreno</span>
-        </label>
-      </div>
-    </div>
   </header>
 
   <!-- Main Navigation Menu -->
@@ -107,6 +83,37 @@
               <option value="provincia">Provincia</option>
             </select>
           </button>
+          <div class="menu-item">
+            <span class="menu-icon">🏛️</span>
+            <span class="menu-label">Provincia</span>
+            <select id="filter-prov" class="menu-select">
+              <option value="">Tutte le province</option>
+            </select>
+          </div>
+          <div class="menu-item">
+            <span class="menu-icon">🟢</span>
+            <span class="menu-label">Stato</span>
+            <select id="filter-stato" class="menu-select">
+              <option value="">Tutti gli stati</option>
+              <option value="attiva">🟢 Attiva</option>
+              <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
+              <option value="non_piu_attiva">🔴 Non più attiva</option>
+            </select>
+          </div>
+          <div class="menu-item">
+            <span class="menu-icon">🏠</span>
+            <span class="menu-label">Tipo</span>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;">
+                <input type="checkbox" id="filter-casa" />
+                🏠 Casa
+              </label>
+              <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;">
+                <input type="checkbox" id="filter-terreno" />
+                🌲 Terreno
+              </label>
+            </div>
+          </div>
         </div>
       </section>
 

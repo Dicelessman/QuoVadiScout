@@ -9,7 +9,10 @@ import {
   deleteDoc,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  query,
+  where,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
   getAuth,
@@ -201,6 +204,7 @@ function renderStrutture(lista) {
           <div class="tags">
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+            ${s.stato ? `<span class="tag stato ${s.stato}">${getStatoIcon(s.stato)} ${getStatoLabel(s.stato)}</span>` : ''}
           </div>
           
           <div class="card-details">
@@ -415,6 +419,30 @@ function mostraRicercaAvanzata() {
     'Gestione': [
       { campo: 'Ultimo controllo', tipo: 'date', placeholder: 'Data ultimo controllo' },
       { campo: 'Note', tipo: 'textarea', placeholder: 'Note aggiuntive' }
+    ],
+    'Stato e Valutazioni': [
+      { campo: 'stato', tipo: 'select', placeholder: 'Stato struttura', options: [
+        { value: '', label: 'Tutti gli stati' },
+        { value: 'attiva', label: '🟢 Attiva' },
+        { value: 'temporaneamente_non_attiva', label: '🟡 Temporaneamente non attiva' },
+        { value: 'non_piu_attiva', label: '🔴 Non più attiva' }
+      ]},
+      { campo: 'rating_min', tipo: 'number', placeholder: 'Rating minimo (1-5)' },
+      { campo: 'rating_max', tipo: 'number', placeholder: 'Rating massimo (1-5)' },
+      { campo: 'has_images', tipo: 'checkbox', placeholder: 'Ha immagini' },
+      { campo: 'has_reports', tipo: 'checkbox', placeholder: 'Ha segnalazioni' }
+    ],
+    'Posizione Geografica': [
+      { campo: 'coordinate_lat', tipo: 'number', placeholder: 'Latitudine' },
+      { campo: 'coordinate_lng', tipo: 'number', placeholder: 'Longitudine' },
+      { campo: 'distance_km', tipo: 'number', placeholder: 'Distanza massima (km)' },
+      { campo: 'near_me', tipo: 'checkbox', placeholder: 'Vicino alla mia posizione' }
+    ],
+    'Date e Versioni': [
+      { campo: 'created_after', tipo: 'date', placeholder: 'Creata dopo' },
+      { campo: 'created_before', tipo: 'date', placeholder: 'Creata prima' },
+      { campo: 'modified_after', tipo: 'date', placeholder: 'Modificata dopo' },
+      { campo: 'modified_before', tipo: 'date', placeholder: 'Modificata prima' }
     ]
   };
   
@@ -438,7 +466,7 @@ function mostraRicercaAvanzata() {
     `;
     categoriaDiv.appendChild(categoriaTitle);
     
-    campi.forEach(({ campo, tipo, placeholder }) => {
+    campi.forEach(({ campo, tipo, placeholder, options }) => {
       const campoDiv = document.createElement('div');
       campoDiv.className = 'campo-div';
       campoDiv.style.cssText = `
@@ -474,6 +502,29 @@ function mostraRicercaAvanzata() {
         checkboxDiv.appendChild(input);
         checkboxDiv.appendChild(label);
         campoDiv.appendChild(checkboxDiv);
+      } else if (tipo === 'select') {
+        input = document.createElement('select');
+        input.id = `search-${campo.replace(/\s+/g, '-')}`;
+        input.style.cssText = `
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+        `;
+        
+        // Aggiungi opzioni
+        if (options) {
+          options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.label;
+            input.appendChild(optionElement);
+          });
+        }
+        
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(input);
       } else if (tipo === 'textarea') {
         input = document.createElement('textarea');
         input.id = `search-${campo.replace(/\s+/g, '-')}`;
@@ -488,6 +539,28 @@ function mostraRicercaAvanzata() {
           font-family: inherit;
           resize: vertical;
         `;
+        
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(input);
+      } else if (tipo === 'number') {
+        input = document.createElement('input');
+        input.type = 'number';
+        input.id = `search-${campo.replace(/\s+/g, '-')}`;
+        input.placeholder = placeholder;
+        input.style.cssText = `
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+        `;
+        
+        // Aggiungi min/max per rating
+        if (campo.includes('rating')) {
+          input.min = 1;
+          input.max = 5;
+          input.step = 0.1;
+        }
         
         campoDiv.appendChild(label);
         campoDiv.appendChild(input);
@@ -613,12 +686,21 @@ function raccogliFiltriAvanzati() {
   const filtri = {};
   
   // Raccogli tutti i valori dai campi di ricerca avanzata
-  document.querySelectorAll('#ricercaAvanzataModal input, #ricercaAvanzataModal textarea').forEach(input => {
+  document.querySelectorAll('#ricercaAvanzataModal input, #ricercaAvanzataModal textarea, #ricercaAvanzataModal select').forEach(input => {
     const campo = input.id.replace('search-', '').replace(/-/g, ' ');
     
     if (input.type === 'checkbox') {
       if (input.checked) {
         filtri[campo] = true;
+      }
+    } else if (input.type === 'number') {
+      const value = parseFloat(input.value);
+      if (!isNaN(value) && value !== '') {
+        filtri[campo] = value;
+      }
+    } else if (input.type === 'date') {
+      if (input.value) {
+        filtri[campo] = new Date(input.value);
       }
     } else if (input.value.trim() !== '') {
       filtri[campo] = input.value.trim();
@@ -694,6 +776,7 @@ function filtra(lista) {
   const prov = document.getElementById("filter-prov").value;
   const casa = document.getElementById("filter-casa").checked;
   const terreno = document.getElementById("filter-terreno").checked;
+  const stato = document.getElementById("filter-stato").value;
 
   let filtrata = lista.filter((s) => {
     // Filtri base
@@ -705,6 +788,7 @@ function filtra(lista) {
     const matchProv = !prov || s.Prov === prov;
     const matchCasa = !casa || s.Casa === true;
     const matchTerreno = !terreno || s.Terreno === true;
+    const matchStato = !stato || s.stato === stato;
     
     // Filtri avanzati
     let matchAvanzati = true;
@@ -718,11 +802,49 @@ function filtra(lista) {
           matchAvanzati = matchAvanzati && 
             s[campo] && 
             s[campo].toString().toLowerCase().includes(valore.toLowerCase());
+        } else if (typeof valore === 'number') {
+          // Per numeri (rating, coordinate, etc.)
+          if (campo === 'rating_min') {
+            matchAvanzati = matchAvanzati && (s.rating?.average || 0) >= valore;
+          } else if (campo === 'rating_max') {
+            matchAvanzati = matchAvanzati && (s.rating?.average || 0) <= valore;
+          } else if (campo === 'coordinate_lat') {
+            matchAvanzati = matchAvanzati && s.coordinate?.lat && Math.abs(s.coordinate.lat - valore) < 0.01;
+          } else if (campo === 'coordinate_lng') {
+            matchAvanzati = matchAvanzati && s.coordinate?.lng && Math.abs(s.coordinate.lng - valore) < 0.01;
+          } else if (campo === 'distance_km') {
+            // Calcola distanza se coordinate disponibili
+            if (s.coordinate?.lat && s.coordinate?.lng) {
+              // Implementa calcolo distanza se necessario
+              matchAvanzati = matchAvanzati && true; // Placeholder
+            }
+          }
+        } else if (valore instanceof Date) {
+          // Per date
+          if (campo === 'created_after') {
+            matchAvanzati = matchAvanzati && s.createdAt && new Date(s.createdAt) >= valore;
+          } else if (campo === 'created_before') {
+            matchAvanzati = matchAvanzati && s.createdAt && new Date(s.createdAt) <= valore;
+          } else if (campo === 'modified_after') {
+            matchAvanzati = matchAvanzati && s.lastModified && new Date(s.lastModified) >= valore;
+          } else if (campo === 'modified_before') {
+            matchAvanzati = matchAvanzati && s.lastModified && new Date(s.lastModified) <= valore;
+          }
+        }
+        
+        // Filtri speciali
+        if (campo === 'has_images') {
+          matchAvanzati = matchAvanzati && s.immagini && s.immagini.length > 0;
+        } else if (campo === 'has_reports') {
+          matchAvanzati = matchAvanzati && s.segnalazioni && s.segnalazioni.length > 0;
+        } else if (campo === 'near_me') {
+          // Implementa geolocalizzazione se necessario
+          matchAvanzati = matchAvanzati && true; // Placeholder
         }
       }
     }
     
-    return matchTesto && matchProv && matchCasa && matchTerreno && matchAvanzati;
+    return matchTesto && matchProv && matchCasa && matchTerreno && matchStato && matchAvanzati;
   });
 
   // Applica ordinamento
@@ -801,6 +923,15 @@ async function modificaStruttura(id) {
       <input type="checkbox" id="edit-terreno" ${strutturaCorrente.Terreno ? 'checked' : ''}>
     </label>
     
+    <label>
+      Stato Struttura
+      <select id="edit-stato">
+        <option value="attiva" ${strutturaCorrente.stato === 'attiva' ? 'selected' : ''}>🟢 Attiva</option>
+        <option value="temporaneamente_non_attiva" ${strutturaCorrente.stato === 'temporaneamente_non_attiva' ? 'selected' : ''}>🟡 Temporaneamente non attiva</option>
+        <option value="non_piu_attiva" ${strutturaCorrente.stato === 'non_piu_attiva' ? 'selected' : ''}>🔴 Non più attiva</option>
+      </select>
+    </label>
+    
     <label class="full-width">
       Informazioni aggiuntive
       <textarea id="edit-info" rows="3" placeholder="Informazioni dettagliate sulla struttura...">${strutturaCorrente.Info || ''}</textarea>
@@ -822,7 +953,12 @@ async function salvaModifiche() {
     Email: document.getElementById('edit-email').value.trim(),
     Casa: document.getElementById('edit-casa').checked,
     Terreno: document.getElementById('edit-terreno').checked,
-    Info: document.getElementById('edit-info').value.trim()
+    stato: document.getElementById('edit-stato').value,
+    Info: document.getElementById('edit-info').value.trim(),
+    // Aggiorna metadati
+    lastModified: new Date(),
+    lastModifiedBy: utenteCorrente?.uid || null,
+    version: (strutturaCorrente.version || 1) + 1
   };
   
   // Validazione
@@ -832,9 +968,19 @@ async function salvaModifiche() {
   }
   
   try {
+    // Salva versione precedente prima di modificare
+    await salvaVersione(strutturaCorrente, utenteCorrente?.uid);
+    
+    // Aggiorna struttura
     await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
+    
+    // Log attività
+    await logActivity('structure_updated', strutturaCorrente.id, utenteCorrente?.uid, {
+      changes: Object.keys(formData).filter(key => formData[key] !== strutturaCorrente[key])
+    });
+    
     chiudiModale();
-  aggiornaLista();
+    aggiornaLista();
   } catch (error) {
     console.error('Errore nel salvataggio:', error);
     alert('Errore nel salvataggio delle modifiche');
@@ -1034,7 +1180,18 @@ async function aggiungiStruttura() {
     Contatto: '',
     IIcontatto: '',
     'Ultimo controllo': '',
-    Note: ''
+    Note: '',
+    // Nuovi campi per il sistema avanzato
+    stato: 'attiva',
+    coordinate: { lat: null, lng: null },
+    rating: { total: 0, count: 0, average: 0 },
+    segnalazioni: [],
+    immagini: [],
+    lastModified: new Date(),
+    lastModifiedBy: utenteCorrente?.uid || null,
+    createdAt: new Date(),
+    createdBy: utenteCorrente?.uid || null,
+    version: 1
   };
   
   // Aggiungi la struttura temporanea all'array
@@ -1045,6 +1202,315 @@ async function aggiungiStruttura() {
   
   // Apri la scheda in modalità creazione
   mostraSchedaCompleta(nuovaStruttura.id);
+}
+
+// === Sistema di Versioning e Activity Log ===
+async function salvaVersione(struttura, userId) {
+  try {
+    const versionData = {
+      strutturaId: struttura.id,
+      version: struttura.version || 1,
+      data: { ...struttura },
+      savedAt: new Date(),
+      savedBy: userId
+    };
+    
+    await addDoc(collection(db, "structure_versions"), versionData);
+    console.log(`✅ Versione ${struttura.version} salvata per struttura ${struttura.id}`);
+  } catch (error) {
+    console.error('❌ Errore nel salvataggio versione:', error);
+  }
+}
+
+async function getVersionHistory(strutturaId) {
+  try {
+    const versionsRef = collection(db, "structure_versions");
+    const q = query(versionsRef, where("strutturaId", "==", strutturaId), orderBy("savedAt", "desc"));
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('❌ Errore nel recupero cronologia:', error);
+    return [];
+  }
+}
+
+async function ripristinaVersione(strutturaId, version) {
+  try {
+    const versionsRef = collection(db, "structure_versions");
+    const q = query(versionsRef, where("strutturaId", "==", strutturaId), where("version", "==", version));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      throw new Error('Versione non trovata');
+    }
+    
+    const versionData = snapshot.docs[0].data();
+    const docRef = doc(db, "strutture", strutturaId);
+    
+    // Aggiorna la struttura con i dati della versione
+    await updateDoc(docRef, {
+      ...versionData.data,
+      lastModified: new Date(),
+      lastModifiedBy: utenteCorrente?.uid || null,
+      version: versionData.version + 1
+    });
+    
+    console.log(`✅ Struttura ${strutturaId} ripristinata alla versione ${version}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Errore nel ripristino versione:', error);
+    return false;
+  }
+}
+
+async function logActivity(action, entity, userId, details = {}) {
+  try {
+    const activityData = {
+      action,
+      entity,
+      userId,
+      details,
+      timestamp: new Date(),
+      userAgent: navigator.userAgent,
+      ip: await getClientIP() // Funzione helper per IP
+    };
+    
+    await addDoc(collection(db, "activity_log"), activityData);
+    console.log(`📝 Attività loggata: ${action} su ${entity}`);
+  } catch (error) {
+    console.error('❌ Errore nel logging attività:', error);
+  }
+}
+
+// Helper function per ottenere IP client (semplificata)
+async function getClientIP() {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
+  } catch {
+    return 'unknown';
+  }
+}
+
+// Helper functions per stati strutture
+function getStatoIcon(stato) {
+  switch (stato) {
+    case 'attiva': return '🟢';
+    case 'temporaneamente_non_attiva': return '🟡';
+    case 'non_piu_attiva': return '🔴';
+    default: return '⚪';
+  }
+}
+
+function getStatoLabel(stato) {
+  switch (stato) {
+    case 'attiva': return 'Attiva';
+    case 'temporaneamente_non_attiva': return 'Temporaneamente non attiva';
+    case 'non_piu_attiva': return 'Non più attiva';
+    default: return 'Stato sconosciuto';
+  }
+}
+
+// === Gestione Note Personali ===
+async function mostraNotePersonali(strutturaId) {
+  const struttura = strutture.find(s => s.id === strutturaId);
+  if (!struttura) return;
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('noteModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'noteModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    width: 500px;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  `;
+  
+  // Carica note esistenti
+  const noteEsistenti = await caricaNotePersonali(strutturaId);
+  
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; color: #2f6b2f;">📝 Note Personali</h3>
+      <button id="closeNoteModal" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
+    </div>
+    
+    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+      <strong>${struttura.Struttura || 'Struttura senza nome'}</strong><br>
+      <span style="color: #666;">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 8px; font-weight: bold;">Aggiungi nuova nota:</label>
+      <textarea id="nuovaNota" placeholder="Scrivi qui le tue note personali su questa struttura..." 
+                style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+    </div>
+    
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button id="salvaNota" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+        💾 Salva Nota
+      </button>
+      <button id="cancellaNota" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+        🗑️ Cancella Testo
+      </button>
+    </div>
+    
+    <div id="noteEsistenti" style="max-height: 300px; overflow-y: auto;">
+      ${noteEsistenti.length > 0 ? 
+        noteEsistenti.map(nota => `
+          <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+              📅 ${new Date(nota.createdAt).toLocaleString('it-IT')}
+            </div>
+            <div style="white-space: pre-wrap;">${nota.nota}</div>
+            <button onclick="eliminaNota('${nota.id}')" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-top: 5px;">
+              🗑️ Elimina
+            </button>
+          </div>
+        `).join('') : 
+        '<div style="text-align: center; color: #666; padding: 20px;">Nessuna nota personale salvata</div>'
+      }
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Event listeners
+  document.getElementById('closeNoteModal').onclick = () => modal.remove();
+  document.getElementById('cancellaNota').onclick = () => {
+    document.getElementById('nuovaNota').value = '';
+  };
+  
+  document.getElementById('salvaNota').onclick = async () => {
+    const testoNota = document.getElementById('nuovaNota').value.trim();
+    if (!testoNota) {
+      alert('Inserisci una nota prima di salvarla!');
+      return;
+    }
+    
+    try {
+      await salvaNotaPersonale(strutturaId, testoNota);
+      document.getElementById('nuovaNota').value = '';
+      modal.remove();
+      mostraNotePersonali(strutturaId); // Ricarica il modal con le nuove note
+    } catch (error) {
+      console.error('Errore nel salvataggio nota:', error);
+      alert('Errore nel salvataggio della nota');
+    }
+  };
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+async function caricaNotePersonali(strutturaId) {
+  try {
+    if (!utenteCorrente) return [];
+    
+    const notesRef = collection(db, "user_notes");
+    const q = query(
+      notesRef, 
+      where("userId", "==", utenteCorrente.uid),
+      where("strutturaId", "==", strutturaId),
+      orderBy("createdAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Errore nel caricamento note:', error);
+    return [];
+  }
+}
+
+async function salvaNotaPersonale(strutturaId, nota) {
+  try {
+    if (!utenteCorrente) {
+      alert('Devi essere loggato per salvare note personali');
+      return;
+    }
+    
+    const noteData = {
+      userId: utenteCorrente.uid,
+      strutturaId: strutturaId,
+      nota: nota,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    await addDoc(collection(db, "user_notes"), noteData);
+    
+    // Log attività
+    await logActivity('note_created', strutturaId, utenteCorrente.uid, {
+      noteLength: nota.length
+    });
+    
+    console.log('✅ Nota personale salvata');
+  } catch (error) {
+    console.error('Errore nel salvataggio nota:', error);
+    throw error;
+  }
+}
+
+async function eliminaNota(notaId) {
+  try {
+    if (!utenteCorrente) return;
+    
+    await deleteDoc(doc(db, "user_notes", notaId));
+    
+    // Log attività
+    await logActivity('note_deleted', notaId, utenteCorrente.uid);
+    
+    // Ricarica il modal
+    const modal = document.getElementById('noteModal');
+    if (modal) {
+      modal.remove();
+      // Trova la strutturaId dal modal per ricaricare
+      const strutturaId = modal.querySelector('[data-struttura-id]')?.dataset.strutturaId;
+      if (strutturaId) {
+        mostraNotePersonali(strutturaId);
+      }
+    }
+  } catch (error) {
+    console.error('Errore nell\'eliminazione nota:', error);
+    alert('Errore nell\'eliminazione della nota');
+  }
 }
 
 // === Gestione Utenti Firebase ===
@@ -1809,6 +2275,22 @@ function mostraGestioneElencoPersonale() {
           mostraSchedaCompleta(struttura.id);
         };
         
+        const notesBtn = document.createElement('button');
+        notesBtn.innerHTML = '📝';
+        notesBtn.title = 'Note personali';
+        notesBtn.style.cssText = `
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px 10px;
+          cursor: pointer;
+          font-size: 14px;
+        `;
+        notesBtn.onclick = () => {
+          mostraNotePersonali(struttura.id);
+        };
+        
         const removeBtn = document.createElement('button');
         removeBtn.innerHTML = '🗑️';
         removeBtn.title = 'Rimuovi dall\'elenco';
@@ -1828,6 +2310,7 @@ function mostraGestioneElencoPersonale() {
         };
         
         actionsDiv.appendChild(viewBtn);
+        actionsDiv.appendChild(notesBtn);
         actionsDiv.appendChild(removeBtn);
         
         itemDiv.appendChild(infoDiv);
@@ -2086,6 +2569,7 @@ function mostraMenuEsportazione(struttureElenco) {
       <h3>Esporta Elenco Personale (${struttureElenco.length} elementi)</h3>
       <button onclick="esportaJSON()">📄 JSON</button>
       <button onclick="esportaCSV()">📊 CSV</button>
+      <button onclick="mostraOpzioniEsportazione(struttureElenco)">📊 Export Avanzato</button>
       <button onclick="chiudiMenu()">❌ Chiudi</button>
     </div>
   `;
@@ -2638,6 +3122,13 @@ function mostraSchedaCompleta(strutturaId) {
   async function salvaModificheScheda(strutturaId) {
     try {
       if (isNewStructure) {
+        // Aggiorna metadati per nuova struttura
+        struttura.lastModified = new Date();
+        struttura.lastModifiedBy = utenteCorrente?.uid || null;
+        struttura.createdAt = new Date();
+        struttura.createdBy = utenteCorrente?.uid || null;
+        struttura.version = 1;
+        
         // Crea nuova struttura in Firestore
         const docRef = await addDoc(colRef, struttura);
         
@@ -2651,11 +3142,30 @@ function mostraSchedaCompleta(strutturaId) {
         // Aggiorna le strutture globali
         window.strutture = strutture;
         
+        // Log attività
+        await logActivity('structure_created', docRef.id, utenteCorrente?.uid, {
+          name: struttura.Struttura,
+          location: struttura.Luogo
+        });
+        
+        // Notifica push per nuova struttura
+        if (window.notifyNewStructure) {
+          await window.notifyNewStructure(struttura);
+        }
+        
         alert('✅ Nuova struttura creata con successo!');
         modalScheda.remove();
-  aggiornaLista();
+        aggiornaLista();
         
       } else {
+        // Salva versione precedente prima di modificare
+        await salvaVersione(struttura, utenteCorrente?.uid);
+        
+        // Aggiorna metadati
+        struttura.lastModified = new Date();
+        struttura.lastModifiedBy = utenteCorrente?.uid || null;
+        struttura.version = (struttura.version || 1) + 1;
+        
         // Aggiorna struttura esistente
         const docRef = doc(db, "strutture", strutturaId);
         await updateDoc(docRef, struttura);
@@ -2668,6 +3178,11 @@ function mostraSchedaCompleta(strutturaId) {
         
         // Aggiorna le strutture globali
         window.strutture = strutture;
+        
+        // Log attività
+        await logActivity('structure_updated', strutturaId, utenteCorrente?.uid, {
+          version: struttura.version
+        });
         
         alert('✅ Modifiche salvate con successo!');
         toggleEditMode();
@@ -2783,6 +3298,11 @@ function mostraCaricamento() {
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
+  
+  // Inizializza push notifications
+  if (window.pushManager) {
+    await window.initializePushNotifications();
+  }
   
   // Carica preferenza modalità visualizzazione
   const savedViewMode = localStorage.getItem('viewMode');

@@ -3,8 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes" />
-<title>Quovadiscout - Strutture & Terreni v1.1</title>
+<title>Quovadiscout - Strutture & Terreni v1.2</title>
+<meta name="description" content="Sistema avanzato per la gestione di strutture e terreni scout" />
+<meta name="theme-color" content="#2f6b2f" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="QuoVadiScout" />
+<link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css">
+<!-- Export libraries -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -24,6 +33,12 @@
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           <label><input type="checkbox" id="filter-casa" /> Casa</label>
           <label><input type="checkbox" id="filter-terreno" /> Terreno</label>
+          <select id="filter-stato">
+            <option value="">Tutti gli stati</option>
+            <option value="attiva">🟢 Attiva</option>
+            <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
+            <option value="non_piu_attiva">🔴 Non più attiva</option>
+          </select>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <div class="view-toggle">
@@ -72,6 +87,79 @@
   </div>
 
 <script type="module" src="script.js"></script>
+<script src="export.js"></script>
+<script src="push-notifications.js"></script>
+
+<script>
+// Registrazione Service Worker per PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('✅ Service Worker registrato:', registration.scope);
+      
+      // Gestione aggiornamenti
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nuovo service worker disponibile
+            if (confirm('È disponibile una nuova versione dell\'app. Vuoi aggiornare?')) {
+              newWorker.postMessage({ action: 'SKIP_WAITING' });
+              window.location.reload();
+            }
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore registrazione Service Worker:', error);
+    }
+  });
+}
+
+// Gestione installazione PWA
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Mostra pulsante installazione personalizzato
+  const installBtn = document.createElement('button');
+  installBtn.textContent = '📱 Installa App';
+  installBtn.className = 'btn-install';
+  installBtn.style.cssText = `
+    background: #2f6b2f;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 8px;
+  `;
+  
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Risultato installazione:', outcome);
+      deferredPrompt = null;
+    }
+  });
+  
+  // Aggiungi pulsante alla topbar
+  const controls = document.querySelector('.controls-secondary');
+  if (controls) {
+    controls.appendChild(installBtn);
+  }
+});
+
+// Gestione installazione completata
+window.addEventListener('appinstalled', () => {
+  console.log('✅ PWA installata con successo');
+  deferredPrompt = null;
+});
+</script>
 
 </body>
 </html>

@@ -6,6 +6,7 @@
 <title>Quovadiscout - Strutture & Terreni v1.2</title>
 <meta name="description" content="Sistema avanzato per la gestione di strutture e terreni scout" />
 <meta name="theme-color" content="#2f6b2f" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="QuoVadiScout" />
@@ -95,7 +96,8 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      // Prova a registrare il service worker
+      const registration = await navigator.serviceWorker.register('./service-worker.js');
       console.log('✅ Service Worker registrato:', registration.scope);
       
       // Gestione aggiornamenti
@@ -113,7 +115,9 @@ if ('serviceWorker' in navigator) {
       });
       
     } catch (error) {
-      console.error('❌ Errore registrazione Service Worker:', error);
+      console.warn('⚠️ Service Worker non disponibile (modalità sviluppo):', error.message);
+      // In modalità sviluppo, continua senza service worker
+      console.log('📱 App funzionante senza PWA features');
     }
   });
 }

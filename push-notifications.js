@@ -15,6 +15,12 @@ class PushNotificationManager {
     }
 
     try {
+      // Controlla se il service worker è disponibile
+      if (!navigator.serviceWorker.controller) {
+        console.log('⚠️ Service Worker non disponibile, notifiche locali solo');
+        return false;
+      }
+
       // Registra service worker se non già registrato
       const registration = await navigator.serviceWorker.ready;
       
@@ -31,7 +37,7 @@ class PushNotificationManager {
       console.log('✅ Push notifications inizializzate');
       return true;
     } catch (error) {
-      console.error('❌ Errore inizializzazione push notifications:', error);
+      console.warn('⚠️ Push notifications non disponibili:', error.message);
       return false;
     }
   }

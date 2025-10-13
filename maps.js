@@ -1,6 +1,13 @@
 // Maps integration for QuoVadiScout
 // Leaflet + OpenStreetMap implementation
 
+// Cache per geocoding (proprietà statiche della classe)
+MapsManager.geocodingCache = new Map();
+MapsManager.geocodingQueue = [];
+MapsManager.isProcessingGeocoding = false;
+MapsManager.lastGeocodingRequest = 0;
+MapsManager.GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
+
 class MapsManager {
   constructor() {
     this.map = null;
@@ -195,13 +202,6 @@ class MapsManager {
     });
     console.log(`📍 ${strutture.length} marker aggiornati sulla mappa`);
   }
-
-  // Cache per geocoding
-  static geocodingCache = new Map();
-  static geocodingQueue = [];
-  static isProcessingGeocoding = false;
-  static lastGeocodingRequest = 0;
-  static readonly GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
 
   async geocodeStructure(struttura) {
     const address = struttura.Indirizzo || `${struttura.Luogo}, ${struttura.Prov}, Italia`;

@@ -123,8 +123,12 @@ async function cacheFirst(request) {
     
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
-      const cache = await caches.open(STATIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      try {
+        const cache = await caches.open(STATIC_CACHE);
+        await cache.put(request, networkResponse.clone());
+      } catch (cacheError) {
+        console.warn('⚠️ Service Worker: Errore nel caching:', cacheError);
+      }
     }
     
     return networkResponse;
@@ -144,8 +148,12 @@ async function networkFirst(request) {
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE);
-      cache.put(request, networkResponse.clone());
+      try {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        await cache.put(request, networkResponse.clone());
+      } catch (cacheError) {
+        console.warn('⚠️ Service Worker: Errore nel caching dinamico:', cacheError);
+      }
     }
     
     return networkResponse;

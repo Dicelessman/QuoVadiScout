@@ -1693,6 +1693,7 @@ window.eliminaStruttura = eliminaStruttura;
 window.eliminaStrutturaConConferma = eliminaStrutturaConConferma;
 window.filtra = filtra;
 window.mostraRicercaAvanzata = mostraRicercaAvanzata;
+window.rimuoviRicercaAvanzata = rimuoviRicercaAvanzata;
 window.esportaElencoPersonale = esportaElencoPersonale;
 window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
 window.mostraNotePersonali = mostraNotePersonali;

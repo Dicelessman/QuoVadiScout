@@ -138,7 +138,7 @@ function renderStrutture(lista) {
   }
   
   if (container) {
-    container.innerHTML = "";
+  container.innerHTML = "";
   }
 
   if (lista.length === 0) {
@@ -303,8 +303,8 @@ function renderStrutture(lista) {
   });
 
   // Aggiungi controlli di paginazione
-  const paginazione = document.createElement('div');
-  paginazione.className = 'paginazione';
+    const paginazione = document.createElement('div');
+    paginazione.className = 'paginazione';
   
   // Selettore elementi per pagina
   const itemsPerPageSelector = `
@@ -321,24 +321,24 @@ function renderStrutture(lista) {
   
   // Controlli di paginazione (solo se ci sono più pagine)
   const paginationControls = totalePagine > 1 ? `
-    <div class="pagination-info">
-      Mostrando ${inizio + 1}-${Math.min(fine, lista.length)} di ${lista.length} strutture
-    </div>
-    <div class="pagination-controls">
-      <button ${paginaCorrente === 1 ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente - 1})">« Precedente</button>
-      <span class="pagination-numbers">
+      <div class="pagination-info">
+        Mostrando ${inizio + 1}-${Math.min(fine, lista.length)} di ${lista.length} strutture
+      </div>
+      <div class="pagination-controls">
+        <button ${paginaCorrente === 1 ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente - 1})">« Precedente</button>
+        <span class="pagination-numbers">
         ${generaNumeriPagina(totalePagine, paginaCorrente)}
-      </span>
-      <button ${paginaCorrente === totalePagine ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente + 1})">Successiva »</button>
-    </div>
+        </span>
+        <button ${paginaCorrente === totalePagine ? 'disabled' : ''} onclick="cambiaPagina(${paginaCorrente + 1})">Successiva »</button>
+      </div>
   ` : `
     <div class="pagination-info">
       Mostrando tutte le ${lista.length} strutture
     </div>
-  `;
+    `;
   
   paginazione.innerHTML = itemsPerPageSelector + paginationControls;
-  container.appendChild(paginazione);
+    container.appendChild(paginazione);
 }
 
 function cambiaPagina(nuovaPagina) {
@@ -3140,11 +3140,21 @@ function aggiornaContatoreElenco() {
 
 // === Gestione Elenco Personale ===
 function esportaElencoPersonale() {
+  console.log('📤 Avvio esportazione elenco personale...');
+  console.log('📋 Strutture in elenco personale:', elencoPersonale.length);
+  
+  if (elencoPersonale.length === 0) {
+    alert('❌ L\'elenco personale è vuoto. Aggiungi alcune strutture prima di esportare.');
+    return;
+  }
+  
   mostraGestioneElencoPersonale();
 }
 
 function mostraGestioneElencoPersonale() {
+  console.log('📋 Apertura gestione elenco personale...');
   const struttureElenco = strutture.filter(s => elencoPersonale.includes(s.id));
+  console.log('📊 Strutture trovate:', struttureElenco.length);
   
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('gestioneElencoModal');
@@ -3700,17 +3710,12 @@ function mostraMenuEsportazione(struttureElenco) {
       alert('Funzione di export avanzato non disponibile');
     }
   };
+  
+  // Salva le strutture dell'elenco in una variabile globale per accesso
+  window.struttureElencoPersonale = struttureElenco;
 }
 
-// Funzione per export generale (tutte le strutture)
-window.mostraOpzioniEsportazioneGenerale = () => {
-  if (typeof window.mostraOpzioniEsportazione === 'function') {
-    window.mostraOpzioniEsportazione(strutture);
-  } else {
-    console.error('Funzione mostraOpzioniEsportazione non trovata');
-    alert('Funzione di export avanzato non disponibile');
-  }
-}
+// Funzione per export generale (tutte le strutture) - definita più sotto
 
 function stampaElenco(struttureElenco) {
   const printWindow = window.open('', '_blank');
@@ -4110,24 +4115,24 @@ function mostraSchedaCompleta(strutturaId) {
             
             campoDiv.appendChild(ratingDiv);
           } else {
-            const value = document.createElement('span');
-            const valore = struttura[campo];
-            
-            if (valore === undefined || valore === null || valore === '') {
-              value.textContent = 'Non specificato';
-              value.style.color = '#6c757d';
-              value.style.fontStyle = 'italic';
-            } else if (typeof valore === 'boolean') {
-              value.textContent = valore ? 'Sì' : 'No';
-              value.style.color = valore ? '#28a745' : '#dc3545';
-              value.style.fontWeight = 'bold';
-            } else {
-              value.textContent = valore;
-              value.style.color = '#212529';
-            }
-            
-            campoDiv.appendChild(label);
-            campoDiv.appendChild(value);
+          const value = document.createElement('span');
+          const valore = struttura[campo];
+          
+          if (valore === undefined || valore === null || valore === '') {
+            value.textContent = 'Non specificato';
+            value.style.color = '#6c757d';
+            value.style.fontStyle = 'italic';
+          } else if (typeof valore === 'boolean') {
+            value.textContent = valore ? 'Sì' : 'No';
+            value.style.color = valore ? '#28a745' : '#dc3545';
+            value.style.fontWeight = 'bold';
+          } else {
+            value.textContent = valore;
+            value.style.color = '#212529';
+          }
+          
+          campoDiv.appendChild(label);
+          campoDiv.appendChild(value);
           }
         }
         
@@ -4622,12 +4627,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     // Aggiorna il toggle button
     const toggleBtn = document.getElementById('viewToggle');
     if (toggleBtn) {
-      const viewIcon = toggleBtn.querySelector('.view-icon');
-      const viewLabel = toggleBtn.querySelector('.view-label');
-      
+    const viewIcon = toggleBtn.querySelector('.view-icon');
+    const viewLabel = toggleBtn.querySelector('.view-label');
+    
       if (viewIcon) viewIcon.textContent = '📄';
       if (viewLabel) viewLabel.textContent = 'Schede';
-      toggleBtn.classList.add('active');
+    toggleBtn.classList.add('active');
     }
   }
   
@@ -4748,7 +4753,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
   document.getElementById("resetBtn").addEventListener("click", resetFiltri);
-  document.getElementById("exportBtn").addEventListener("click", esportaElencoPersonale);
+  // exportBtn gestito in initializeUIEventListeners()
   
   // Event listener per toggle visualizzazione
   document.getElementById("viewToggle").addEventListener("click", toggleViewMode);

@@ -644,3 +644,4 @@ function getStatoLabel(stato) {
 // Rendi le funzioni accessibili globalmente
 window.esportaExcel = esportaExcel;
 window.esportaPDF = esportaPDF;
+window.mostraOpzioniEsportazione = mostraOpzioniEsportazione;

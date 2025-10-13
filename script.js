@@ -155,6 +155,9 @@ function renderStrutture(lista) {
             <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
               ${isInElenco ? '⭐' : '☆'}
             </button>
+            <button class="notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
+              📝
+            </button>
           </div>
         </div>
         
@@ -168,6 +171,8 @@ function renderStrutture(lista) {
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
             ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
+            ${s.rating?.average ? `<span class="rating-badge">⭐ ${s.rating.average.toFixed(1)}</span>` : ''}
+            ${s.segnalazioni?.length ? `<span class="reports-badge">⚠️ ${s.segnalazioni.length}</span>` : ''}
           </div>
           
           <div class="contact-info">
@@ -189,6 +194,9 @@ function renderStrutture(lista) {
             <button class="toggle-elenco ${isInElenco ? 'in-elenco' : ''}" data-id="${s.id}">
               ${isInElenco ? '⭐' : '☆'}
             </button>
+            <button class="notes-btn" onclick="mostraNotePersonali('${s.id}')" title="Note personali">
+              📝
+            </button>
           </div>
         </div>
         
@@ -206,6 +214,8 @@ function renderStrutture(lista) {
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
             ${s.stato ? `<span class="status-badge ${s.stato}">${getStatoLabel(s.stato)}</span>` : ''}
+            ${s.rating?.average ? `<span class="rating-badge">⭐ ${s.rating.average.toFixed(1)}</span>` : ''}
+            ${s.segnalazioni?.length ? `<span class="reports-badge">⚠️ ${s.segnalazioni.length}</span>` : ''}
           </div>
           
           <div class="card-details">
@@ -1305,9 +1315,9 @@ async function aggiungiStruttura() {
     segnalazioni: [],
     immagini: [],
     lastModified: new Date(),
-    lastModifiedBy: utenteCorrente?.uid || null,
+    lastModifiedBy: auth.currentUser?.uid || null,
     createdAt: new Date(),
-    createdBy: utenteCorrente?.uid || null,
+    createdBy: auth.currentUser?.uid || null,
     version: 1
   };
   
@@ -1698,6 +1708,699 @@ window.esportaElencoPersonale = esportaElencoPersonale;
 window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
 window.mostraNotePersonali = mostraNotePersonali;
 window.salvaNotaPersonale = salvaNotaPersonale;
+
+// === Gestione Mappe ===
+async function mostraMappa() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('mapModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'mapModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95%;
+    max-height: 95%;
+    width: 100%;
+    height: 90%;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '🗺️ Mappa Strutture';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const controls = document.createElement('div');
+  controls.style.cssText = `
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  `;
+  
+  const centerBtn = document.createElement('button');
+  centerBtn.innerHTML = '📍 Centro su di me';
+  centerBtn.style.cssText = `
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  `;
+  centerBtn.onclick = async () => {
+    try {
+      await window.centerMapOnUser();
+    } catch (error) {
+      alert('Impossibile ottenere la tua posizione');
+    }
+  };
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  controls.appendChild(centerBtn);
+  controls.appendChild(closeBtn);
+  
+  header.appendChild(title);
+  header.appendChild(controls);
+  
+  // Container mappa
+  const mapContainer = document.createElement('div');
+  mapContainer.id = 'map';
+  mapContainer.style.cssText = `
+    flex: 1;
+    min-height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+  `;
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(mapContainer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Inizializza mappa
+  try {
+    await window.initializeMap('map');
+    
+    // Mostra tutte le strutture sulla mappa
+    const listaFiltrata = filtra(strutture);
+    window.showStructuresOnMap(listaFiltrata);
+    
+    console.log('✅ Mappa inizializzata con', listaFiltrata.length, 'strutture');
+  } catch (error) {
+    console.error('❌ Errore inizializzazione mappa:', error);
+    mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';
+  }
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+// Rendi la funzione accessibile globalmente
+window.mostraMappa = mostraMappa;
+
+// === Sistema Rating ===
+async function voteStructure(strutturaId, rating) {
+  try {
+    if (!utenteCorrente) {
+      alert('Devi essere loggato per votare una struttura');
+      return;
+    }
+
+    const struttura = strutture.find(s => s.id === strutturaId);
+    if (!struttura) {
+      console.error('Struttura non trovata:', strutturaId);
+      return;
+    }
+
+    // Inizializza rating se non esiste
+    if (!struttura.rating) {
+      struttura.rating = { total: 0, count: 0, average: 0 };
+    }
+
+    // Salva il voto su Firestore
+    const voteData = {
+      userId: utenteCorrente.uid,
+      strutturaId: strutturaId,
+      rating: rating,
+      createdAt: new Date(),
+      userName: utenteCorrente.displayName || utenteCorrente.email?.split('@')[0] || 'Utente'
+    };
+
+    await addDoc(collection(db, "structure_ratings"), voteData);
+
+    // Aggiorna il rating della struttura
+    struttura.rating.count += 1;
+    struttura.rating.total += rating;
+    struttura.rating.average = struttura.rating.total / struttura.rating.count;
+
+    // Salva su Firestore
+    await updateDoc(doc(db, "strutture", strutturaId), {
+      rating: struttura.rating,
+      lastModified: new Date(),
+      lastModifiedBy: utenteCorrente.uid
+    });
+
+    // Log attività
+    await logActivity('structure_rated', strutturaId, utenteCorrente.uid, {
+      rating: rating,
+      newAverage: struttura.rating.average
+    });
+
+    // Aggiorna la scheda se è aperta
+    if (modalScheda && modalScheda.id === 'schedaCompletaModal') {
+      creaContenutoScheda();
+    }
+
+    // Aggiorna la lista
+    const listaFiltrata = filtra(strutture);
+    renderStrutture(listaFiltrata);
+
+    console.log(`✅ Voto ${rating}/5 registrato per ${struttura.Struttura}`);
+    
+    // Mostra notifica
+    if (window.showNotification) {
+      window.showNotification(
+        '⭐ Voto registrato!',
+        {
+          body: `Hai votato ${rating}/5 stelle per ${struttura.Struttura}`,
+          tag: 'vote-success'
+        }
+      );
+    }
+  } catch (error) {
+    console.error('❌ Errore nel salvataggio voto:', error);
+    alert('Errore nel salvataggio del voto');
+  }
+}
+
+// Rendi la funzione accessibile globalmente
+window.voteStructure = voteStructure;
+
+// === Sistema Segnalazioni ===
+async function mostraSegnalazione(strutturaId) {
+  const struttura = strutture.find(s => s.id === strutturaId);
+  if (!struttura) {
+    console.error('Struttura non trovata:', strutturaId);
+    return;
+  }
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('reportModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'reportModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    width: 500px;
+    max-height: 80%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  `;
+  
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; color: #dc3545;">⚠️ Segnala Problema</h3>
+      <button id="closeReportModal" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
+    </div>
+    
+    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+      <strong>Struttura:</strong> ${struttura.Struttura || 'Senza nome'}<br>
+      <span style="color: #666;">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 8px; font-weight: bold;">Tipo di problema:</label>
+      <select id="reportType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <option value="dati_obsoleti">Dati obsoleti o non aggiornati</option>
+        <option value="struttura_chiusa">Struttura chiusa o non più disponibile</option>
+        <option value="info_errate">Informazioni errate o incomplete</option>
+        <option value="contatto_non_funzionante">Contatti non funzionanti</option>
+        <option value="prezzi_aggiornati">Prezzi non aggiornati</option>
+        <option value="altro">Altro</option>
+      </select>
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 8px; font-weight: bold;">Descrizione del problema:</label>
+      <textarea id="reportDescription" placeholder="Descrivi il problema riscontrato..." 
+                style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+    </div>
+    
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button id="cancelReport" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+        ❌ Annulla
+      </button>
+      <button id="submitReport" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+        📤 Invia Segnalazione
+      </button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Event listeners
+  document.getElementById('closeReportModal').onclick = () => modal.remove();
+  document.getElementById('cancelReport').onclick = () => modal.remove();
+  
+  document.getElementById('submitReport').onclick = async () => {
+    const reportType = document.getElementById('reportType').value;
+    const description = document.getElementById('reportDescription').value.trim();
+    
+    if (!description) {
+      alert('Inserisci una descrizione del problema!');
+      return;
+    }
+    
+    try {
+      await inviaSegnalazione(strutturaId, reportType, description);
+      modal.remove();
+    } catch (error) {
+      console.error('Errore nell\'invio segnalazione:', error);
+      alert('Errore nell\'invio della segnalazione');
+    }
+  };
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+async function inviaSegnalazione(strutturaId, tipo, descrizione) {
+  try {
+    const struttura = strutture.find(s => s.id === strutturaId);
+    if (!struttura) {
+      throw new Error('Struttura non trovata');
+    }
+
+    // Crea la segnalazione
+    const reportData = {
+      strutturaId: strutturaId,
+      strutturaNome: struttura.Struttura || 'Senza nome',
+      tipo: tipo,
+      descrizione: descrizione,
+      userId: utenteCorrente?.uid || null,
+      userName: utenteCorrente?.displayName || utenteCorrente?.email?.split('@')[0] || 'Utente anonimo',
+      userEmail: utenteCorrente?.email || null,
+      createdAt: new Date(),
+      status: 'pending', // pending, reviewed, resolved
+      reviewedBy: null,
+      reviewedAt: null
+    };
+
+    // Salva su Firestore
+    await addDoc(collection(db, "structure_reports"), reportData);
+
+    // Aggiorna il contatore segnalazioni nella struttura
+    if (!struttura.segnalazioni) {
+      struttura.segnalazioni = [];
+    }
+    
+    struttura.segnalazioni.push({
+      tipo: tipo,
+      descrizione: descrizione,
+      createdAt: new Date(),
+      userId: utenteCorrente?.uid || null
+    });
+
+    // Aggiorna su Firestore
+    await updateDoc(doc(db, "strutture", strutturaId), {
+      segnalazioni: struttura.segnalazioni,
+      lastModified: new Date(),
+      lastModifiedBy: utenteCorrente?.uid || null
+    });
+
+    // Log attività
+    await logActivity('report_submitted', strutturaId, utenteCorrente?.uid || 'anonymous', {
+      reportType: tipo,
+      reportDescription: descrizione.substring(0, 100)
+    });
+
+    console.log('✅ Segnalazione inviata per:', struttura.Struttura);
+    
+    // Mostra notifica
+    if (window.showNotification) {
+      window.showNotification(
+        '⚠️ Segnalazione inviata',
+        {
+          body: `La tua segnalazione per ${struttura.Struttura} è stata inviata`,
+          tag: 'report-success'
+        }
+      );
+    }
+    
+    alert('✅ Segnalazione inviata con successo! Grazie per il tuo contributo.');
+  } catch (error) {
+    console.error('❌ Errore nell\'invio segnalazione:', error);
+    throw error;
+  }
+}
+
+// Rendi le funzioni accessibili globalmente
+window.mostraSegnalazione = mostraSegnalazione;
+window.inviaSegnalazione = inviaSegnalazione;
+
+// === Ottimizzazioni Performance ===
+function setupLazyLoading() {
+  // Verifica se l'Intersection Observer è supportato
+  if (!('IntersectionObserver' in window)) {
+    console.log('⚠️ Intersection Observer non supportato, caricamento immagini normale');
+    return;
+  }
+
+  const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        
+        // Carica l'immagine
+        if (img.dataset.src) {
+          img.src = img.dataset.src;
+          img.classList.remove('lazy');
+          img.classList.add('loaded');
+        }
+        
+        // Rimuovi l'observer per questa immagine
+        imageObserver.unobserve(img);
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: '50px',
+    threshold: 0.1
+  });
+
+  // Osserva tutte le immagini lazy
+  document.querySelectorAll('img[data-src]').forEach(img => {
+    imageObserver.observe(img);
+  });
+
+  console.log('✅ Lazy loading configurato');
+}
+
+// Funzione per creare immagini lazy
+function createLazyImage(src, alt = '', className = '') {
+  const img = document.createElement('img');
+  img.dataset.src = src;
+  img.alt = alt;
+  img.className = `lazy ${className}`;
+  img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjhmOWZhIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM2Yzc1N2QiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7wn5GvIENhcmljYW1lbnRvLi4uPC90ZXh0Pgo8L3N2Zz4='; // Placeholder SVG
+  
+  // Stili per il placeholder
+  img.style.cssText = `
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    transition: opacity 0.3s ease;
+  `;
+  
+  img.onload = () => {
+    img.style.opacity = '1';
+  };
+  
+  return img;
+}
+
+// Cache intelligente per i dati
+class DataCache {
+  constructor() {
+    this.cache = new Map();
+    this.ttl = 5 * 60 * 1000; // 5 minuti
+  }
+
+  set(key, data) {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+  }
+
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    // Verifica se è scaduto
+    if (Date.now() - item.timestamp > this.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.data;
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+
+  has(key) {
+    const item = this.cache.get(key);
+    if (!item) return false;
+    
+    if (Date.now() - item.timestamp > this.ttl) {
+      this.cache.delete(key);
+      return false;
+    }
+    
+    return true;
+  }
+}
+
+// Inizializza cache globale
+window.dataCache = new DataCache();
+
+// Funzione per caricare dati con cache
+async function loadDataWithCache(key, loaderFunction) {
+  // Verifica cache
+  if (window.dataCache.has(key)) {
+    console.log(`📦 Dati caricati da cache: ${key}`);
+    return window.dataCache.get(key);
+  }
+
+  // Carica dati
+  console.log(`🌐 Caricamento dati da server: ${key}`);
+  const data = await loaderFunction();
+  
+  // Salva in cache
+  window.dataCache.set(key, data);
+  
+  return data;
+}
+
+// Paginazione ottimizzata con virtual scrolling
+function setupVirtualScrolling(container, items, itemsPerPage = 20) {
+  let currentPage = 1;
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  
+  function renderPage(page) {
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = items.slice(start, end);
+    
+    container.innerHTML = '';
+    pageItems.forEach(item => {
+      // Renderizza l'item
+      const itemElement = document.createElement('div');
+      itemElement.className = 'virtual-item';
+      // Aggiungi contenuto dell'item
+      container.appendChild(itemElement);
+    });
+  }
+  
+  function nextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderPage(currentPage);
+    }
+  }
+  
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderPage(currentPage);
+    }
+  }
+  
+  // Inizializza prima pagina
+  renderPage(1);
+  
+  return {
+    nextPage,
+    prevPage,
+    currentPage: () => currentPage,
+    totalPages: () => totalPages
+  };
+}
+
+// Skeleton screens per caricamento
+function showSkeletonScreen(container, type = 'cards') {
+  const skeletonHTML = {
+    cards: `
+      <div class="skeleton-card">
+        <div class="skeleton-header"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+        </div>
+      </div>
+    `,
+    list: `
+      <div class="skeleton-list-item">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    `
+  };
+  
+  container.innerHTML = skeletonHTML[type].repeat(5);
+}
+
+// Rendi le funzioni accessibili globalmente
+window.setupLazyLoading = setupLazyLoading;
+window.createLazyImage = createLazyImage;
+window.loadDataWithCache = loadDataWithCache;
+window.setupVirtualScrolling = setupVirtualScrolling;
+window.showSkeletonScreen = showSkeletonScreen;
+
+// === Gestione Temi ===
+class ThemeManager {
+  constructor() {
+    this.currentTheme = this.getStoredTheme() || this.getSystemTheme();
+    this.applyTheme(this.currentTheme);
+  }
+
+  getSystemTheme() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  getStoredTheme() {
+    return localStorage.getItem('theme');
+  }
+
+  storeTheme(theme) {
+    localStorage.setItem('theme', theme);
+  }
+
+  applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    this.currentTheme = theme;
+    this.storeTheme(theme);
+    
+    // Aggiorna l'icona del toggle
+    this.updateToggleIcon(theme);
+    
+    console.log(`🎨 Tema applicato: ${theme}`);
+  }
+
+  updateToggleIcon(theme) {
+    const toggle = document.getElementById('themeToggle');
+    if (toggle) {
+      const sunIcon = toggle.querySelector('.sun-icon');
+      if (sunIcon) {
+        sunIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+    }
+  }
+
+  toggleTheme() {
+    const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.applyTheme(newTheme);
+    
+    // Mostra notifica
+    if (window.showNotification) {
+      window.showNotification(
+        `🎨 Tema ${newTheme === 'dark' ? 'scuro' : 'chiaro'} attivato`,
+        {
+          body: `L'interfaccia è stata aggiornata al tema ${newTheme === 'dark' ? 'scuro' : 'chiaro'}`,
+          tag: 'theme-change'
+        }
+      );
+    }
+  }
+
+  getCurrentTheme() {
+    return this.currentTheme;
+  }
+}
+
+// Inizializza il gestore dei temi
+const themeManager = new ThemeManager();
+
+// Funzione per il toggle del tema
+function toggleTheme() {
+  themeManager.toggleTheme();
+}
+
+// Rendi le funzioni accessibili globalmente
+window.toggleTheme = toggleTheme;
+window.themeManager = themeManager;
 
 // === Gestione Utenti Firebase ===
 let utenteCorrente = null;
@@ -3053,7 +3756,21 @@ function mostraSchedaCompleta(strutturaId) {
     modalScheda.remove();
   };
   
+  const reportBtn = document.createElement('button');
+  reportBtn.innerHTML = '⚠️ Segnala';
+  reportBtn.style.cssText = `
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  reportBtn.onclick = () => mostraSegnalazione(strutturaId);
+  
   controls.appendChild(editBtn);
+  controls.appendChild(reportBtn);
   controls.appendChild(saveBtn);
   controls.appendChild(cancelBtn);
   controls.appendChild(closeBtn);
@@ -3096,6 +3813,9 @@ function mostraSchedaCompleta(strutturaId) {
       ],
       'Gestione': [
         'Ultimo controllo'
+      ],
+      'Valutazioni': [
+        'rating'
       ]
     };
     
@@ -3173,24 +3893,80 @@ function mostraSchedaCompleta(strutturaId) {
           }
         } else {
           // Modalità visualizzazione
-          const value = document.createElement('span');
-          const valore = struttura[campo];
-          
-          if (valore === undefined || valore === null || valore === '') {
-            value.textContent = 'Non specificato';
-            value.style.color = '#6c757d';
-            value.style.fontStyle = 'italic';
-          } else if (typeof valore === 'boolean') {
-            value.textContent = valore ? 'Sì' : 'No';
-            value.style.color = valore ? '#28a745' : '#dc3545';
-            value.style.fontWeight = 'bold';
+          if (campo === 'rating') {
+            // Gestione speciale per il rating
+            const ratingDiv = document.createElement('div');
+            ratingDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const ratingLabel = document.createElement('strong');
+            ratingLabel.textContent = 'Rating: ';
+            ratingLabel.style.color = '#495057';
+            
+            const starsContainer = document.createElement('div');
+            starsContainer.style.cssText = `
+              display: flex;
+              gap: 2px;
+            `;
+            
+            const currentRating = struttura.rating?.average || 0;
+            const totalVotes = struttura.rating?.count || 0;
+            
+            // Crea le stelle
+            for (let i = 1; i <= 5; i++) {
+              const star = document.createElement('span');
+              star.style.cssText = `
+                font-size: 20px;
+                color: ${i <= currentRating ? '#ffc107' : '#e9ecef'};
+                cursor: pointer;
+                transition: color 0.2s;
+              `;
+              star.textContent = '★';
+              star.title = `Vota ${i} stelle`;
+              star.onclick = () => voteStructure(struttura.id, i);
+              star.onmouseover = () => {
+                star.style.color = '#ffc107';
+              };
+              star.onmouseout = () => {
+                star.style.color = i <= currentRating ? '#ffc107' : '#e9ecef';
+              };
+              starsContainer.appendChild(star);
+            }
+            
+            const ratingInfo = document.createElement('span');
+            ratingInfo.textContent = ` (${currentRating.toFixed(1)}/5 - ${totalVotes} voti)`;
+            ratingInfo.style.color = '#6c757d';
+            ratingInfo.style.fontSize = '14px';
+            
+            ratingDiv.appendChild(ratingLabel);
+            ratingDiv.appendChild(starsContainer);
+            ratingDiv.appendChild(ratingInfo);
+            
+            campoDiv.appendChild(ratingDiv);
           } else {
-            value.textContent = valore;
-            value.style.color = '#212529';
+            const value = document.createElement('span');
+            const valore = struttura[campo];
+            
+            if (valore === undefined || valore === null || valore === '') {
+              value.textContent = 'Non specificato';
+              value.style.color = '#6c757d';
+              value.style.fontStyle = 'italic';
+            } else if (typeof valore === 'boolean') {
+              value.textContent = valore ? 'Sì' : 'No';
+              value.style.color = valore ? '#28a745' : '#dc3545';
+              value.style.fontWeight = 'bold';
+            } else {
+              value.textContent = valore;
+              value.style.color = '#212529';
+            }
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(value);
           }
-          
-          campoDiv.appendChild(label);
-          campoDiv.appendChild(value);
         }
         
         categoriaDiv.appendChild(campoDiv);
@@ -3713,6 +4489,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Carica filtri salvati
   await caricaFiltriSalvatiDropdown();
+  
+  // Inizializza ottimizzazioni performance
+  setupLazyLoading();
+  
+  // Inizializza gestione temi
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 });
 
 // === Gestione Filtri Salvati Dropdown ===

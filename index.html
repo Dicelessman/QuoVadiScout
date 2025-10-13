@@ -16,6 +16,9 @@
 <!-- Export libraries -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Maps libraries -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <header class="topbar">
@@ -67,7 +70,11 @@
           <button onclick="trovaVicinoAMe()" class="btn-location" title="Trova Vicino a Me">📍</button>
           <button onclick="geocodificaTutteStrutture()" class="btn-geocoding" title="Geocoding Automatico">🌍</button>
           <button onclick="mostraOpzioniEsportazioneGenerale()" class="btn-export">📊 Export</button>
+          <button onclick="mostraMappa()" class="btn-map" title="Visualizza mappa">🗺️ Mappa</button>
           <button onclick="location.href='dashboard.html'" class="btn-dashboard">📈 Dashboard</button>
+          <button id="themeToggle" class="theme-toggle" title="Cambia tema">
+            <span class="sun-icon">☀️</span>
+          </button>
           <button id="userBtn" class="btn-user">
             <span class="user-icon">👤</span>
             <span class="user-name">Accedi</span>
@@ -98,6 +105,7 @@
 <script type="module" src="script.js"></script>
 <script src="export.js"></script>
 <script src="push-notifications.js"></script>
+<script src="maps.js"></script>
 
 <script>
 // Registrazione Service Worker per PWA

@@ -1820,6 +1820,177 @@ window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
 window.mostraNotePersonali = mostraNotePersonali;
 window.salvaNotaPersonale = salvaNotaPersonale;
 
+// === Helper per Modali Responsive ===
+function createResponsiveModal(id, title, content) {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById(id);
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = id;
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 10px;
+    box-sizing: border-box;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 100%;
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const titleEl = document.createElement('h2');
+  titleEl.textContent = title;
+  titleEl.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+  
+  modalContent.appendChild(header);
+  modalContent.appendChild(content);
+  modal.appendChild(modalContent);
+  
+  // Chiudi modal cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+  
+  // Media query per mobile
+  const mediaQuery = window.matchMedia('(max-width: 768px)');
+  function handleMobileView(e) {
+    if (e.matches) {
+      // Mobile: modal a schermo intero
+      modalContent.style.cssText = `
+        background: white;
+        border-radius: 0;
+        padding: 15px;
+        max-width: 100%;
+        max-height: 100vh;
+        overflow-y: auto;
+        box-shadow: none;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+      `;
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        z-index: 10000;
+        padding: 0;
+        box-sizing: border-box;
+      `;
+    } else {
+      // Desktop: modal centrato
+      modalContent.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 90%;
+        max-height: 95vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+      `;
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 10px;
+        box-sizing: border-box;
+      `;
+    }
+  }
+  
+  // Applica stili iniziali
+  handleMobileView(mediaQuery);
+  
+  // Ascolta cambiamenti di viewport
+  mediaQuery.addListener(handleMobileView);
+  
+  // Pulisci listener quando il modal viene rimosso
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById(id)) {
+      mediaQuery.removeListener(handleMobileView);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  
+  document.body.appendChild(modal);
+  return modal;
+}
+
 // === Gestione Mappe ===
 async function mostraMappa() {
   // Rimuovi modal esistente se presente

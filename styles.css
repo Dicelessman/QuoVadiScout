@@ -1246,19 +1246,90 @@ html {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .paginazione {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+  
   .pagination-items-per-page {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+    width: 100%;
+    order: 1;
+  }
+  
+  .pagination-items-per-page label {
+    font-size: var(--text-xs);
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .pagination-items-per-page select {
+    width: 100%;
+    min-width: auto;
+    font-size: var(--text-sm);
+    padding: var(--spacing-xs);
+  }
+  
+  .pagination-info {
+    order: 2;
+    text-align: center;
+    font-size: var(--text-sm);
+    margin: var(--spacing-xs) 0;
+  }
+  
+  .pagination-controls {
+    order: 3;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .pagination-controls button {
+    min-width: 32px;
+    height: 32px;
+    font-size: var(--text-xs);
+    padding: var(--spacing-xs);
+  }
+  
+  .pagination-numbers {
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+  
+  .pagination-numbers button {
+    min-width: 28px;
+    height: 28px;
+    font-size: var(--text-xs);
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .paginazione {
+    padding: var(--spacing-xs);
     gap: var(--spacing-xs);
   }
   
   .pagination-controls {
-    gap: var(--spacing-xs);
+    gap: 2px;
   }
   
   .pagination-controls button {
-    min-width: 36px;
-    height: 32px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+  
+  .pagination-numbers button {
+    min-width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .pagination-info {
     font-size: var(--text-xs);
   }
 }
@@ -1359,5 +1430,98 @@ html {
   .export-options button {
     padding: var(--spacing-lg);
     font-size: var(--font-size-lg);
+  }
+}
+
+/* === MODAL RESPONSIVE STYLES === */
+@media (max-width: 768px) {
+  /* Modali a schermo intero su mobile */
+  div[id$="Modal"] {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    background: white !important;
+  }
+  
+  div[id$="Modal"] > div {
+    background: white !important;
+    border-radius: 0 !important;
+    padding: 15px !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  
+  /* Header modali su mobile */
+  div[id$="Modal"] h2 {
+    font-size: 1.2rem !important;
+  }
+  
+  /* Pulsanti modali su mobile */
+  div[id$="Modal"] button {
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+  }
+  
+  /* Form modali su mobile */
+  div[id$="Modal"] input,
+  div[id$="Modal"] select,
+  div[id$="Modal"] textarea {
+    min-height: 44px !important;
+    font-size: 16px !important;
+    padding: 12px !important;
+  }
+  
+  /* Grid responsive per form */
+  div[id$="Modal"] form {
+    display: block !important;
+    gap: 15px !important;
+  }
+  
+  /* Categorie responsive */
+  div[id$="Modal"] .categoria-div {
+    margin-bottom: 15px !important;
+    padding: 12px !important;
+  }
+  
+  /* Footer modali responsive */
+  div[id$="Modal"] > div > div:last-child {
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding-top: 15px !important;
+  }
+  
+  div[id$="Modal"] > div > div:last-child > div {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  div[id$="Modal"] > div > div:last-child button {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  div[id$="Modal"] {
+    padding: 0 !important;
+  }
+  
+  div[id$="Modal"] > div {
+    padding: 10px !important;
+  }
+  
+  div[id$="Modal"] h2 {
+    font-size: 1.1rem !important;
+  }
+  
+  div[id$="Modal"] button {
+    min-height: 48px !important;
+    font-size: 16px !important;
   }
 }

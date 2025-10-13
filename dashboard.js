@@ -227,7 +227,8 @@ function aggiungiMarkers() {
     
     if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
       const marker = L.marker([lat, lng], {
-        title: struttura.Struttura || 'Struttura senza nome'
+        title: struttura.Struttura || 'Struttura senza nome',
+        icon: getMarkerIcon(struttura)
       });
       
       const popupContent = `
@@ -282,14 +283,20 @@ function getMarkerIcon(struttura) {
     color = '#4caf50'; // Verde per terreni
   }
   
-  return {
-    path: google.maps.SymbolPath.CIRCLE,
-    fillColor: color,
-    fillOpacity: 0.8,
-    strokeColor: '#ffffff',
-    strokeWeight: 2,
-    scale: 8
-  };
+  // Crea icona personalizzata per Leaflet
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="
+      background-color: ${color};
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
 }
 
 function filtraMarkers(tipo) {
@@ -517,13 +524,9 @@ async function inizializzaDashboard() {
     aggiornaStatisticheProvince();
     creaGrafici();
     
-    // Se Google Maps è già caricato, inizializza la mappa
-    if (typeof google !== 'undefined' && google.maps) {
-      console.log('🗺️ Google Maps già disponibile, inizializzazione mappa...');
-      initMap();
-    } else {
-      console.log('⏳ Google Maps non ancora caricato, attendo...');
-    }
+    // Inizializza la mappa Leaflet
+    console.log('🗺️ Inizializzazione mappa Leaflet...');
+    initMap();
     
     document.getElementById('loading').classList.add('hidden');
     
@@ -547,16 +550,16 @@ document.getElementById('refreshBtn').addEventListener('click', inizializzaDashb
 // === Avvio Dashboard ===
 window.addEventListener('DOMContentLoaded', inizializzaDashboard);
 
-// Fallback per Google Maps se non disponibile
+// Fallback per Leaflet se non disponibile
 setTimeout(() => {
-  if (typeof google === 'undefined' || !google.maps) {
-    console.warn('⚠️ Google Maps non caricato dopo 5 secondi, mostrando fallback');
+  if (typeof L === 'undefined') {
+    console.warn('⚠️ Leaflet non caricato dopo 5 secondi, mostrando fallback');
     const mapContainer = document.getElementById('map');
     if (mapContainer && !map) {
       mapContainer.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666; flex-direction: column;">
           <h3>🗺️ Mappa non disponibile</h3>
-          <p>Google Maps non è stato caricato correttamente</p>
+          <p>Leaflet non è stato caricato correttamente</p>
           <p style="font-size: 0.9rem; color: #999;">Le statistiche e i grafici sono comunque disponibili</p>
           <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #2f6b2f; color: white; border: none; border-radius: 4px; cursor: pointer;">
             🔄 Riprova
@@ -565,7 +568,7 @@ setTimeout(() => {
       `;
     }
   }
-}, 5000); // Attendi 5 secondi per il caricamento di Google Maps
+}, 5000); // Attendi 5 secondi per il caricamento di Leaflet
 
 // Rendi le funzioni accessibili globalmente
 window.initMap = initMap;

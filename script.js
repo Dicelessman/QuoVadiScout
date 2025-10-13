@@ -331,6 +331,7 @@ function cambiaPagina(nuovaPagina) {
   renderStrutture(listaFiltrata);
 }
 
+
 // === Ricerca Avanzata ===
 function mostraRicercaAvanzata() {
   console.log('🔍 Apertura ricerca avanzata...');
@@ -5876,3 +5877,16 @@ function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
     }
   });
 }
+
+// === Esposizione Funzioni Globali ===
+// Esponi tutte le funzioni necessarie per compatibilità con HTML onclick
+window.cambiaPagina = cambiaPagina;
+window.mostraRicercaAvanzata = mostraRicercaAvanzata;
+window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
+window.mostraMappa = mostraMappa;
+window.trovaVicinoAMe = trovaVicinoAMe;
+window.geocodificaTutteStrutture = geocodificaTutteStrutture;
+window.mostraOpzioniEsportazioneGenerale = mostraOpzioniEsportazioneGenerale;
+window.mostraFeedAttivita = mostraFeedAttivita;
+
+console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');

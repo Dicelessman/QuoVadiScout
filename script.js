@@ -3593,9 +3593,15 @@ function mostraGestioneElencoPersonale() {
   `;
   exportBtn.disabled = struttureElenco.length === 0;
   exportBtn.onclick = () => {
+    console.log('📤 Pulsante esportazione cliccato');
+    console.log('📊 Strutture da esportare:', struttureElenco.length);
+    
     if (struttureElenco.length > 0) {
+      console.log('✅ Rimuovo modal e apro menu esportazione');
       modal.remove();
       mostraMenuEsportazione(struttureElenco);
+    } else {
+      console.log('❌ Nessuna struttura da esportare');
     }
   };
   
@@ -3641,6 +3647,9 @@ function mostraGestioneElencoPersonale() {
 }
 
 function mostraMenuEsportazione(struttureElenco) {
+  console.log('📋 Apertura menu esportazione...');
+  console.log('📊 Strutture ricevute:', struttureElenco.length);
+  
   const menu = document.createElement('div');
   menu.className = 'export-menu';
   menu.innerHTML = `
@@ -3653,7 +3662,9 @@ function mostraMenuEsportazione(struttureElenco) {
     </div>
   `;
   
+  console.log('✅ Menu creato, aggiungo al DOM');
   document.body.appendChild(menu);
+  console.log('✅ Menu aggiunto al DOM');
   
   // Funzioni di esportazione
   window.esportaJSON = () => {

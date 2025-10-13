@@ -67,21 +67,48 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Ignora richieste per favicon e altre risorse non critiche
+  if (url.pathname.includes('favicon.ico') || 
+      url.pathname.includes('robots.txt') ||
+      url.pathname.includes('sitemap.xml')) {
+    return;
+  }
+  
   // Strategia per risorse statiche
   if (isStaticAsset(request)) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(
+      cacheFirst(request).catch(error => {
+        console.warn('⚠️ Service Worker: Errore cache-first per:', request.url, error);
+        return new Response('Risorsa non disponibile', { status: 404 });
+      })
+    );
   }
   // Strategia per API Firebase
   else if (isFirebaseRequest(request)) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(
+      networkFirst(request).catch(error => {
+        console.warn('⚠️ Service Worker: Errore network-first per:', request.url, error);
+        return new Response('API non disponibile', { status: 503 });
+      })
+    );
   }
   // Strategia per immagini
   else if (isImageRequest(request)) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(
+      cacheFirst(request).catch(error => {
+        console.warn('⚠️ Service Worker: Errore immagine per:', request.url, error);
+        return new Response('Immagine non disponibile', { status: 404 });
+      })
+    );
   }
   // Strategia di default
   else {
-    event.respondWith(networkFirst(request));
+    event.respondWith(
+      networkFirst(request).catch(error => {
+        console.warn('⚠️ Service Worker: Errore default per:', request.url, error);
+        return new Response('Risorsa non disponibile', { status: 404 });
+      })
+    );
   }
 });
 
@@ -103,6 +130,10 @@ async function cacheFirst(request) {
     return networkResponse;
   } catch (error) {
     console.error('❌ Service Worker: Errore cache-first:', error);
+    // Non loggare errori per risorse che potrebbero non esistere (come favicon)
+    if (!request.url.includes('favicon.ico')) {
+      console.warn('⚠️ Service Worker: Risorsa non trovata:', request.url);
+    }
     return new Response('Offline - Risorsa non disponibile', { status: 503 });
   }
 }

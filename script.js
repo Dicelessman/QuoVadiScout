@@ -794,15 +794,20 @@ async function caricaFiltriSalvati() {
     const filtersRef = collection(db, "user_filters");
     const q = query(
       filtersRef, 
-      where("userId", "==", utenteCorrente.uid),
-      orderBy("updatedAt", "desc")
+      where("userId", "==", utenteCorrente.uid)
     );
     const snapshot = await getDocs(q);
-    
-    return snapshot.docs.map(doc => ({
+    const filtri = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    
+    // Ordina localmente per evitare problemi di indice
+    return filtri.sort((a, b) => {
+      const dateA = a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0);
+      const dateB = b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || 0);
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Errore nel caricamento filtri salvati:', error);
     return [];

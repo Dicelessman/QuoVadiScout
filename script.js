@@ -4479,6 +4479,111 @@ function mostraSchedaCompleta(strutturaId) {
       content.appendChild(categoriaDiv);
     });
     
+    // Aggiungi pulsante WhatsApp se ci sono numeri di telefono
+    const hasPhoneNumbers = (struttura.Contatto && struttura.Contatto.trim() !== '') || 
+                           (struttura.IIcontatto && struttura.IIcontatto.trim() !== '');
+    
+    if (hasPhoneNumbers) {
+      const whatsappDiv = document.createElement('div');
+      whatsappDiv.style.cssText = `
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 4px solid #25d366;
+        grid-column: 1 / -1;
+        margin-bottom: 20px;
+      `;
+      
+      const whatsappTitle = document.createElement('h3');
+      whatsappTitle.textContent = '💬 Contatta via WhatsApp';
+      whatsappTitle.style.cssText = `
+        margin: 0 0 15px 0;
+        color: #25d366;
+        font-size: 1.1rem;
+      `;
+      whatsappDiv.appendChild(whatsappTitle);
+      
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      `;
+      
+      // Pulsante per primo contatto
+      if (struttura.Contatto && struttura.Contatto.trim() !== '') {
+        const phone1 = struttura.Contatto.replace(/\D/g, ''); // Rimuove caratteri non numerici
+        const whatsappBtn1 = document.createElement('button');
+        whatsappBtn1.innerHTML = `📱 ${struttura.Contatto}`;
+        whatsappBtn1.style.cssText = `
+          background: #25d366;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `;
+        whatsappBtn1.onclick = () => {
+          const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
+          const whatsappUrl = `https://wa.me/${phone1}?text=${message}`;
+          window.open(whatsappUrl, '_blank');
+        };
+        whatsappBtn1.onmouseover = () => {
+          whatsappBtn1.style.backgroundColor = '#128c7e';
+          whatsappBtn1.style.transform = 'translateY(-1px)';
+        };
+        whatsappBtn1.onmouseout = () => {
+          whatsappBtn1.style.backgroundColor = '#25d366';
+          whatsappBtn1.style.transform = 'translateY(0)';
+        };
+        buttonsContainer.appendChild(whatsappBtn1);
+      }
+      
+      // Pulsante per secondo contatto
+      if (struttura.IIcontatto && struttura.IIcontatto.trim() !== '') {
+        const phone2 = struttura.IIcontatto.replace(/\D/g, ''); // Rimuove caratteri non numerici
+        const whatsappBtn2 = document.createElement('button');
+        whatsappBtn2.innerHTML = `📱 ${struttura.IIcontatto}`;
+        whatsappBtn2.style.cssText = `
+          background: #25d366;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        `;
+        whatsappBtn2.onclick = () => {
+          const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
+          const whatsappUrl = `https://wa.me/${phone2}?text=${message}`;
+          window.open(whatsappUrl, '_blank');
+        };
+        whatsappBtn2.onmouseover = () => {
+          whatsappBtn2.style.backgroundColor = '#128c7e';
+          whatsappBtn2.style.transform = 'translateY(-1px)';
+        };
+        whatsappBtn2.onmouseout = () => {
+          whatsappBtn2.style.backgroundColor = '#25d366';
+          whatsappBtn2.style.transform = 'translateY(0)';
+        };
+        buttonsContainer.appendChild(whatsappBtn2);
+      }
+      
+      whatsappDiv.appendChild(buttonsContainer);
+      content.appendChild(whatsappDiv);
+    }
+    
     // Aggiungi campo Note
     const noteDiv = document.createElement('div');
     noteDiv.style.cssText = `

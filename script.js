@@ -1,3 +1,5 @@
+// === QuoVadiScout v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
+console.log('🔄 Script.js caricato con versione v1.2.1 - Cache bust applicato');
 // === Firebase SDK Imports ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {

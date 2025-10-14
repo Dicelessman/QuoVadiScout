@@ -5013,6 +5013,7 @@ function initializeNewUI() {
 }
 
 // Prima dichiarazione di initializeUIEventListeners rimossa per evitare ridichiarazione
+// Cache fix: 2024-12-19 11:20:00
 
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {

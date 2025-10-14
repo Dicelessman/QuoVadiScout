@@ -655,13 +655,6 @@ window.showStructuresOnMap = (strutture) => {
   mapsManager.updateMarkers(strutture);
 };
 
-console.log('🗺️ Funzioni mappa esportate su window:', {
-  initializeMap: typeof window.initializeMap,
-  showStructuresOnMap: typeof window.showStructuresOnMap,
-  centerMapOnUser: typeof window.centerMapOnUser,
-  findNearbyStructures: typeof window.findNearbyStructures
-});
-
 window.centerMapOnUser = async () => {
   try {
     await mapsManager.getUserLocation();
@@ -674,5 +667,13 @@ window.centerMapOnUser = async () => {
 window.findNearbyStructures = async (radiusKm) => {
   return await mapsManager.findNearbyStructures(radiusKm);
 };
+
+// Log delle funzioni esportate (dopo averle tutte definite)
+console.log('🗺️ Funzioni mappa esportate su window:', {
+  initializeMap: typeof window.initializeMap,
+  showStructuresOnMap: typeof window.showStructuresOnMap,
+  centerMapOnUser: typeof window.centerMapOnUser,
+  findNearbyStructures: typeof window.findNearbyStructures
+});
 
 console.log('🗺️ Maps Manager caricato');

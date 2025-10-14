@@ -103,11 +103,13 @@
   --z-dropdown: 1000;
   --z-sticky: 1020;
   --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
-  --z-toast: 1080;
+  --z-menu: 1040;
+  --z-modal-backdrop: 1050;
+  --z-modal: 1060;
+  --z-popover: 1070;
+  --z-tooltip: 1080;
+  --z-toast: 1090;
+  --z-export-menu: 1100;
 }
 
 /* === DARK MODE VARIABLES === */
@@ -423,7 +425,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: var(--z-modal);
+  z-index: var(--z-menu);
   background-color: var(--bg-overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -438,13 +440,13 @@ body {
 .menu-sections {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   width: min(320px, 85vw);
   background-color: var(--bg-primary);
-  border-right: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
   overflow-y: auto;
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform var(--transition-normal);
 }
 
@@ -1341,7 +1343,7 @@ html {
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: var(--z-sticky);
 }
 
 .header-main {
@@ -1550,27 +1552,8 @@ html {
   }
 }
 
-/* === MAIN MENU STYLES === */
-.main-menu {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-light);
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 60px; /* Below header */
-  z-index: 999;
-  transition: all var(--transition-fast);
-}
-
-.main-menu.hidden {
-  display: none;
-}
-
-.menu-sections {
-  padding: var(--spacing-md) var(--spacing-lg);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-lg);
-}
+/* === MAIN MENU STYLES (RESPONSIVE) === */
+/* Note: Main menu styles are handled above in the MAIN MENU section */
 
 .menu-section {
   display: flex;
@@ -1746,7 +1729,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: var(--z-export-menu);
 }
 
 .export-options {

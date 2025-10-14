@@ -4710,6 +4710,16 @@ function initializeNewUI() {
         document.body.style.overflow = '';
       }
     });
+
+    // Chiudi menu con ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mainMenu.classList.contains('hidden')) {
+        console.log('📱 Menu chiuso con ESC');
+        mainMenu.classList.add('hidden');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+    });
   } else {
     console.warn('⚠️ Menu toggle o main menu non trovati');
   }

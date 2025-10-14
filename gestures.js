@@ -276,4 +276,7 @@ window.enableDoubleTapZoom = (element, onDoubleTap) => TouchGestures.enableDoubl
 window.enablePinchZoom = (container, minScale, maxScale) => TouchGestures.enablePinchZoom(container, minScale, maxScale);
 window.enableLongPress = (element, onLongPress, duration) => TouchGestures.enableLongPress(element, onLongPress, duration);
 
+// Alias per compatibilità test
+window.TouchGestureManager = TouchGestures;
+
 console.log('🔄 TouchGestures inizializzato');

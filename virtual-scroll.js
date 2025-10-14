@@ -289,4 +289,8 @@ class SmartScrollManager {
   }
 }
 
+// Esponi globalmente
+window.VirtualScroller = VirtualScroller;
+window.VirtualScrollManager = VirtualScrollManager;
+
 console.log('🔄 VirtualScroll inizializzato');

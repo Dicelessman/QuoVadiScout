@@ -380,4 +380,9 @@ window.addEventListener('beforeunload', saveUserConfig);
 window.loadUserConfig = loadUserConfig;
 window.saveUserConfig = saveUserConfig;
 
+// Esponi Config per compatibilità test
+window.Config = {
+  get: (path, defaultValue) => AppConfig.utils.get.call(AppConfig, path, defaultValue)
+};
+
 console.log('⚙️ AppConfig v1.3.0 inizializzato');

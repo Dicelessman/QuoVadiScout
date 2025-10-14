@@ -420,10 +420,35 @@ class BackupSyncManager {
 
   // UI per gestione backup
   showBackupManager() {
+    // Rimuovi modal esistente se presente
+    const existingModal = document.querySelector('.backup-modal-overlay');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'backup-modal-overlay modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    `;
     modal.innerHTML = `
-      <div class="modal" style="max-width: 600px;">
+      <div class="modal" style="
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      ">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h2 style="margin: 0; color: #2f6b2f;">💾 Gestione Backup</h2>
           <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>

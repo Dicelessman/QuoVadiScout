@@ -339,4 +339,7 @@ window.resolveConflict = (conflictId, resolution) => {
   return window.offlineSyncManager.resolveConflict(conflictId, resolution);
 };
 
+// Alias per compatibilità test
+window.resolveConflicts = window.resolveConflict;
+
 console.log('🔄 OfflineSyncManager inizializzato');

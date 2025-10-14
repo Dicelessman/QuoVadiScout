@@ -7936,6 +7936,9 @@ function testMenuToggle() {
 window.mostraStatisticheApp = mostraStatisticheApp;
 window.showNotification = showNotification;
 window.testMenuToggle = testMenuToggle;
+window.mostraPreferenzeNotifiche = mostraPreferenzeNotifiche;
+window.mostraGestioneOffline = mostraGestioneOffline;
+window.getUserLocation = trovaVicinoAMe; // Alias per compatibilità test
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 

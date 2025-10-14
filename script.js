@@ -4274,7 +4274,8 @@ function mostraSchedaCompleta(strutturaId) {
           // Modalità modifica
           const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia'].includes(campo);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
-          const isUrlField = ['google_maps_link', 'Sito'].includes(campo);
+          const isUrlField = ['google_maps_link'].includes(campo);
+          const isWebsiteField = campo === 'Sito';
           const isEmailField = campo === 'Email';
           const isPhoneField = ['Contatto', 'IIcontatto'].includes(campo);
           
@@ -4332,6 +4333,60 @@ function mostraSchedaCompleta(strutturaId) {
             
             campoDiv.appendChild(label);
             campoDiv.appendChild(input);
+          } else if (isWebsiteField) {
+            // Campo sito web con pulsante
+            const inputContainer = document.createElement('div');
+            inputContainer.style.cssText = `
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            `;
+            
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.value = struttura[campo] || '';
+            input.placeholder = 'https://www.esempio.com';
+            input.style.cssText = `
+              flex: 1;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value;
+            };
+            
+            const websiteBtn = document.createElement('button');
+            websiteBtn.innerHTML = '🌐';
+            websiteBtn.title = 'Apri sito web';
+            websiteBtn.style.cssText = `
+              background: #6c757d;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              padding: 6px 10px;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.2s;
+            `;
+            websiteBtn.onclick = () => {
+              if (struttura[campo] && struttura[campo].trim() !== '') {
+                window.open(struttura[campo], '_blank');
+              }
+            };
+            websiteBtn.onmouseover = () => {
+              websiteBtn.style.backgroundColor = '#5a6268';
+            };
+            websiteBtn.onmouseout = () => {
+              websiteBtn.style.backgroundColor = '#6c757d';
+            };
+            
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(websiteBtn);
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(inputContainer);
           } else if (isEmailField) {
             // Campo email con pulsante
             const inputContainer = document.createElement('div');
@@ -4573,6 +4628,62 @@ function mostraSchedaCompleta(strutturaId) {
             }
             
             campoDiv.appendChild(linkDiv);
+          } else if (campo === 'Sito') {
+            // Campo sito web con pulsante nella modalità visualizzazione
+            const websiteDiv = document.createElement('div');
+            websiteDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const websiteLabel = document.createElement('strong');
+            websiteLabel.textContent = 'Sito: ';
+            websiteLabel.style.color = '#495057';
+            
+            const valore = struttura[campo];
+            
+            if (valore && valore.trim() !== '') {
+              const websiteValue = document.createElement('span');
+              websiteValue.textContent = valore;
+              websiteValue.style.color = '#212529';
+              
+              const websiteBtn = document.createElement('button');
+              websiteBtn.innerHTML = '🌐';
+              websiteBtn.title = 'Apri sito web';
+              websiteBtn.style.cssText = `
+                background: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 6px 10px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.2s;
+              `;
+              websiteBtn.onclick = () => {
+                window.open(valore, '_blank');
+              };
+              websiteBtn.onmouseover = () => {
+                websiteBtn.style.backgroundColor = '#5a6268';
+              };
+              websiteBtn.onmouseout = () => {
+                websiteBtn.style.backgroundColor = '#6c757d';
+              };
+              
+              websiteDiv.appendChild(websiteLabel);
+              websiteDiv.appendChild(websiteValue);
+              websiteDiv.appendChild(websiteBtn);
+            } else {
+              websiteDiv.appendChild(websiteLabel);
+              const noValue = document.createElement('span');
+              noValue.textContent = 'Non specificato';
+              noValue.style.color = '#6c757d';
+              websiteDiv.appendChild(noValue);
+            }
+            
+            campoDiv.appendChild(websiteDiv);
           } else if (campo === 'Email') {
             // Campo email con pulsante nella modalità visualizzazione
             const emailDiv = document.createElement('div');
@@ -4595,15 +4706,16 @@ function mostraSchedaCompleta(strutturaId) {
               emailValue.style.color = '#212529';
               
               const emailBtn = document.createElement('button');
-              emailBtn.innerHTML = '📧 Scrivi email';
+              emailBtn.innerHTML = '📧';
+              emailBtn.title = 'Scrivi email';
               emailBtn.style.cssText = `
                 background: #007bff;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                padding: 6px 12px;
+                padding: 6px 10px;
                 cursor: pointer;
-                font-size: 12px;
+                font-size: 14px;
                 transition: all 0.2s;
               `;
               emailBtn.onclick = () => {
@@ -4652,15 +4764,16 @@ function mostraSchedaCompleta(strutturaId) {
               phoneValue.style.color = '#212529';
               
               const whatsappBtn = document.createElement('button');
-              whatsappBtn.innerHTML = '💬 WhatsApp';
+              whatsappBtn.innerHTML = '💬';
+              whatsappBtn.title = 'Contatta via WhatsApp';
               whatsappBtn.style.cssText = `
                 background: #25d366;
                 color: white;
                 border: none;
                 border-radius: 4px;
-                padding: 6px 12px;
+                padding: 6px 10px;
                 cursor: pointer;
-                font-size: 12px;
+                font-size: 14px;
                 transition: all 0.2s;
               `;
               whatsappBtn.onclick = () => {

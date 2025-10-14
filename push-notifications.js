@@ -24,17 +24,16 @@ class PushNotificationManager {
       // Registra service worker se non già registrato
       const registration = await navigator.serviceWorker.ready;
       
-      // Richiedi permessi
+      // Richiedi permessi solo per notifiche locali
       const permission = await this.requestPermission();
       if (permission !== 'granted') {
         console.log('❌ Permessi notifiche negati');
         return false;
       }
 
-      // Sottoscrivi alle notifiche
-      await this.subscribe();
-      
-      console.log('✅ Push notifications inizializzate');
+      // Disabilita temporaneamente la sottoscrizione push per evitare errori VAPID
+      console.log('⚠️ Push notifications remote disabilitate (VAPID key non configurata)');
+      console.log('✅ Notifiche locali abilitate');
       return true;
     } catch (error) {
       console.warn('⚠️ Push notifications non disponibili:', error.message);

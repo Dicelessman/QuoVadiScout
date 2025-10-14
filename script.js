@@ -573,7 +573,9 @@ function mostraRicercaAvanzata() {
       color: #2f6b2f;
       font-size: 1.1rem;
     `;
-    categoriaDiv.appendChild(categoriaTitle);
+    if (categoriaDiv && categoriaTitle) {
+      categoriaDiv.appendChild(categoriaTitle);
+    }
     
     campi.forEach(({ campo, tipo, placeholder, options }) => {
       const campoDiv = document.createElement('div');
@@ -3766,7 +3768,9 @@ function mostraGestioneElencoPersonale() {
     // Genera gli elementi iniziali
     generateElencoItems();
     
-    content.appendChild(listaContainer);
+    if (content && listaContainer) {
+      content.appendChild(listaContainer);
+    }
   }
   
   // Footer con azioni
@@ -4246,7 +4250,9 @@ function mostraSchedaCompleta(strutturaId) {
         color: #2f6b2f;
         font-size: 1.1rem;
       `;
+      if (categoriaDiv && categoriaTitle) {
       categoriaDiv.appendChild(categoriaTitle);
+    }
       
       campi.forEach(campo => {
         const campoDiv = document.createElement('div');
@@ -4473,10 +4479,14 @@ function mostraSchedaCompleta(strutturaId) {
           }
         }
         
-        categoriaDiv.appendChild(campoDiv);
+        if (categoriaDiv && campoDiv) {
+          categoriaDiv.appendChild(campoDiv);
+        }
       });
       
-      content.appendChild(categoriaDiv);
+      if (content && categoriaDiv) {
+        content.appendChild(categoriaDiv);
+      }
     });
     
     // Aggiungi pulsante WhatsApp se ci sono numeri di telefono
@@ -4542,7 +4552,9 @@ function mostraSchedaCompleta(strutturaId) {
           whatsappBtn1.style.backgroundColor = '#25d366';
           whatsappBtn1.style.transform = 'translateY(0)';
         };
-        buttonsContainer.appendChild(whatsappBtn1);
+        if (buttonsContainer) {
+          buttonsContainer.appendChild(whatsappBtn1);
+        }
       }
       
       // Pulsante per secondo contatto
@@ -4577,11 +4589,17 @@ function mostraSchedaCompleta(strutturaId) {
           whatsappBtn2.style.backgroundColor = '#25d366';
           whatsappBtn2.style.transform = 'translateY(0)';
         };
-        buttonsContainer.appendChild(whatsappBtn2);
+        if (buttonsContainer) {
+          buttonsContainer.appendChild(whatsappBtn2);
+        }
       }
       
-      whatsappDiv.appendChild(buttonsContainer);
-      content.appendChild(whatsappDiv);
+      if (whatsappDiv && buttonsContainer) {
+        whatsappDiv.appendChild(buttonsContainer);
+      }
+      if (content && whatsappDiv) {
+        content.appendChild(whatsappDiv);
+      }
     }
     
     // Aggiungi campo Note
@@ -4636,8 +4654,10 @@ function mostraSchedaCompleta(strutturaId) {
         struttura.Note = e.target.value;
       };
       
-      campoDiv.appendChild(label);
-      campoDiv.appendChild(textarea);
+      if (campoDiv) {
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(textarea);
+      }
     } else {
       // Modalità visualizzazione
       const value = document.createElement('span');
@@ -4653,12 +4673,18 @@ function mostraSchedaCompleta(strutturaId) {
         value.style.whiteSpace = 'pre-wrap';
       }
       
-      campoDiv.appendChild(label);
-      campoDiv.appendChild(value);
+      if (campoDiv) {
+        campoDiv.appendChild(label);
+        campoDiv.appendChild(value);
+      }
     }
     
-    noteDiv.appendChild(campoDiv);
-    content.appendChild(noteDiv);
+    if (noteDiv && campoDiv) {
+      noteDiv.appendChild(campoDiv);
+    }
+    if (content && noteDiv) {
+      content.appendChild(noteDiv);
+    }
     
     // Aggiungi bottone Elimina solo se non è una nuova struttura
     if (!isNewStructure) {
@@ -4679,7 +4705,9 @@ function mostraSchedaCompleta(strutturaId) {
         color: #dc3545;
         font-size: 1.1rem;
       `;
-      deleteSection.appendChild(deleteTitle);
+      if (deleteSection && deleteTitle) {
+        deleteSection.appendChild(deleteTitle);
+      }
       
       const deleteBtn = document.createElement('button');
       deleteBtn.innerHTML = '🗑️ Elimina Struttura';
@@ -4708,8 +4736,12 @@ function mostraSchedaCompleta(strutturaId) {
         eliminaStrutturaConConferma(strutturaId);
       };
       
-      deleteSection.appendChild(deleteBtn);
-      content.appendChild(deleteSection);
+      if (deleteSection && deleteBtn) {
+        deleteSection.appendChild(deleteBtn);
+      }
+      if (content && deleteSection) {
+        content.appendChild(deleteSection);
+      }
     }
   }
   

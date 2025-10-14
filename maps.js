@@ -1,5 +1,18 @@
 // === QuoVadiScout Maps v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
 console.log('🔄 Maps.js caricato con versione v1.2.1 - Cache bust applicato');
+
+// Aggiungi script per Leaflet Routing Machine
+const routingScript = document.createElement('script');
+routingScript.src = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js';
+routingScript.onload = () => {
+  console.log('✅ Leaflet Routing Machine caricato');
+};
+document.head.appendChild(routingScript);
+
+const routingCSS = document.createElement('link');
+routingCSS.rel = 'stylesheet';
+routingCSS.href = 'https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css';
+document.head.appendChild(routingCSS);
 // Maps integration for QuoVadiScout
 // Leaflet + OpenStreetMap implementation
 
@@ -12,6 +25,7 @@ class MapsManager {
     this.markerCluster = null;
     this.userLocation = null;
     this.isInitialized = false;
+    this.routingControl = null;
   }
 
   async initialize(containerId = 'map') {
@@ -623,8 +637,108 @@ class MapsManager {
     return deg * (Math.PI/180);
   }
 
+  // Calcola percorso tra due punti
+  async calculateRoute(fromLat, fromLng, toLat, toLng, options = {}) {
+    if (!this.map || typeof L.Routing === 'undefined') {
+      console.warn('Routing non disponibile');
+      return null;
+    }
+
+    try {
+      // Rimuovi routing precedente se presente
+      if (this.routingControl) {
+        this.map.removeControl(this.routingControl);
+      }
+
+      // Crea routing control
+      this.routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(fromLat, fromLng),
+          L.latLng(toLat, toLng)
+        ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
+        lineOptions: {
+          styles: [{ 
+            color: '#2f6b2f', 
+            weight: 4,
+            opacity: 0.8
+          }]
+        },
+        show: false, // Nascondi pannello di controllo
+        addWaypoints: false,
+        routeWhileDragging: false,
+        fitSelectedRoutes: true,
+        createMarker: function() { return null; }, // Nessun marker sui waypoints
+        ...options
+      });
+
+      // Aggiungi alla mappa
+      this.routingControl.addTo(this.map);
+
+      // Eventi routing
+      this.routingControl.on('routesfound', (e) => {
+        const routes = e.routes;
+        const summary = routes[0].summary;
+        
+        console.log(`Percorso trovato: ${(summary.totalDistance / 1000).toFixed(1)}km, ${Math.round(summary.totalTime / 60)}min`);
+        
+        // Dispatches evento custom
+        document.dispatchEvent(new CustomEvent('routeFound', {
+          detail: {
+            distance: summary.totalDistance,
+            duration: summary.totalTime,
+            routes: routes
+          }
+        }));
+      });
+
+      this.routingControl.on('routingerror', (e) => {
+        console.error('Errore routing:', e.error);
+      });
+
+      return this.routingControl;
+
+    } catch (error) {
+      console.error('Errore calcolo percorso:', error);
+      return null;
+    }
+  }
+
+  // Calcola percorso dalla posizione utente a una struttura
+  async calculateRouteToStructure(structureId) {
+    if (!this.userLocation) {
+      console.warn('Posizione utente non disponibile');
+      return null;
+    }
+
+    const structure = this.structures.find(s => s.id === structureId);
+    if (!structure || !structure.coordinate_lat || !structure.coordinate_lng) {
+      console.warn('Struttura non trovata o senza coordinate');
+      return null;
+    }
+
+    return await this.calculateRoute(
+      this.userLocation.lat,
+      this.userLocation.lng,
+      parseFloat(structure.coordinate_lat),
+      parseFloat(structure.coordinate_lng)
+    );
+  }
+
+  // Rimuove il percorso corrente
+  clearRoute() {
+    if (this.routingControl) {
+      this.map.removeControl(this.routingControl);
+      this.routingControl = null;
+      console.log('Percorso rimosso');
+    }
+  }
+
   destroy() {
     if (this.map) {
+      this.clearRoute();
       this.map.remove();
       this.map = null;
       this.markers = [];
@@ -670,12 +784,27 @@ window.findNearbyStructures = async (radiusKm) => {
   return await mapsManager.findNearbyStructures(radiusKm);
 };
 
+window.calculateRoute = async (fromLat, fromLng, toLat, toLng, options = {}) => {
+  return await mapsManager.calculateRoute(fromLat, fromLng, toLat, toLng, options);
+};
+
+window.calculateRouteToStructure = async (structureId) => {
+  return await mapsManager.calculateRouteToStructure(structureId);
+};
+
+window.clearRoute = () => {
+  mapsManager.clearRoute();
+};
+
 // Log delle funzioni esportate (dopo averle tutte definite)
 console.log('🗺️ Funzioni mappa esportate su window:', {
   initializeMap: typeof window.initializeMap,
   showStructuresOnMap: typeof window.showStructuresOnMap,
   centerMapOnUser: typeof window.centerMapOnUser,
-  findNearbyStructures: typeof window.findNearbyStructures
+  findNearbyStructures: typeof window.findNearbyStructures,
+  calculateRoute: typeof window.calculateRoute,
+  calculateRouteToStructure: typeof window.calculateRouteToStructure,
+  clearRoute: typeof window.clearRoute
 });
 
 console.log('🗺️ Maps Manager caricato');

@@ -1,7 +1,9 @@
 // Service Worker per QuoVadiScout PWA
-const CACHE_NAME = 'quovadiscout-v1.2.0';
-const STATIC_CACHE = 'static-v1.2.0';
-const DYNAMIC_CACHE = 'dynamic-v1.2.0';
+const CACHE_NAME = 'quovadiscout-v1.2.1';
+const STATIC_CACHE = 'static-v1.2.1';
+const DYNAMIC_CACHE = 'dynamic-v1.2.1';
+const FREQUENTLY_USED_CACHE = 'frequently-used-v1';
+const MAX_CACHED_STRUCTURES = 50;
 
 // Risorse da cachare staticamente
 const STATIC_ASSETS = [
@@ -67,7 +69,7 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== FREQUENTLY_USED_CACHE) {
               console.log('🗑️ Service Worker: Rimozione cache obsoleta:', cacheName);
               return caches.delete(cacheName);
             }
@@ -292,7 +294,33 @@ self.addEventListener('message', (event) => {
     case 'SYNC_DATA':
       syncOfflineData();
       break;
+      
+    case 'TRACK_STRUCTURE_ACCESS':
+      trackStructureAccess(data.structureId);
+      break;
+      
+    case 'CACHE_FREQUENT_STRUCTURES':
+      cacheFrequentStructures();
+      break;
   }
+});
+
+// Registra sync event per background sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-structures') {
+    event.waitUntil(syncOfflineData());
+  }
+});
+
+// Controlla aggiornamenti automatici
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ action: 'SW_UPDATED' });
+      });
+    })
+  );
 });
 
 // Funzioni di utilità
@@ -315,6 +343,93 @@ async function getCacheStatus() {
   }
   
   return status;
+}
+
+// Cache intelligente per strutture più utilizzate
+async function trackStructureAccess(structureId) {
+  try {
+    // Salva timestamp accesso in IndexedDB
+    const db = await openIndexedDB();
+    const transaction = db.transaction(['structureAccess'], 'readwrite');
+    const store = transaction.objectStore('structureAccess');
+    
+    const existing = await store.get(structureId);
+    const newData = {
+      id: structureId,
+      lastAccess: Date.now(),
+      count: (existing?.count || 0) + 1
+    };
+    
+    await store.put(newData);
+    console.log('📊 Service Worker: Tracciato accesso struttura:', structureId);
+  } catch (error) {
+    console.error('❌ Service Worker: Errore tracking accesso:', error);
+  }
+}
+
+async function cacheFrequentStructures() {
+  try {
+    const db = await openIndexedDB();
+    const transaction = db.transaction(['structureAccess'], 'readonly');
+    const store = transaction.objectStore('structureAccess');
+    const index = store.index('count');
+    
+    // Recupera le strutture più accessate
+    const frequentStructures = await index.getAll(null, MAX_CACHED_STRUCTURES);
+    
+    // Cache le strutture in IndexedDB per accesso offline
+    const cacheTransaction = db.transaction(['cachedStructures'], 'readwrite');
+    const cacheStore = cacheTransaction.objectStore('cachedStructures');
+    
+    // Scarica e cache le strutture (implementazione semplificata)
+    console.log('📦 Service Worker: Caching strutture frequenti:', frequentStructures.length);
+    
+  } catch (error) {
+    console.error('❌ Service Worker: Errore caching strutture:', error);
+  }
+}
+
+async function getCachedStructure(structureId) {
+  try {
+    const db = await openIndexedDB();
+    const transaction = db.transaction(['cachedStructures'], 'readonly');
+    const store = transaction.objectStore('cachedStructures');
+    const result = await store.get(structureId);
+    return result;
+  } catch (error) {
+    console.error('❌ Service Worker: Errore recupero struttura cached:', error);
+    return null;
+  }
+}
+
+async function openIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('QuoVadiScoutDB', 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      // Store per tracking accessi
+      if (!db.objectStoreNames.contains('structureAccess')) {
+        const accessStore = db.createObjectStore('structureAccess', { keyPath: 'id' });
+        accessStore.createIndex('count', 'count', { unique: false });
+        accessStore.createIndex('lastAccess', 'lastAccess', { unique: false });
+      }
+      
+      // Store per strutture cached
+      if (!db.objectStoreNames.contains('cachedStructures')) {
+        db.createObjectStore('cachedStructures', { keyPath: 'id' });
+      }
+      
+      // Store per modifiche offline
+      if (!db.objectStoreNames.contains('offlineChanges')) {
+        db.createObjectStore('offlineChanges', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
 }
 
 async function syncOfflineData() {

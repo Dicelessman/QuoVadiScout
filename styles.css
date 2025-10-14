@@ -1797,26 +1797,83 @@ html {
   }
 }
 
+/* === ANIMAZIONI === */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* === TOGGLE SWITCHES === */
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #2f6b2f;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
 /* === MODAL RESPONSIVE STYLES === */
 @media (max-width: 768px) {
   /* Modali a schermo intero su mobile */
   div[id$="Modal"] {
     padding: 0 !important;
-    align-items: stretch !important;
+    align-items: flex-end !important;
     justify-content: stretch !important;
-    background: white !important;
+    background: rgba(0,0,0,0.5) !important;
   }
   
   div[id$="Modal"] > div {
     background: white !important;
-    border-radius: 0 !important;
-    padding: 15px !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    padding: 20px !important;
     max-width: 100% !important;
-    max-height: 100vh !important;
+    max-height: 90vh !important;
     width: 100% !important;
-    height: 100% !important;
-    box-shadow: none !important;
+    height: auto !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
     margin: 0 !important;
+    animation: slideUp 0.3s ease-out !important;
   }
   
   /* Header modali su mobile */

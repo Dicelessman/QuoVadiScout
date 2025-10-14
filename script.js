@@ -45,12 +45,27 @@ const colRef = collection(db, "strutture");
 
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
+  const cacheKey = 'strutture_cache';
+  const cacheTimestamp = 'strutture_cache_timestamp';
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minuti
+  
   try {
+    // Controlla cache prima di fare la query
+    const cached = localStorage.getItem(cacheKey);
+    const timestamp = localStorage.getItem(cacheTimestamp);
+    
+    if (cached && timestamp && (Date.now() - parseInt(timestamp)) < CACHE_DURATION) {
+      console.log('📦 Carico strutture da cache');
+      const dati = JSON.parse(cached);
+      console.log(`✅ Caricate ${dati.length} strutture da cache (${Math.round((Date.now() - parseInt(timestamp)) / 1000)}s fa)`);
+      return dati;
+    }
+    
     console.log('🔗 Connessione a Firestore...');
     console.log('📊 Progetto:', firebaseConfig.projectId);
     console.log('📁 Collezione: strutture');
     
-  const snapshot = await getDocs(colRef);
+    const snapshot = await getDocs(colRef);
     console.log('✅ Connessione Firestore riuscita');
     console.log('📄 Documenti trovati:', snapshot.docs.length);
     
@@ -61,6 +76,11 @@ async function caricaStrutture() {
     });
     
     console.log(`✅ Caricate ${dati.length} strutture da Firestore`);
+    
+    // Salva in cache
+    localStorage.setItem(cacheKey, JSON.stringify(dati));
+    localStorage.setItem(cacheTimestamp, Date.now().toString());
+    console.log('💾 Strutture salvate in cache');
     
     // Se Firestore è vuoto, prova con i dati locali
     if (dati.length === 0) {
@@ -4025,6 +4045,11 @@ function mostraSchedaCompleta(strutturaId) {
     return;
   }
   
+  // Trigger evento per preloading predittivo
+  document.dispatchEvent(new CustomEvent('cardOpened', {
+    detail: { structureId: strutturaId }
+  }));
+  
   const isNewStructure = strutturaId.startsWith('new_');
   
   // Rimuovi modal esistente se presente
@@ -4191,6 +4216,15 @@ function mostraSchedaCompleta(strutturaId) {
   header.appendChild(title);
   header.appendChild(controls);
   
+  // Galleria immagini
+  const galleryContainer = document.createElement('div');
+  galleryContainer.id = 'imageGallery';
+  galleryContainer.style.cssText = `
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+  `;
+  
   // Contenuto scheda
   const content = document.createElement('div');
   content.id = 'schedaContent';
@@ -4199,6 +4233,204 @@ function mostraSchedaCompleta(strutturaId) {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
   `;
+  
+  // Funzione per creare la galleria immagini
+  async function creaGalleriaImmagini() {
+    galleryContainer.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+        <h3 style="margin: 0; color: #2f6b2f; font-size: 1.1rem;">📸 Galleria Immagini</h3>
+        ${isEditMode ? `
+          <div style="display: flex; gap: 8px;">
+            <input type="file" id="imageUpload" accept="image/*" multiple style="display: none;">
+            <button onclick="document.getElementById('imageUpload').click()" style="background: #2f6b2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+              📷 Aggiungi Foto
+            </button>
+          </div>
+        ` : ''}
+      </div>
+      <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; min-height: 60px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+        <div style="display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9rem;">
+          Caricamento immagini...
+        </div>
+      </div>
+    `;
+    
+    // Carica immagini esistenti
+    await caricaImmaginiEsistenti();
+    
+    // Event listener per upload
+    if (isEditMode) {
+      const fileInput = document.getElementById('imageUpload');
+      fileInput.addEventListener('change', handleImageUpload);
+    }
+  }
+  
+  async function caricaImmaginiEsistenti() {
+    const galleryGrid = document.getElementById('galleryGrid');
+    
+    try {
+      // Carica galleria da MediaManager
+      const images = await window.mediaManager?.getGallery(strutturaId) || [];
+      
+      if (images.length === 0) {
+        galleryGrid.innerHTML = `
+          <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9rem; padding: 20px;">
+            ${isEditMode ? 'Nessuna immagine. Clicca "Aggiungi Foto" per iniziare.' : 'Nessuna immagine disponibile.'}
+          </div>
+        `;
+        return;
+      }
+      
+      galleryGrid.innerHTML = images.map(img => `
+        <div style="position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="apriLightbox('${img.id}')">
+          <img src="${img.thumbnailUrl || img.url}" 
+               alt="${img.name || 'Immagine struttura'}" 
+               loading="lazy"
+               style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
+               onmouseover="this.style.transform='scale(1.05)'"
+               onmouseout="this.style.transform='scale(1)'"
+               onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik00NSA0NUg3NVY3NUg0NVY0NVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHN2Zz4K'">
+          ${isEditMode ? `
+            <button onclick="event.stopPropagation(); eliminaImmagine('${img.id}')" 
+                    style="position: absolute; top: 4px; right: 4px; background: rgba(220,53,69,0.9); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;">
+              ×
+            </button>
+          ` : ''}
+          ${img.geoData?.lat ? `
+            <div style="position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 4px; border-radius: 3px; font-size: 8px;">
+              📍 GPS
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+      
+    } catch (error) {
+      console.error('❌ Errore caricamento galleria:', error);
+      galleryGrid.innerHTML = `
+        <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; color: #dc3545; font-size: 0.9rem; padding: 20px;">
+          Errore nel caricamento delle immagini
+        </div>
+      `;
+    }
+  }
+  
+  async function handleImageUpload(event) {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+    
+    const galleryGrid = document.getElementById('galleryGrid');
+    
+    // Mostra indicatore di caricamento
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = `
+      grid-column: 1/-1; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: #2f6b2f; 
+      font-size: 0.9rem; 
+      padding: 20px;
+    `;
+    loadingDiv.innerHTML = `📤 Caricamento ${files.length} immagine/i...`;
+    galleryGrid.appendChild(loadingDiv);
+    
+    try {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          console.warn('⚠️ File non supportato:', file.name);
+          continue;
+        }
+        
+        // Upload immagine
+        const uploadedImage = await window.mediaManager.uploadImage(file, strutturaId, {
+          uploadedBy: window.utenteCorrente?.uid || 'anonymous'
+        });
+        
+        console.log('✅ Immagine caricata:', uploadedImage.id);
+      }
+      
+      // Ricarica galleria
+      await caricaImmaginiEsistenti();
+      
+      // Notifica successo
+      window.showNotification('✅ Immagini caricate', {
+        body: `${files.length} immagini aggiunte alla galleria`,
+        tag: 'images-uploaded'
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore upload immagini:', error);
+      alert('Errore durante il caricamento delle immagini: ' + error.message);
+      
+      // Rimuovi indicatore di caricamento e ricarica
+      loadingDiv.remove();
+      await caricaImmaginiEsistenti();
+    }
+  }
+  
+  async function eliminaImmagine(imageId) {
+    if (!confirm('Sei sicuro di voler eliminare questa immagine?')) {
+      return;
+    }
+    
+    try {
+      await window.mediaManager.deleteImage(imageId, strutturaId);
+      await caricaImmaginiEsistenti();
+      
+      window.showNotification('✅ Immagine eliminata', {
+        body: 'L\'immagine è stata rimossa dalla galleria',
+        tag: 'image-deleted'
+      });
+      
+    } catch (error) {
+      console.error('❌ Errore eliminazione immagine:', error);
+      alert('Errore durante l\'eliminazione dell\'immagine: ' + error.message);
+    }
+  }
+  
+  // Funzione per aprire lightbox
+  function apriLightbox(imageId) {
+    // Implementazione lightbox semplificata
+    const lightbox = document.createElement('div');
+    lightbox.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+      padding: 20px;
+    `;
+    
+    lightbox.innerHTML = `
+      <div style="position: relative; max-width: 90%; max-height: 90%;">
+        <img id="lightboxImage" src="" alt="Immagine" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        <button onclick="this.closest('div').remove()" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">×</button>
+      </div>
+    `;
+    
+    document.body.appendChild(lightbox);
+    
+    // Carica immagine full-size
+    window.mediaManager.getGallery(strutturaId).then(images => {
+      const image = images.find(img => img.id === imageId);
+      if (image) {
+        document.getElementById('lightboxImage').src = image.url;
+      }
+    });
+    
+    // Chiudi con ESC
+    lightbox.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        lightbox.remove();
+      }
+    });
+    
+    // Focus per ricevere eventi tastiera
+    lightbox.focus();
+    lightbox.tabIndex = -1;
+  }
   
   // Funzione per creare il contenuto
   function creaContenutoScheda() {
@@ -4627,6 +4859,92 @@ function mostraSchedaCompleta(strutturaId) {
               linkDiv.appendChild(noLink);
             }
             
+            // Aggiungi pulsanti di navigazione se abbiamo coordinate
+            if (struttura.coordinate_lat && struttura.coordinate_lng) {
+              const navButtonsDiv = document.createElement('div');
+              navButtonsDiv.style.cssText = `
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+                flex-wrap: wrap;
+              `;
+              
+              // Pulsante Apri in Mappe
+              const mapsBtn = document.createElement('button');
+              mapsBtn.innerHTML = '🗺️ Apri in Mappe';
+              mapsBtn.style.cssText = `
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              `;
+              mapsBtn.onclick = () => {
+                window.navigationIntegrations.openInMaps(
+                  parseFloat(struttura.coordinate_lat),
+                  parseFloat(struttura.coordinate_lng),
+                  struttura.Struttura || 'Struttura'
+                );
+              };
+              mapsBtn.onmouseover = () => mapsBtn.style.backgroundColor = '#218838';
+              mapsBtn.onmouseout = () => mapsBtn.style.backgroundColor = '#28a745';
+              
+              // Pulsante Calcola Percorso
+              const routeBtn = document.createElement('button');
+              routeBtn.innerHTML = '🧭 Percorso';
+              routeBtn.style.cssText = `
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              `;
+              routeBtn.onclick = async () => {
+                if (window.mapsManager && window.mapsManager.userLocation) {
+                  await window.calculateRouteToStructure(struttura.id);
+                  // Apri la mappa se non è già aperta
+                  if (!window.mapsManager.isInitialized) {
+                    window.mostraMappaStrutture();
+                  }
+                } else {
+                  alert('Posizione utente non disponibile. Abilita la geolocalizzazione per calcolare il percorso.');
+                }
+              };
+              routeBtn.onmouseover = () => routeBtn.style.backgroundColor = '#0056b3';
+              routeBtn.onmouseout = () => routeBtn.style.backgroundColor = '#007bff';
+              
+              // Pulsante Aggiungi a Calendario
+              const calendarBtn = document.createElement('button');
+              calendarBtn.innerHTML = '📅 Calendario';
+              calendarBtn.style.cssText = `
+                background: #6f42c1;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              `;
+              calendarBtn.onclick = () => {
+                window.calendarIntegrations.createICalEvent(struttura);
+              };
+              calendarBtn.onmouseover = () => calendarBtn.style.backgroundColor = '#5a32a3';
+              calendarBtn.onmouseout = () => calendarBtn.style.backgroundColor = '#6f42c1';
+              
+              navButtonsDiv.appendChild(mapsBtn);
+              navButtonsDiv.appendChild(routeBtn);
+              navButtonsDiv.appendChild(calendarBtn);
+              
+              linkDiv.appendChild(navButtonsDiv);
+            }
+            
             campoDiv.appendChild(linkDiv);
           } else if (campo === 'Sito') {
             // Campo sito web con pulsante nella modalità visualizzazione
@@ -4983,6 +5301,7 @@ function mostraSchedaCompleta(strutturaId) {
     editBtn.style.display = isEditMode ? 'none' : 'inline-block';
     saveBtn.style.display = isEditMode ? 'inline-block' : 'none';
     cancelBtn.style.display = isEditMode ? 'inline-block' : 'none';
+    creaGalleriaImmagini();
     creaContenutoScheda();
   }
   
@@ -5071,9 +5390,11 @@ function mostraSchedaCompleta(strutturaId) {
   }
   
   // Inizializza contenuto
+  creaGalleriaImmagini();
   creaContenutoScheda();
   
   modalContent.appendChild(header);
+  modalContent.appendChild(galleryContainer);
   modalContent.appendChild(content);
   modalScheda.appendChild(modalContent);
   document.body.appendChild(modalScheda);
@@ -5246,6 +5567,617 @@ function initializeNewUI() {
 
 // Prima dichiarazione di initializeUIEventListeners rimossa per evitare ridichiarazione
 // Cache fix: 2024-12-19 11:20:00
+
+// === Gestione Preferenze Notifiche ===
+function mostraPreferenzeNotifiche() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('preferenzeNotificheModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'preferenzeNotificheModal';
+  modal.className = 'modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  `;
+
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal';
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  `;
+
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">🔔 Preferenze Notifiche</h2>
+      <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <h3 style="color: #374151; margin-bottom: 15px;">Tipi di Notifiche</h3>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <div>
+            <div style="font-weight: 500;">🏕️ Nuove Strutture</div>
+            <div style="font-size: 0.9rem; color: #666;">Notifica quando viene aggiunta una nuova struttura</div>
+          </div>
+          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
+            <input type="checkbox" id="newStructures" style="opacity: 0; width: 0; height: 0;">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <div>
+            <div style="font-weight: 500;">📝 Aggiornamenti Strutture</div>
+            <div style="font-size: 0.9rem; color: #666;">Notifica quando una struttura viene modificata</div>
+          </div>
+          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
+            <input type="checkbox" id="structureUpdates" style="opacity: 0; width: 0; height: 0;">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <div>
+            <div style="font-weight: 500;">⭐ Elenco Personale</div>
+            <div style="font-size: 0.9rem; color: #666;">Notifica per aggiornamenti del tuo elenco personale</div>
+          </div>
+          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
+            <input type="checkbox" id="personalListUpdates" style="opacity: 0; width: 0; height: 0;">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <div>
+            <div style="font-weight: 500;">📍 Strutture Vicine</div>
+            <div style="font-size: 0.9rem; color: #666;">Notifica per strutture nelle vicinanze</div>
+          </div>
+          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
+            <input type="checkbox" id="nearbyStructures" style="opacity: 0; width: 0; height: 0;">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <div>
+            <div style="font-weight: 500;">⚠️ Segnalazioni</div>
+            <div style="font-size: 0.9rem; color: #666;">Notifica per nuove segnalazioni</div>
+          </div>
+          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
+            <input type="checkbox" id="reports" style="opacity: 0; width: 0; height: 0;">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <h3 style="color: #374151; margin-bottom: 15px;">Distanza per Notifiche Vicinanza</h3>
+      <div style="padding: 12px; background: #f8f9fa; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span>Raggio notifiche:</span>
+          <span id="distanceValue" style="font-weight: 500;">10 km</span>
+        </div>
+        <input type="range" id="distanceSlider" min="1" max="50" value="10" style="width: 100%;">
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button onclick="testNotification()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        🔔 Test Notifica
+      </button>
+      <button onclick="salvaPreferenzeNotifiche()" style="padding: 10px 20px; background: #2f6b2f; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        💾 Salva Preferenze
+      </button>
+    </div>
+  `;
+
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // Carica preferenze attuali
+  caricaPreferenzeNotifiche();
+  
+  // Event listener per slider distanza
+  const distanceSlider = document.getElementById('distanceSlider');
+  const distanceValue = document.getElementById('distanceValue');
+  
+  distanceSlider.addEventListener('input', (e) => {
+    distanceValue.textContent = `${e.target.value} km`;
+  });
+
+  // Chiudi modal cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+function caricaPreferenzeNotifiche() {
+  if (!window.pushManager?.preferences) return;
+  
+  const prefs = window.pushManager.preferences.preferences;
+  
+  // Carica toggle switches
+  document.getElementById('newStructures').checked = prefs.newStructures;
+  document.getElementById('structureUpdates').checked = prefs.structureUpdates;
+  document.getElementById('personalListUpdates').checked = prefs.personalListUpdates;
+  document.getElementById('nearbyStructures').checked = prefs.nearbyStructures;
+  document.getElementById('reports').checked = prefs.reports;
+  
+  // Carica slider distanza
+  document.getElementById('distanceSlider').value = prefs.distance;
+  document.getElementById('distanceValue').textContent = `${prefs.distance} km`;
+}
+
+async function salvaPreferenzeNotifiche() {
+  if (!window.pushManager?.preferences || !window.utenteCorrente) {
+    alert('Errore: Utente non autenticato');
+    return;
+  }
+  
+  // Aggiorna preferenze
+  const prefs = window.pushManager.preferences.preferences;
+  prefs.newStructures = document.getElementById('newStructures').checked;
+  prefs.structureUpdates = document.getElementById('structureUpdates').checked;
+  prefs.personalListUpdates = document.getElementById('personalListUpdates').checked;
+  prefs.nearbyStructures = document.getElementById('nearbyStructures').checked;
+  prefs.reports = document.getElementById('reports').checked;
+  prefs.distance = parseInt(document.getElementById('distanceSlider').value);
+  
+  // Salva su Firestore
+  await window.pushManager.preferences.save(window.utenteCorrente.uid);
+  
+  // Chiudi modal
+  document.getElementById('preferenzeNotificheModal').remove();
+  
+  // Mostra conferma
+  window.showNotification('✅ Preferenze salvate', {
+    body: 'Le tue preferenze notifiche sono state aggiornate',
+    tag: 'preferences-saved'
+  });
+}
+
+function testNotification() {
+  window.showNotification('🔔 Test Notifica', {
+    body: 'Questa è una notifica di test per verificare che tutto funzioni correttamente',
+    tag: 'test-notification'
+  });
+}
+
+// === Preloading Predittivo ===
+function preloadNearbyStructures(currentStructureId) {
+  if (!currentStructureId || !window.strutture) return;
+  
+  const currentStructure = window.strutture.find(s => s.id === currentStructureId);
+  if (!currentStructure) return;
+  
+  // Trova strutture vicine (stessa provincia o coordinate simili)
+  const nearby = window.strutture.filter(s => {
+    if (s.id === currentStructureId) return false;
+    
+    // Stessa provincia
+    if (s.Prov === currentStructure.Prov) return true;
+    
+    // Coordinate simili (se disponibili)
+    if (currentStructure.coordinate?.lat && currentStructure.coordinate?.lng && 
+        s.coordinate?.lat && s.coordinate?.lng) {
+      const distance = calculateDistance(
+        currentStructure.coordinate, 
+        s.coordinate
+      );
+      return distance < 10; // 10 km
+    }
+    
+    return false;
+  });
+  
+  // Preload prime 5 strutture vicine
+  nearby.slice(0, 5).forEach(s => {
+    if (s.immagini?.[0]) {
+      const img = new Image();
+      img.src = s.immagini[0].thumbnailUrl || s.immagini[0].url;
+      console.log('🔄 Preloading immagine per:', s.Struttura);
+    }
+  });
+  
+  console.log(`🔄 Preloaded ${nearby.slice(0, 5).length} strutture vicine`);
+}
+
+// Calcola distanza tra due coordinate (formula di Haversine)
+function calculateDistance(coord1, coord2) {
+  const R = 6371; // Raggio della Terra in km
+  const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+  const dLon = (coord2.lng - coord1.lng) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Trigger preloading quando si apre una scheda
+document.addEventListener('cardOpened', (e) => {
+  if (e.detail && e.detail.structureId) {
+    preloadNearbyStructures(e.detail.structureId);
+  }
+});
+
+// === Gestione Download Offline ===
+function mostraGestioneOffline() {
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('gestioneOfflineModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'gestioneOfflineModal';
+  modal.className = 'modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  `;
+
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal';
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  `;
+
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">📥 Gestione Offline</h2>
+      <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <h3 style="color: #374151; margin-bottom: 15px;">Strutture Elenco Personale</h3>
+      <div id="offlineStructuresList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+        <div style="text-align: center; color: #666; padding: 20px;">
+          Caricamento strutture...
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <h3 style="color: #374151; margin-bottom: 15px;">Spazio Utilizzato</h3>
+      <div style="padding: 12px; background: #f8f9fa; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span>Cache locale:</span>
+          <span id="cacheSize" style="font-weight: 500;">0 MB</span>
+        </div>
+        <div style="width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px;">
+          <div id="cacheBar" style="height: 100%; background: #2f6b2f; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button onclick="pulisciCacheOffline()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        🗑️ Pulisci Cache
+      </button>
+      <button onclick="downloadForOffline()" style="padding: 10px 20px; background: #2f6b2f; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        📥 Scarica Selezionate
+      </button>
+    </div>
+  `;
+
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // Carica strutture elenco personale
+  caricaStruttureOfflineList();
+  
+  // Aggiorna info cache
+  aggiornaInfoCache();
+
+  // Chiudi modal cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+async function caricaStruttureOfflineList() {
+  const listContainer = document.getElementById('offlineStructuresList');
+  
+  try {
+    // Carica elenco personale
+    const elencoPersonale = JSON.parse(localStorage.getItem('elencoPersonale') || '[]');
+    
+    if (elencoPersonale.length === 0) {
+      listContainer.innerHTML = `
+        <div style="text-align: center; color: #666; padding: 20px;">
+          Nessuna struttura nell'elenco personale
+        </div>
+      `;
+      return;
+    }
+    
+    // Trova le strutture corrispondenti
+    const struttureElenco = strutture.filter(s => elencoPersonale.includes(s.id));
+    
+    listContainer.innerHTML = struttureElenco.map(struttura => `
+      <div style="display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #f3f4f6;">
+        <input type="checkbox" id="offline_${struttura.id}" style="margin-right: 12px;" checked>
+        <div style="flex: 1;">
+          <div style="font-weight: 500;">${struttura.Struttura}</div>
+          <div style="font-size: 0.9rem; color: #666;">${struttura.Luogo}, ${struttura.Prov}</div>
+        </div>
+        <div style="font-size: 0.8rem; color: #9ca3af;">
+          ${struttura.immagini?.length || 0} foto
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('❌ Errore caricamento strutture offline:', error);
+    listContainer.innerHTML = `
+      <div style="text-align: center; color: #dc3545; padding: 20px;">
+        Errore nel caricamento delle strutture
+      </div>
+    `;
+  }
+}
+
+async function downloadForOffline() {
+  const checkboxes = document.querySelectorAll('#offlineStructuresList input[type="checkbox"]:checked');
+  const selectedIds = Array.from(checkboxes).map(cb => cb.id.replace('offline_', ''));
+  
+  if (selectedIds.length === 0) {
+    alert('Seleziona almeno una struttura da scaricare');
+    return;
+  }
+  
+  const progressModal = document.createElement('div');
+  progressModal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+  `;
+  
+  progressModal.innerHTML = `
+    <div style="background: white; padding: 24px; border-radius: 12px; text-align: center; min-width: 300px;">
+      <h3 style="margin: 0 0 16px 0; color: #2f6b2f;">📥 Download in corso...</h3>
+      <div style="margin-bottom: 16px;">
+        <div style="width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px;">
+          <div id="downloadProgress" style="height: 100%; background: #2f6b2f; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
+        </div>
+      </div>
+      <div id="downloadStatus" style="color: #666;">Preparazione...</div>
+    </div>
+  `;
+  
+  document.body.appendChild(progressModal);
+  
+  try {
+    let completed = 0;
+    
+    for (const structureId of selectedIds) {
+      const struttura = strutture.find(s => s.id === structureId);
+      if (!struttura) continue;
+      
+      // Aggiorna status
+      document.getElementById('downloadStatus').textContent = `Scaricando ${struttura.Struttura}...`;
+      
+      // Salva struttura in IndexedDB
+      await salvaStrutturaOffline(struttura);
+      
+      // Scarica immagini se presenti
+      if (struttura.immagini && struttura.immagini.length > 0) {
+        for (const img of struttura.immagini) {
+          await salvaImmagineOffline(img.url, structureId);
+        }
+      }
+      
+      completed++;
+      const progress = (completed / selectedIds.length) * 100;
+      document.getElementById('downloadProgress').style.width = `${progress}%`;
+    }
+    
+    // Completato
+    document.getElementById('downloadStatus').textContent = 'Download completato!';
+    
+    setTimeout(() => {
+      progressModal.remove();
+      aggiornaInfoCache();
+      window.showNotification('✅ Download completato', {
+        body: `${selectedIds.length} strutture scaricate per uso offline`,
+        tag: 'offline-download-complete'
+      });
+    }, 1500);
+    
+  } catch (error) {
+    console.error('❌ Errore download offline:', error);
+    progressModal.remove();
+    alert('Errore durante il download: ' + error.message);
+  }
+}
+
+async function salvaStrutturaOffline(struttura) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('QuoVadiScoutDB', 1);
+    
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction(['cachedStructures'], 'readwrite');
+      const store = transaction.objectStore('cachedStructures');
+      
+      const offlineStructure = {
+        ...struttura,
+        downloadedAt: Date.now(),
+        offline: true
+      };
+      
+      store.put(offlineStructure).onsuccess = () => resolve();
+      store.put(offlineStructure).onerror = () => reject(store.error);
+    };
+    
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function salvaImmagineOffline(imageUrl, structureId) {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('QuoVadiScoutDB', 1);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        
+        // Crea store per immagini se non esiste
+        if (!db.objectStoreNames.contains('cachedImages')) {
+          const transaction = db.transaction(['cachedImages'], 'readwrite');
+          db.createObjectStore('cachedImages', { keyPath: 'url' });
+        }
+        
+        const transaction = db.transaction(['cachedImages'], 'readwrite');
+        const store = transaction.objectStore('cachedImages');
+        
+        const imageData = {
+          url: imageUrl,
+          blob: blob,
+          structureId: structureId,
+          downloadedAt: Date.now()
+        };
+        
+        store.put(imageData).onsuccess = () => resolve();
+        store.put(imageData).onerror = () => reject(store.error);
+      };
+      
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.warn('⚠️ Errore download immagine:', imageUrl, error);
+    // Non bloccare il processo per errori di singole immagini
+  }
+}
+
+async function aggiornaInfoCache() {
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('QuoVadiScoutDB', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    
+    // Calcola spazio utilizzato
+    let cacheSize = 0;
+    
+    if (db.objectStoreNames.contains('cachedStructures')) {
+      const transaction = db.transaction(['cachedStructures'], 'readonly');
+      const store = transaction.objectStore('cachedStructures');
+      const structures = await new Promise((resolve) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+      });
+      cacheSize += JSON.stringify(structures).length;
+    }
+    
+    if (db.objectStoreNames.contains('cachedImages')) {
+      const transaction = db.transaction(['cachedImages'], 'readonly');
+      const store = transaction.objectStore('cachedImages');
+      const images = await new Promise((resolve) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+      });
+      cacheSize += images.reduce((total, img) => total + (img.blob?.size || 0), 0);
+    }
+    
+    const sizeMB = (cacheSize / (1024 * 1024)).toFixed(2);
+    const maxSize = 50; // MB limite stimato
+    const percentage = Math.min((sizeMB / maxSize) * 100, 100);
+    
+    document.getElementById('cacheSize').textContent = `${sizeMB} MB`;
+    document.getElementById('cacheBar').style.width = `${percentage}%`;
+    
+  } catch (error) {
+    console.error('❌ Errore aggiornamento info cache:', error);
+    document.getElementById('cacheSize').textContent = 'Errore';
+  }
+}
+
+async function pulisciCacheOffline() {
+  if (!confirm('Sei sicuro di voler cancellare tutta la cache offline? Questa azione non può essere annullata.')) {
+    return;
+  }
+  
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('QuoVadiScoutDB', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    
+    // Pulisci strutture cached
+    if (db.objectStoreNames.contains('cachedStructures')) {
+      const transaction = db.transaction(['cachedStructures'], 'readwrite');
+      const store = transaction.objectStore('cachedStructures');
+      await store.clear();
+    }
+    
+    // Pulisci immagini cached
+    if (db.objectStoreNames.contains('cachedImages')) {
+      const transaction = db.transaction(['cachedImages'], 'readwrite');
+      const store = transaction.objectStore('cachedImages');
+      await store.clear();
+    }
+    
+    aggiornaInfoCache();
+    
+    window.showNotification('✅ Cache pulita', {
+      body: 'Tutti i dati offline sono stati rimossi',
+      tag: 'cache-cleared'
+    });
+    
+  } catch (error) {
+    console.error('❌ Errore pulizia cache:', error);
+    alert('Errore durante la pulizia della cache: ' + error.message);
+  }
+}
 
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {

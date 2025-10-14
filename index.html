@@ -147,6 +147,10 @@
             <span class="menu-icon">📈</span>
             <span class="menu-label">Dashboard</span>
           </button>
+          <button class="menu-item" onclick="mostraGestioneOffline()">
+            <span class="menu-icon">📱</span>
+            <span class="menu-label">Download Offline</span>
+          </button>
         </div>
       </section>
 
@@ -161,6 +165,10 @@
           <button id="userBtn" class="menu-item">
             <span class="menu-icon">👤</span>
             <span class="menu-label">Account Utente</span>
+          </button>
+          <button class="menu-item" onclick="mostraPreferenzeNotifiche()">
+            <span class="menu-icon">🔔</span>
+            <span class="menu-label">Preferenze Notifiche</span>
           </button>
         </div>
       </section>
@@ -211,10 +219,15 @@
     </div>
   </div>
 
-<script src="maps.js"></script>
-<script src="export.js"></script>
-<script src="push-notifications.js"></script>
-<script type="module" src="script.js"></script>
+  <script src="maps.js"></script>
+  <script src="export.js"></script>
+  <script src="push-notifications.js"></script>
+  <script src="offline-sync.js"></script>
+  <script src="media-manager.js"></script>
+  <script src="virtual-scroll.js"></script>
+  <script src="integrations.js"></script>
+  <script src="gestures.js"></script>
+  <script type="module" src="script.js"></script>
 
 <script>
 // Registrazione Service Worker per PWA
@@ -225,19 +238,28 @@ if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.register('./service-worker.js');
       console.log('✅ Service Worker registrato:', registration.scope);
       
-      // Gestione aggiornamenti
+      // Gestione aggiornamenti automatici
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // Nuovo service worker disponibile
-            if (confirm('È disponibile una nuova versione dell\'app. Vuoi aggiornare?')) {
-              newWorker.postMessage({ action: 'SKIP_WAITING' });
-              window.location.reload();
-            }
+            showUpdateNotification();
           }
         });
       });
+      
+      // Listener per messaggi dal service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.action === 'SW_UPDATED') {
+          console.log('🔄 Service Worker aggiornato');
+        }
+      });
+      
+      // Controlla aggiornamenti ogni 30 minuti
+      setInterval(() => {
+        registration.update();
+      }, 30 * 60 * 1000);
       
     } catch (error) {
       console.warn('⚠️ Service Worker non disponibile (modalità sviluppo):', error.message);
@@ -245,6 +267,69 @@ if ('serviceWorker' in navigator) {
       console.log('📱 App funzionante senza PWA features');
     }
   });
+}
+
+// Mostra notifica di aggiornamento
+function showUpdateNotification() {
+  // Rimuovi notifica esistente se presente
+  const existingNotification = document.getElementById('updateNotification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+  
+  const notification = document.createElement('div');
+  notification.id = 'updateNotification';
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2f6b2f;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 350px;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  
+  notification.innerHTML = `
+    <div style="flex: 1;">
+      <div style="font-weight: 500; margin-bottom: 4px;">🔄 Nuova versione disponibile!</div>
+      <div style="font-size: 14px; opacity: 0.9;">Ricarica la pagina per aggiornare l'app</div>
+    </div>
+    <button onclick="location.reload()" style="
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    ">Aggiorna ora</button>
+    <button onclick="this.closest('#updateNotification').remove()" style="
+      background: none;
+      color: white;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      font-size: 18px;
+      opacity: 0.7;
+    ">×</button>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto-rimuovi dopo 10 secondi
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 10000);
 }
 
 // Gestione installazione PWA

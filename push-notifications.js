@@ -1,11 +1,66 @@
 // Push Notifications System for QuoVadiScout
 // Web Push API implementation
 
+class NotificationPreferences {
+  constructor() {
+    this.preferences = {
+      newStructures: true,
+      structureUpdates: true,
+      personalListUpdates: true,
+      nearbyStructures: false,
+      reports: true,
+      distance: 10 // km per notifiche vicinanza
+    };
+  }
+  
+  async loadFromFirestore(userId) {
+    try {
+      if (!userId || !window.db) return;
+      
+      const userPrefsRef = window.doc(window.db, "user_notification_prefs", userId);
+      const userPrefsDoc = await window.getDoc(userPrefsRef);
+      
+      if (userPrefsDoc.exists()) {
+        const data = userPrefsDoc.data();
+        this.preferences = { ...this.preferences, ...data };
+        console.log('📱 Preferenze notifiche caricate:', this.preferences);
+      }
+    } catch (error) {
+      console.error('❌ Errore caricamento preferenze notifiche:', error);
+    }
+  }
+  
+  async save(userId) {
+    try {
+      if (!userId || !window.db) return;
+      
+      const userPrefsRef = window.doc(window.db, "user_notification_prefs", userId);
+      await window.setDoc(userPrefsRef, {
+        ...this.preferences,
+        lastUpdated: new Date()
+      }, { merge: true });
+      
+      console.log('✅ Preferenze notifiche salvate');
+    } catch (error) {
+      console.error('❌ Errore salvataggio preferenze notifiche:', error);
+    }
+  }
+  
+  isEnabled(type) {
+    return this.preferences[type] === true;
+  }
+  
+  getDistance() {
+    return this.preferences.distance || 10;
+  }
+}
+
 class PushNotificationManager {
   constructor() {
     this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
     this.subscription = null;
     this.vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HIeFfD7l1KQlYw'; // Replace with your VAPID key
+    this.preferences = new NotificationPreferences();
   }
 
   async initialize() {
@@ -29,6 +84,11 @@ class PushNotificationManager {
       if (permission !== 'granted') {
         console.log('❌ Permessi notifiche negati');
         return false;
+      }
+
+      // Carica preferenze utente se autenticato
+      if (window.utenteCorrente) {
+        await this.preferences.loadFromFirestore(window.utenteCorrente.uid);
       }
 
       // Disabilita temporaneamente la sottoscrizione push per evitare errori VAPID
@@ -116,8 +176,19 @@ class PushNotificationManager {
     return outputArray;
   }
 
-  // Mostra notifica locale
-  showLocalNotification(title, options = {}) {
+  // Controlla preferenze prima di mostrare notifica
+  checkPreferences(type) {
+    return this.preferences.isEnabled(type);
+  }
+
+  // Mostra notifica locale con controllo preferenze
+  showLocalNotification(title, options = {}, type = null) {
+    // Controlla preferenze se specificato il tipo
+    if (type && !this.checkPreferences(type)) {
+      console.log(`🔕 Notifica ${type} disabilitata dalle preferenze`);
+      return null;
+    }
+
     if (Notification.permission === 'granted') {
       const notification = new Notification(title, {
         icon: '/icon-192x192.png',
@@ -178,7 +249,8 @@ window.notifyNewStructure = async (struttura) => {
         body: `${struttura.Struttura} a ${struttura.Luogo}`,
         tag: 'new-structure',
         data: { strutturaId: struttura.id }
-      }
+      },
+      'newStructures'
     );
   }
 };
@@ -192,7 +264,8 @@ window.notifyStructureUpdate = async (struttura) => {
         body: `Modifiche a ${struttura.Struttura}`,
         tag: 'structure-update',
         data: { strutturaId: struttura.id }
-      }
+      },
+      'structureUpdates'
     );
   }
 };
@@ -206,7 +279,38 @@ window.notifyNewReport = async (struttura, report) => {
         body: `Segnalazione per ${struttura.Struttura}`,
         tag: 'new-report',
         data: { strutturaId: struttura.id, reportId: report.id }
-      }
+      },
+      'reports'
+    );
+  }
+};
+
+// Gestione notifiche per aggiornamenti elenco personale
+window.notifyPersonalListUpdate = async (message) => {
+  if (pushManager.subscription) {
+    const notification = pushManager.showLocalNotification(
+      '⭐ Elenco Personale',
+      {
+        body: message,
+        tag: 'personal-list-update',
+        data: { type: 'personalList' }
+      },
+      'personalListUpdates'
+    );
+  }
+};
+
+// Gestione notifiche per strutture vicine
+window.notifyNearbyStructure = async (struttura, distance) => {
+  if (pushManager.subscription) {
+    const notification = pushManager.showLocalNotification(
+      '📍 Struttura Vicina',
+      {
+        body: `${struttura.Struttura} a ${distance.toFixed(1)}km da te`,
+        tag: 'nearby-structure',
+        data: { strutturaId: struttura.id, distance }
+      },
+      'nearbyStructures'
     );
   }
 };

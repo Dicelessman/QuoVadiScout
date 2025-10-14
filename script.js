@@ -6291,7 +6291,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       
       // Mostra messaggio informativo
       const container = document.getElementById("results");
-      if (container) {
+      if (container && container.firstChild !== null) {
         const infoDiv = document.createElement('div');
         infoDiv.style.cssText = `
           background: #e8f5e8;
@@ -6309,6 +6309,25 @@ window.addEventListener("DOMContentLoaded", async () => {
           <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: #2f6b2f; cursor: pointer; font-size: 16px;">✕</button>
         `;
         container.insertBefore(infoDiv, container.firstChild);
+      } else if (container) {
+        // Se container esiste ma non ha firstChild, usa appendChild
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+          background: #e8f5e8;
+          border: 1px solid #2f6b2f;
+          border-radius: 6px;
+          padding: 12px;
+          margin-bottom: 20px;
+          color: #2f6b2f;
+          font-weight: 500;
+        `;
+        infoDiv.innerHTML = `
+          🔍 <strong>Filtro applicato dalla dashboard:</strong> 
+          ${filtro === 'casa' ? 'Case' : filtro === 'terreno' ? 'Terreni' : 'Case e Terreni'} 
+          in provincia di ${provincia}
+          <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; color: #2f6b2f; cursor: pointer; font-size: 16px;">✕</button>
+        `;
+        container.appendChild(infoDiv);
       }
       
       // Pulisci il filtro dashboard
@@ -6318,26 +6337,41 @@ window.addEventListener("DOMContentLoaded", async () => {
     // Mostra messaggio informativo se si usano dati locali
     if (strutture.length > 0 && strutture[0].id.startsWith('demo-')) {
       const container = document.getElementById("results");
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'info-message';
-      infoDiv.innerHTML = `
-        <div class="info-banner">
-          <strong>ℹ️ Modalità Demo</strong> - Stai visualizzando dati di esempio. 
-          <button onclick="this.parentElement.parentElement.remove()">✕</button>
-        </div>
-      `;
-      container.insertBefore(infoDiv, container.firstChild);
+      if (container && container.firstChild !== null) {
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'info-message';
+        infoDiv.innerHTML = `
+          <div class="info-banner">
+            <strong>ℹ️ Modalità Demo</strong> - Stai visualizzando dati di esempio. 
+            <button onclick="this.parentElement.parentElement.remove()">✕</button>
+          </div>
+        `;
+        container.insertBefore(infoDiv, container.firstChild);
+      } else if (container) {
+        // Se container esiste ma non ha firstChild, usa appendChild
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'info-message';
+        infoDiv.innerHTML = `
+          <div class="info-banner">
+            <strong>ℹ️ Modalità Demo</strong> - Stai visualizzando dati di esempio. 
+            <button onclick="this.parentElement.parentElement.remove()">✕</button>
+          </div>
+        `;
+        container.appendChild(infoDiv);
+      }
     }
   } catch (error) {
     console.error('Errore nel caricamento:', error);
     const container = document.getElementById("results");
-    container.innerHTML = `
-      <div class="error">
-        <h3>⚠️ Errore nel caricamento</h3>
-        <p>Impossibile caricare le strutture. Controlla la connessione e riprova.</p>
-        <button onclick="location.reload()">🔄 Ricarica pagina</button>
-      </div>
-    `;
+    if (container) {
+      container.innerHTML = `
+        <div class="error">
+          <h3>⚠️ Errore nel caricamento</h3>
+          <p>Impossibile caricare le strutture. Controlla la connessione e riprova.</p>
+          <button onclick="location.reload()">🔄 Ricarica pagina</button>
+        </div>
+      `;
+    }
   }
 
   // Popola le province

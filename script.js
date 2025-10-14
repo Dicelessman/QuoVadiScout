@@ -544,7 +544,8 @@ function mostraRicercaAvanzata() {
       { campo: 'coordinate_lat', tipo: 'number', placeholder: 'Latitudine' },
       { campo: 'coordinate_lng', tipo: 'number', placeholder: 'Longitudine' },
       { campo: 'distance_km', tipo: 'number', placeholder: 'Distanza massima (km)' },
-      { campo: 'near_me', tipo: 'checkbox', placeholder: 'Vicino alla mia posizione' }
+      { campo: 'near_me', tipo: 'checkbox', placeholder: 'Vicino alla mia posizione' },
+      { campo: 'google_maps_link', tipo: 'url', placeholder: 'Link Google Maps' }
     ],
     'Date e Versioni': [
       { campo: 'created_after', tipo: 'date', placeholder: 'Creata dopo' },
@@ -1184,6 +1185,24 @@ async function modificaStruttura(id) {
       <input type="email" id="edit-email" value="${strutturaCorrente.Email || ''}">
     </label>
     
+    <fieldset>
+      <legend>📍 Posizione Geografica</legend>
+      <label>
+        Latitudine
+        <input type="number" id="edit-coordinate_lat" step="any" value="${strutturaCorrente.coordinate_lat || ''}" placeholder="es. 45.123456">
+      </label>
+      
+      <label>
+        Longitudine
+        <input type="number" id="edit-coordinate_lng" step="any" value="${strutturaCorrente.coordinate_lng || ''}" placeholder="es. 9.123456">
+      </label>
+      
+      <label>
+        Link Google Maps
+        <input type="url" id="edit-google_maps_link" value="${strutturaCorrente.google_maps_link || ''}" placeholder="https://maps.google.com/...">
+      </label>
+    </fieldset>
+    
     <label>
       Casa
       <input type="checkbox" id="edit-casa" ${strutturaCorrente.Casa ? 'checked' : ''}>
@@ -1222,6 +1241,9 @@ async function salvaModifiche() {
     Referente: document.getElementById('edit-referente').value.trim(),
     Contatto: document.getElementById('edit-contatto').value.trim(),
     Email: document.getElementById('edit-email').value.trim(),
+    coordinate_lat: document.getElementById('edit-coordinate_lat').value ? parseFloat(document.getElementById('edit-coordinate_lat').value) : null,
+    coordinate_lng: document.getElementById('edit-coordinate_lng').value ? parseFloat(document.getElementById('edit-coordinate_lng').value) : null,
+    google_maps_link: document.getElementById('edit-google_maps_link').value.trim(),
     Casa: document.getElementById('edit-casa').checked,
     Terreno: document.getElementById('edit-terreno').checked,
     stato: document.getElementById('edit-stato').value,
@@ -1454,6 +1476,9 @@ async function aggiungiStruttura() {
     Note: '',
     // Nuovi campi per il sistema avanzato
     stato: 'attiva',
+    coordinate_lat: null,
+    coordinate_lng: null,
+    google_maps_link: '',
     coordinate: { lat: null, lng: null },
     rating: { total: 0, count: 0, average: 0 },
     segnalazioni: [],
@@ -4193,6 +4218,9 @@ function mostraSchedaCompleta(strutturaId) {
       'Contatti': [
         'Referente', 'Email', 'Sito', 'Contatto', 'IIcontatto'
       ],
+      'Posizione Geografica': [
+        'coordinate_lat', 'coordinate_lng', 'google_maps_link'
+      ],
       'Gestione': [
         'Ultimo controllo'
       ],
@@ -4237,6 +4265,8 @@ function mostraSchedaCompleta(strutturaId) {
         if (isEditMode) {
           // Modalità modifica
           const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia'].includes(campo);
+          const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
+          const isUrlField = ['google_maps_link', 'Sito'].includes(campo);
           
           if (isCheckboxField) {
             // Campo checkbox
@@ -4249,6 +4279,45 @@ function mostraSchedaCompleta(strutturaId) {
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.checked;
+            };
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(input);
+          } else if (isGeoField) {
+            // Campo numerico per coordinate
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = 'any';
+            input.value = struttura[campo] || '';
+            input.placeholder = campo === 'coordinate_lat' ? 'es. 45.123456' : 'es. 9.123456';
+            input.style.cssText = `
+              width: 100%;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value ? parseFloat(e.target.value) : null;
+            };
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(input);
+          } else if (isUrlField) {
+            // Campo URL
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.value = struttura[campo] || '';
+            input.placeholder = campo === 'google_maps_link' ? 'https://maps.google.com/...' : 'https://...';
+            input.style.cssText = `
+              width: 100%;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value;
             };
             
             campoDiv.appendChild(label);
@@ -4329,6 +4398,59 @@ function mostraSchedaCompleta(strutturaId) {
             ratingDiv.appendChild(ratingInfo);
             
             campoDiv.appendChild(ratingDiv);
+          } else if (campo === 'google_maps_link') {
+            // Gestione speciale per il link Google Maps
+            const linkDiv = document.createElement('div');
+            linkDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const linkLabel = document.createElement('strong');
+            linkLabel.textContent = 'Google Maps: ';
+            linkLabel.style.color = '#495057';
+            
+            const valore = struttura[campo];
+            
+            if (valore && valore.trim() !== '') {
+              const link = document.createElement('a');
+              link.href = valore;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.textContent = 'Apri su Google Maps';
+              link.style.cssText = `
+                color: #007bff;
+                text-decoration: none;
+                padding: 4px 8px;
+                border: 1px solid #007bff;
+                border-radius: 4px;
+                font-size: 14px;
+                transition: all 0.2s;
+              `;
+              link.onmouseover = () => {
+                link.style.backgroundColor = '#007bff';
+                link.style.color = 'white';
+              };
+              link.onmouseout = () => {
+                link.style.backgroundColor = 'transparent';
+                link.style.color = '#007bff';
+              };
+              
+              linkDiv.appendChild(linkLabel);
+              linkDiv.appendChild(link);
+            } else {
+              const noLink = document.createElement('span');
+              noLink.textContent = 'Non specificato';
+              noLink.style.color = '#6c757d';
+              noLink.style.fontStyle = 'italic';
+              
+              linkDiv.appendChild(linkLabel);
+              linkDiv.appendChild(noLink);
+            }
+            
+            campoDiv.appendChild(linkDiv);
           } else {
           const value = document.createElement('span');
           const valore = struttura[campo];

@@ -5534,10 +5534,15 @@ function initializeNewUI() {
   
   if (menuToggle && mainMenu) {
     console.log('📱 Menu toggle trovato, aggiungo event listener');
-    menuToggle.addEventListener('click', () => {
+    console.log('📱 Stato iniziale menu:', mainMenu.classList.toString());
+    menuToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       console.log('📱 Toggle menu clicked');
       const isOpen = !mainMenu.classList.contains('hidden');
+      console.log('📱 Menu attualmente aperto:', !isOpen);
       mainMenu.classList.toggle('hidden');
+      console.log('📱 Nuovo stato menu:', mainMenu.classList.toString());
       menuToggle.setAttribute('aria-expanded', !isOpen);
       document.body.style.overflow = !isOpen ? 'hidden' : '';
     });
@@ -5563,6 +5568,8 @@ function initializeNewUI() {
     });
   } else {
     console.warn('⚠️ Menu toggle o main menu non trovati');
+    console.log('📱 Menu toggle element:', menuToggle);
+    console.log('📱 Main menu element:', mainMenu);
   }
   
   // Theme toggle
@@ -6211,9 +6218,6 @@ async function pulisciCacheOffline() {
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
-  
-  // Inizializza nuova UI mobile-first
-  initializeNewUI();
   
   // Gestisci parametri URL dalla dashboard
   const urlParams = new URLSearchParams(window.location.search);
@@ -7870,9 +7874,34 @@ function showNotification(title, options = {}) {
   }
 }
 
+// Funzione di test per il menu
+function testMenuToggle() {
+  const menuToggle = document.getElementById('menuToggle');
+  const mainMenu = document.getElementById('mainMenu');
+  
+  console.log('🧪 Test menu toggle:');
+  console.log('- Menu toggle:', menuToggle);
+  console.log('- Main menu:', mainMenu);
+  console.log('- Menu classes:', mainMenu?.classList.toString());
+  
+  if (mainMenu) {
+    const isHidden = mainMenu.classList.contains('hidden');
+    console.log('- Menu nascosto:', isHidden);
+    
+    if (isHidden) {
+      mainMenu.classList.remove('hidden');
+      console.log('- Menu aperto manualmente');
+    } else {
+      mainMenu.classList.add('hidden');
+      console.log('- Menu chiuso manualmente');
+    }
+  }
+}
+
 // Esponi funzioni globalmente
 window.mostraStatisticheApp = mostraStatisticheApp;
 window.showNotification = showNotification;
+window.testMenuToggle = testMenuToggle;
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 

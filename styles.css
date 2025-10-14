@@ -432,6 +432,7 @@ body {
 .main-menu.hidden {
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
 
 .menu-sections {

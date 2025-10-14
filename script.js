@@ -4273,6 +4273,11 @@ function mostraSchedaCompleta(strutturaId) {
   async function caricaImmaginiEsistenti() {
     const galleryGrid = document.getElementById('galleryGrid');
     
+    if (!galleryGrid) {
+      console.warn('⚠️ GalleryGrid non trovato, skip caricamento immagini');
+      return;
+    }
+    
     try {
       // Carica galleria da MediaManager
       const images = await window.mediaManager?.getGallery(strutturaId) || [];
@@ -4287,7 +4292,7 @@ function mostraSchedaCompleta(strutturaId) {
       }
       
       galleryGrid.innerHTML = images.map(img => `
-        <div style="position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="apriLightbox('${img.id}')">
+        <div style="position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onclick="if(typeof apriLightbox === 'function') apriLightbox('${img.id}'); else console.warn('apriLightbox non disponibile')">
           <img src="${img.thumbnailUrl || img.url}" 
                alt="${img.name || 'Immagine struttura'}" 
                loading="lazy"
@@ -4311,11 +4316,13 @@ function mostraSchedaCompleta(strutturaId) {
       
     } catch (error) {
       console.error('❌ Errore caricamento galleria:', error);
-      galleryGrid.innerHTML = `
-        <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; color: #dc3545; font-size: 0.9rem; padding: 20px;">
-          Errore nel caricamento delle immagini
-        </div>
-      `;
+      if (galleryGrid) {
+        galleryGrid.innerHTML = `
+          <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; color: #dc3545; font-size: 0.9rem; padding: 20px;">
+            Errore nel caricamento delle immagini
+          </div>
+        `;
+      }
     }
   }
   
@@ -5394,6 +5401,23 @@ function mostraSchedaCompleta(strutturaId) {
     }
   }
   
+  // Funzione per aprire lightbox immagini
+  async function apriLightbox(imageId) {
+    console.log('🖼️ Apertura lightbox per immagine:', imageId);
+    try {
+      // Carica le immagini dal MediaManager
+      const images = await window.mediaManager?.getGallery(strutturaId) || [];
+      const img = images.find(i => i.id === imageId);
+      if (img) {
+        window.open(img.url || img.thumbnailUrl, '_blank');
+      } else {
+        console.warn('⚠️ Immagine non trovata:', imageId);
+      }
+    } catch (error) {
+      console.error('❌ Errore apertura lightbox:', error);
+    }
+  }
+  
   // Inizializza contenuto
   creaGalleriaImmagini();
   creaContenutoScheda();
@@ -6315,37 +6339,67 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Popola le province
   const province = [...new Set(strutture.map(s => s.Prov).filter(Boolean))].sort();
   const provSelect = document.getElementById("filter-prov");
-  province.forEach(prov => {
-    const option = document.createElement("option");
-    option.value = prov;
-    option.textContent = prov;
-    provSelect.appendChild(option);
-  });
+  if (provSelect) {
+    province.forEach(prov => {
+      const option = document.createElement("option");
+      option.value = prov;
+      option.textContent = prov;
+      provSelect.appendChild(option);
+    });
+  }
 
   // Event listeners
-  document.getElementById("search").addEventListener("input", () => {
-    renderStrutture(filtra(strutture));
-  });
-  document.getElementById("filter-prov").addEventListener("change", () => {
-    renderStrutture(filtra(strutture));
-  });
-  document.getElementById("filter-casa").addEventListener("change", () => {
-    renderStrutture(filtra(strutture));
-  });
-  document.getElementById("filter-terreno").addEventListener("change", () => {
-    renderStrutture(filtra(strutture));
-  });
-  document.getElementById("sort-by").addEventListener("change", () => {
-    paginaCorrente = 1; // Reset alla prima pagina
-    renderStrutture(filtra(strutture));
-  });
+  const searchInput = document.getElementById("search");
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      renderStrutture(filtra(strutture));
+    });
+  }
+  const filterProv = document.getElementById("filter-prov");
+  if (filterProv) {
+    filterProv.addEventListener("change", () => {
+      renderStrutture(filtra(strutture));
+    });
+  }
   
-  document.getElementById("add-btn").addEventListener("click", aggiungiStruttura);
-  document.getElementById("resetBtn").addEventListener("click", resetFiltri);
+  const filterCasa = document.getElementById("filter-casa");
+  if (filterCasa) {
+    filterCasa.addEventListener("change", () => {
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  const filterTerreno = document.getElementById("filter-terreno");
+  if (filterTerreno) {
+    filterTerreno.addEventListener("change", () => {
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  const sortBy = document.getElementById("sort-by");
+  if (sortBy) {
+    sortBy.addEventListener("change", () => {
+      paginaCorrente = 1; // Reset alla prima pagina
+      renderStrutture(filtra(strutture));
+    });
+  }
+  
+  const addBtn = document.getElementById("add-btn");
+  if (addBtn) {
+    addBtn.addEventListener("click", aggiungiStruttura);
+  }
+  
+  const resetBtn = document.getElementById("resetBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetFiltri);
+  }
   // exportBtn gestito in initializeUIEventListeners()
   
   // Event listener per toggle visualizzazione
-  document.getElementById("viewToggle").addEventListener("click", toggleViewMode);
+  const viewToggle = document.getElementById("viewToggle");
+  if (viewToggle) {
+    viewToggle.addEventListener("click", toggleViewMode);
+  }
   
   // Event listener per ricerca avanzata
   const advancedSearchBtn = document.getElementById("advancedSearchBtn");
@@ -7801,8 +7855,24 @@ function mostraStatisticheApp() {
   document.body.appendChild(modal);
 }
 
-// Esponi funzione globalmente
+// Funzione di utilità per mostrare notifiche
+function showNotification(title, options = {}) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      icon: '/icon-192.png',
+      badge: '/badge-72.png',
+      tag: 'quovadiscout',
+      ...options
+    });
+  } else {
+    // Fallback: mostra alert o toast
+    console.log('🔔 Notifica:', title, options.body);
+  }
+}
+
+// Esponi funzioni globalmente
 window.mostraStatisticheApp = mostraStatisticheApp;
+window.showNotification = showNotification;
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 

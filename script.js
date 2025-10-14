@@ -1,5 +1,5 @@
-// === QuoVadiScout v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
-console.log('🔄 Script.js caricato con versione v1.2.1 - Cache bust applicato');
+// === QuoVadiScout v1.3.0 - Cache Bust: 2024-12-19-12-00 ===
+console.log('🔄 Script.js caricato con versione v1.3.0 - Cache bust applicato');
 // === Firebase SDK Imports ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
@@ -4044,6 +4044,11 @@ function mostraSchedaCompleta(strutturaId) {
     console.error('Struttura non trovata:', strutturaId);
     return;
   }
+
+  // Track analytics
+  if (window.analyticsManager) {
+    window.analyticsManager.trackStructureView(strutturaId, struttura.Struttura, 'modal');
+  }
   
   // Trigger evento per preloading predittivo
   document.dispatchEvent(new CustomEvent('cardOpened', {
@@ -7671,6 +7676,133 @@ window.trovaVicinoAMe = trovaVicinoAMe;
 window.geocodificaTutteStrutture = geocodificaTutteStrutture;
 window.mostraOpzioniEsportazioneGenerale = mostraOpzioniEsportazioneGenerale;
 window.mostraFeedAttivita = mostraFeedAttivita;
+
+// === FUNZIONE STATISTICHE APP ===
+function mostraStatisticheApp() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  
+  // Genera statistiche
+  const stats = window.analyticsManager ? window.analyticsManager.generateUserReport() : {
+    sessionId: 'N/A',
+    sessionDuration: 0,
+    totalEvents: 0,
+    totalActions: 0,
+    totalErrors: 0,
+    eventBreakdown: {},
+    actionBreakdown: {},
+    performanceMetrics: {},
+    mostUsedFeatures: []
+  };
+
+  const smartStats = window.smartNotificationManager ? window.smartNotificationManager.getNotificationStats() : {
+    todayNotifications: 0,
+    weekNotifications: 0,
+    nearbyStructures: 0,
+    visitedStructures: 0,
+    totalNotifications: 0
+  };
+
+  const backupStats = window.backupSyncManager ? {
+    lastSync: window.backupSyncManager.lastSyncTime,
+    backupCount: window.backupSyncManager.backupHistory.length,
+    storageUsed: window.backupSyncManager.getStorageUsage()
+  } : {
+    lastSync: null,
+    backupCount: 0,
+    storageUsed: { localStorage: 0, estimated: 0 }
+  };
+
+  modal.innerHTML = `
+    <div class="modal" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">📊 Statistiche App</h2>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        
+        <!-- Sessione Corrente -->
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">⏱️ Sessione Corrente</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div><strong>ID Sessione:</strong> ${stats.sessionId}</div>
+            <div><strong>Durata:</strong> ${stats.sessionDuration}s</div>
+            <div><strong>Eventi:</strong> ${stats.totalEvents}</div>
+            <div><strong>Azioni:</strong> ${stats.totalActions}</div>
+            <div><strong>Errori:</strong> ${stats.totalErrors}</div>
+          </div>
+        </div>
+
+        <!-- Performance -->
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">⚡ Performance</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div><strong>Tempo Caricamento:</strong> ${stats.performanceMetrics.loadTime ? Math.round(stats.performanceMetrics.loadTime) + 'ms' : 'N/A'}</div>
+            <div><strong>LCP:</strong> ${stats.performanceMetrics.lcp ? Math.round(stats.performanceMetrics.lcp) + 'ms' : 'N/A'}</div>
+            <div><strong>FID:</strong> ${stats.performanceMetrics.fid ? Math.round(stats.performanceMetrics.fid) + 'ms' : 'N/A'}</div>
+            <div><strong>CLS:</strong> ${stats.performanceMetrics.cls ? stats.performanceMetrics.cls.toFixed(3) : 'N/A'}</div>
+          </div>
+        </div>
+
+        <!-- Notifiche Intelligenti -->
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">🧠 Notifiche Intelligenti</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div><strong>Oggi:</strong> ${smartStats.todayNotifications}</div>
+            <div><strong>Settimana:</strong> ${smartStats.weekNotifications}</div>
+            <div><strong>Strutture Vicine:</strong> ${smartStats.nearbyStructures}</div>
+            <div><strong>Strutture Visitate:</strong> ${smartStats.visitedStructures}</div>
+          </div>
+        </div>
+
+        <!-- Backup & Sync -->
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">💾 Backup & Sync</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div><strong>Ultima Sync:</strong> ${backupStats.lastSync ? backupStats.lastSync.toLocaleString() : 'Mai'}</div>
+            <div><strong>Backup Disponibili:</strong> ${backupStats.backupCount}</div>
+            <div><strong>Spazio Usato:</strong> ${Math.round(backupStats.storageUsed.localStorage / 1024)}KB</div>
+            <div><strong>Stima Totale:</strong> ${Math.round(backupStats.storageUsed.estimated / 1024)}KB</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Funzioni Più Utilizzate -->
+      <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">🏆 Funzioni Più Utilizzate</h3>
+        ${stats.mostUsedFeatures.length > 0 ? 
+          stats.mostUsedFeatures.map(f => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+              <span>${f.feature}</span>
+              <span style="background: #2f6b2f; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${f.count}</span>
+            </div>
+          `).join('') : 
+          '<p style="color: #666; text-align: center;">Nessun dato disponibile</p>'
+        }
+      </div>
+
+      <!-- Azioni -->
+      <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+        <button onclick="window.backupSyncManager?.performSync()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          🔄 Sincronizza Ora
+        </button>
+        <button onclick="window.backupSyncManager?.performBackup()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          💾 Crea Backup
+        </button>
+        <button onclick="this.closest('.modal-overlay').remove()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          ✅ Chiudi
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+// Esponi funzione globalmente
+window.mostraStatisticheApp = mostraStatisticheApp;
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 

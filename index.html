@@ -147,10 +147,14 @@
             <span class="menu-icon">📈</span>
             <span class="menu-label">Dashboard</span>
           </button>
-          <button class="menu-item" onclick="mostraGestioneOffline()">
-            <span class="menu-icon">📱</span>
-            <span class="menu-label">Download Offline</span>
-          </button>
+           <button class="menu-item" onclick="mostraGestioneOffline()">
+             <span class="menu-icon">📱</span>
+             <span class="menu-label">Download Offline</span>
+           </button>
+           <button class="menu-item" onclick="mostraGestioneBackup()">
+             <span class="menu-icon">💾</span>
+             <span class="menu-label">Gestione Backup</span>
+           </button>
         </div>
       </section>
 
@@ -166,10 +170,14 @@
             <span class="menu-icon">👤</span>
             <span class="menu-label">Account Utente</span>
           </button>
-          <button class="menu-item" onclick="mostraPreferenzeNotifiche()">
-            <span class="menu-icon">🔔</span>
-            <span class="menu-label">Preferenze Notifiche</span>
-          </button>
+           <button class="menu-item" onclick="mostraPreferenzeNotifiche()">
+             <span class="menu-icon">🔔</span>
+             <span class="menu-label">Preferenze Notifiche</span>
+           </button>
+           <button class="menu-item" onclick="mostraStatisticheApp()">
+             <span class="menu-icon">📊</span>
+             <span class="menu-label">Statistiche App</span>
+           </button>
         </div>
       </section>
     </div>
@@ -227,6 +235,10 @@
   <script src="virtual-scroll.js"></script>
   <script src="integrations.js"></script>
   <script src="gestures.js"></script>
+  <script src="smart-notifications.js"></script>
+  <script src="analytics.js"></script>
+  <script src="backup-sync.js"></script>
+  <script src="config.js"></script>
   <script type="module" src="script.js"></script>
 
 <script>

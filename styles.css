@@ -220,7 +220,9 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-2);
+  margin-left: auto;
 }
 
 /* === HEADER BUTTONS === */
@@ -238,6 +240,12 @@ body {
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+/* Specific styles for menu button positioning */
+.btn-menu {
+  order: 999; /* Ensure it's always last */
+  margin-left: auto;
 }
 
 .btn-menu:hover,
@@ -1483,6 +1491,11 @@ html {
     padding: var(--spacing-sm) var(--spacing-md);
     flex-wrap: wrap;
     gap: var(--spacing-sm);
+  }
+  
+  .header-actions {
+    justify-content: flex-end;
+    margin-left: auto;
   }
   
   .app-title {

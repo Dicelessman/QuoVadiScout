@@ -77,37 +77,6 @@
               <option value="provincia">Provincia</option>
             </select>
           </button>
-          <div class="menu-item">
-            <span class="menu-icon">🏛️</span>
-            <span class="menu-label">Provincia</span>
-            <select id="filter-prov" class="menu-select">
-              <option value="">Tutte le province</option>
-            </select>
-          </div>
-          <div class="menu-item">
-            <span class="menu-icon">🟢</span>
-            <span class="menu-label">Stato</span>
-            <select id="filter-stato" class="menu-select">
-              <option value="">Tutti gli stati</option>
-              <option value="attiva">🟢 Attiva</option>
-              <option value="temporaneamente_non_attiva">🟡 Temporaneamente non attiva</option>
-              <option value="non_piu_attiva">🔴 Non più attiva</option>
-            </select>
-          </div>
-          <div class="menu-item">
-            <span class="menu-icon">🏠</span>
-            <span class="menu-label">Tipo</span>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;">
-                <input type="checkbox" id="filter-casa" />
-                🏠 Casa
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;">
-                <input type="checkbox" id="filter-terreno" />
-                🌲 Terreno
-              </label>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -119,10 +88,6 @@
             <span class="menu-icon">📋</span>
             <span class="menu-label">Elenco Personale</span>
             <span id="contatore-elenco" class="menu-badge">0</span>
-          </button>
-          <button class="menu-item" onclick="mostraGestioneElencoPersonale()">
-            <span class="menu-icon">⚙️</span>
-            <span class="menu-label">Gestisci Liste</span>
           </button>
         </div>
       </section>
@@ -146,24 +111,6 @@
         </div>
       </section>
 
-      <!-- Data Management -->
-      <section class="menu-section">
-        <h3 class="menu-section-title">📊 Gestione Dati</h3>
-        <div class="menu-items">
-          <button class="menu-item" onclick="mostraOpzioniEsportazioneGenerale()">
-            <span class="menu-icon">📤</span>
-            <span class="menu-label">Esporta Dati</span>
-          </button>
-          <button class="menu-item" onclick="mostraFeedAttivita()">
-            <span class="menu-icon">📋</span>
-            <span class="menu-label">Feed Attività</span>
-          </button>
-          <button class="menu-item" onclick="location.href='dashboard.html'">
-            <span class="menu-icon">📈</span>
-            <span class="menu-label">Dashboard</span>
-          </button>
-        </div>
-      </section>
 
       <!-- Actions -->
       <section class="menu-section">
@@ -185,6 +132,25 @@
               <span class="view-label">Elenco</span>
             </button>
           </div>
+        </div>
+      </section>
+
+      <!-- Data Management -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">📊 Gestione Dati</h3>
+        <div class="menu-items">
+          <button class="menu-item" onclick="mostraOpzioniEsportazioneGenerale()">
+            <span class="menu-icon">📤</span>
+            <span class="menu-label">Esporta Dati</span>
+          </button>
+          <button class="menu-item" onclick="mostraFeedAttivita()">
+            <span class="menu-icon">📋</span>
+            <span class="menu-label">Feed Attività</span>
+          </button>
+          <button class="menu-item" onclick="location.href='dashboard.html'">
+            <span class="menu-icon">📈</span>
+            <span class="menu-label">Dashboard</span>
+          </button>
         </div>
       </section>
 

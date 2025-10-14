@@ -4275,6 +4275,8 @@ function mostraSchedaCompleta(strutturaId) {
           const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia'].includes(campo);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
           const isUrlField = ['google_maps_link', 'Sito'].includes(campo);
+          const isEmailField = campo === 'Email';
+          const isPhoneField = ['Contatto', 'IIcontatto'].includes(campo);
           
           if (isCheckboxField) {
             // Campo checkbox
@@ -4330,6 +4332,118 @@ function mostraSchedaCompleta(strutturaId) {
             
             campoDiv.appendChild(label);
             campoDiv.appendChild(input);
+          } else if (isEmailField) {
+            // Campo email con pulsante
+            const inputContainer = document.createElement('div');
+            inputContainer.style.cssText = `
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            `;
+            
+            const input = document.createElement('input');
+            input.type = 'email';
+            input.value = struttura[campo] || '';
+            input.placeholder = 'email@esempio.com';
+            input.style.cssText = `
+              flex: 1;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value;
+            };
+            
+            const emailBtn = document.createElement('button');
+            emailBtn.innerHTML = '📧';
+            emailBtn.title = 'Scrivi email';
+            emailBtn.style.cssText = `
+              background: #007bff;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              padding: 6px 10px;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.2s;
+            `;
+            emailBtn.onclick = () => {
+              if (struttura[campo] && struttura[campo].trim() !== '') {
+                const subject = encodeURIComponent(`Informazioni su ${struttura.Struttura || 'struttura'}`);
+                const body = encodeURIComponent(`Ciao!\n\nSono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.\n\nGrazie!`);
+                window.open(`mailto:${struttura[campo]}?subject=${subject}&body=${body}`, '_blank');
+              }
+            };
+            emailBtn.onmouseover = () => {
+              emailBtn.style.backgroundColor = '#0056b3';
+            };
+            emailBtn.onmouseout = () => {
+              emailBtn.style.backgroundColor = '#007bff';
+            };
+            
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(emailBtn);
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(inputContainer);
+          } else if (isPhoneField) {
+            // Campo telefono con pulsante WhatsApp
+            const inputContainer = document.createElement('div');
+            inputContainer.style.cssText = `
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            `;
+            
+            const input = document.createElement('input');
+            input.type = 'tel';
+            input.value = struttura[campo] || '';
+            input.placeholder = 'Numero di telefono';
+            input.style.cssText = `
+              flex: 1;
+              padding: 4px 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 14px;
+            `;
+            input.onchange = (e) => {
+              struttura[campo] = e.target.value;
+            };
+            
+            const whatsappBtn = document.createElement('button');
+            whatsappBtn.innerHTML = '💬';
+            whatsappBtn.title = 'Contatta via WhatsApp';
+            whatsappBtn.style.cssText = `
+              background: #25d366;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              padding: 6px 10px;
+              cursor: pointer;
+              font-size: 14px;
+              transition: all 0.2s;
+            `;
+            whatsappBtn.onclick = () => {
+              if (struttura[campo] && struttura[campo].trim() !== '') {
+                const phone = struttura[campo].replace(/\D/g, '');
+                const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
+                window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+              }
+            };
+            whatsappBtn.onmouseover = () => {
+              whatsappBtn.style.backgroundColor = '#128c7e';
+            };
+            whatsappBtn.onmouseout = () => {
+              whatsappBtn.style.backgroundColor = '#25d366';
+            };
+            
+            inputContainer.appendChild(input);
+            inputContainer.appendChild(whatsappBtn);
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(inputContainer);
           } else {
             // Campo di testo normale
             const input = document.createElement('input');
@@ -4459,6 +4573,120 @@ function mostraSchedaCompleta(strutturaId) {
             }
             
             campoDiv.appendChild(linkDiv);
+          } else if (campo === 'Email') {
+            // Campo email con pulsante nella modalità visualizzazione
+            const emailDiv = document.createElement('div');
+            emailDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const emailLabel = document.createElement('strong');
+            emailLabel.textContent = 'Email: ';
+            emailLabel.style.color = '#495057';
+            
+            const valore = struttura[campo];
+            
+            if (valore && valore.trim() !== '') {
+              const emailValue = document.createElement('span');
+              emailValue.textContent = valore;
+              emailValue.style.color = '#212529';
+              
+              const emailBtn = document.createElement('button');
+              emailBtn.innerHTML = '📧 Scrivi email';
+              emailBtn.style.cssText = `
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              `;
+              emailBtn.onclick = () => {
+                const subject = encodeURIComponent(`Informazioni su ${struttura.Struttura || 'struttura'}`);
+                const body = encodeURIComponent(`Ciao!\n\nSono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.\n\nGrazie!`);
+                window.open(`mailto:${valore}?subject=${subject}&body=${body}`, '_blank');
+              };
+              emailBtn.onmouseover = () => {
+                emailBtn.style.backgroundColor = '#0056b3';
+              };
+              emailBtn.onmouseout = () => {
+                emailBtn.style.backgroundColor = '#007bff';
+              };
+              
+              emailDiv.appendChild(emailLabel);
+              emailDiv.appendChild(emailValue);
+              emailDiv.appendChild(emailBtn);
+            } else {
+              emailDiv.appendChild(emailLabel);
+              const noValue = document.createElement('span');
+              noValue.textContent = 'Non specificato';
+              noValue.style.color = '#6c757d';
+              emailDiv.appendChild(noValue);
+            }
+            
+            campoDiv.appendChild(emailDiv);
+          } else if (['Contatto', 'IIcontatto'].includes(campo)) {
+            // Campo telefono con pulsante WhatsApp nella modalità visualizzazione
+            const phoneDiv = document.createElement('div');
+            phoneDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const phoneLabel = document.createElement('strong');
+            phoneLabel.textContent = `${campo}: `;
+            phoneLabel.style.color = '#495057';
+            
+            const valore = struttura[campo];
+            
+            if (valore && valore.trim() !== '') {
+              const phoneValue = document.createElement('span');
+              phoneValue.textContent = valore;
+              phoneValue.style.color = '#212529';
+              
+              const whatsappBtn = document.createElement('button');
+              whatsappBtn.innerHTML = '💬 WhatsApp';
+              whatsappBtn.style.cssText = `
+                background: #25d366;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.2s;
+              `;
+              whatsappBtn.onclick = () => {
+                const phone = valore.replace(/\D/g, '');
+                const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
+                window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+              };
+              whatsappBtn.onmouseover = () => {
+                whatsappBtn.style.backgroundColor = '#128c7e';
+              };
+              whatsappBtn.onmouseout = () => {
+                whatsappBtn.style.backgroundColor = '#25d366';
+              };
+              
+              phoneDiv.appendChild(phoneLabel);
+              phoneDiv.appendChild(phoneValue);
+              phoneDiv.appendChild(whatsappBtn);
+            } else {
+              phoneDiv.appendChild(phoneLabel);
+              const noValue = document.createElement('span');
+              noValue.textContent = 'Non specificato';
+              noValue.style.color = '#6c757d';
+              phoneDiv.appendChild(noValue);
+            }
+            
+            campoDiv.appendChild(phoneDiv);
           } else {
           const value = document.createElement('span');
           const valore = struttura[campo];
@@ -4491,118 +4719,7 @@ function mostraSchedaCompleta(strutturaId) {
       }
     });
     
-    // Aggiungi pulsante WhatsApp se ci sono numeri di telefono
-    const hasPhoneNumbers = (struttura.Contatto && struttura.Contatto.trim() !== '') || 
-                           (struttura.IIcontatto && struttura.IIcontatto.trim() !== '');
-    
-    if (hasPhoneNumbers) {
-      const whatsappDiv = document.createElement('div');
-      whatsappDiv.style.cssText = `
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 15px;
-        border-left: 4px solid #25d366;
-        grid-column: 1 / -1;
-        margin-bottom: 20px;
-      `;
-      
-      const whatsappTitle = document.createElement('h3');
-      whatsappTitle.textContent = '💬 Contatta via WhatsApp';
-      whatsappTitle.style.cssText = `
-        margin: 0 0 15px 0;
-        color: #25d366;
-        font-size: 1.1rem;
-      `;
-      whatsappDiv.appendChild(whatsappTitle);
-      
-      const buttonsContainer = document.createElement('div');
-      buttonsContainer.style.cssText = `
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      `;
-      
-      // Pulsante per primo contatto
-      if (struttura.Contatto && struttura.Contatto.trim() !== '') {
-        const phone1 = struttura.Contatto.replace(/\D/g, ''); // Rimuove caratteri non numerici
-        const whatsappBtn1 = document.createElement('button');
-        whatsappBtn1.innerHTML = `📱 ${struttura.Contatto}`;
-        whatsappBtn1.style.cssText = `
-          background: #25d366;
-          color: white;
-          border: none;
-          padding: 10px 15px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 500;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        `;
-        whatsappBtn1.onclick = () => {
-          const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
-          const whatsappUrl = `https://wa.me/${phone1}?text=${message}`;
-          window.open(whatsappUrl, '_blank');
-        };
-        whatsappBtn1.onmouseover = () => {
-          whatsappBtn1.style.backgroundColor = '#128c7e';
-          whatsappBtn1.style.transform = 'translateY(-1px)';
-        };
-        whatsappBtn1.onmouseout = () => {
-          whatsappBtn1.style.backgroundColor = '#25d366';
-          whatsappBtn1.style.transform = 'translateY(0)';
-        };
-        if (buttonsContainer) {
-          buttonsContainer.appendChild(whatsappBtn1);
-        }
-      }
-      
-      // Pulsante per secondo contatto
-      if (struttura.IIcontatto && struttura.IIcontatto.trim() !== '') {
-        const phone2 = struttura.IIcontatto.replace(/\D/g, ''); // Rimuove caratteri non numerici
-        const whatsappBtn2 = document.createElement('button');
-        whatsappBtn2.innerHTML = `📱 ${struttura.IIcontatto}`;
-        whatsappBtn2.style.cssText = `
-          background: #25d366;
-          color: white;
-          border: none;
-          padding: 10px 15px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 500;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        `;
-        whatsappBtn2.onclick = () => {
-          const message = encodeURIComponent(`Ciao! Sono interessato alla struttura "${struttura.Struttura || 'questa struttura'}" e vorrei avere maggiori informazioni.`);
-          const whatsappUrl = `https://wa.me/${phone2}?text=${message}`;
-          window.open(whatsappUrl, '_blank');
-        };
-        whatsappBtn2.onmouseover = () => {
-          whatsappBtn2.style.backgroundColor = '#128c7e';
-          whatsappBtn2.style.transform = 'translateY(-1px)';
-        };
-        whatsappBtn2.onmouseout = () => {
-          whatsappBtn2.style.backgroundColor = '#25d366';
-          whatsappBtn2.style.transform = 'translateY(0)';
-        };
-        if (buttonsContainer) {
-          buttonsContainer.appendChild(whatsappBtn2);
-        }
-      }
-      
-      if (whatsappDiv && buttonsContainer) {
-        whatsappDiv.appendChild(buttonsContainer);
-      }
-      if (content && whatsappDiv) {
-        content.appendChild(whatsappDiv);
-      }
-    }
+    // Sezione WhatsApp rimossa - ora integrata nella sezione Contatti
     
     // Aggiungi campo Note
     const noteDiv = document.createElement('div');

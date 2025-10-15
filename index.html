@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes" />
-<title>Quovadiscout - Strutture & Terreni v1.2</title>
+<title>Quovadiscout - Strutture & Terreni</title>
 <meta name="description" content="Sistema avanzato per la gestione di strutture e terreni scout" />
 <meta name="theme-color" content="#2f6b2f" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -29,7 +29,7 @@
     <div class="header-main">
       <div class="header-brand">
         <h1 class="app-title">🏕️ QuoVadiScout</h1>
-        <span class="app-version">v1.2</span>
+        <span class="app-version">v1.3/span>
       </div>
       <div class="header-actions">
         <button id="menuToggle" class="btn-menu" aria-label="Menu principale">
@@ -57,12 +57,9 @@
             <span class="menu-icon">🔍</span>
             <span class="menu-label">Ricerca Avanzata</span>
           </button>
-          <button class="menu-item" id="savedFiltersBtn">
-            <span class="menu-icon">💾</span>
-            <span class="menu-label">Filtri Salvati</span>
-            <select id="saved-filters" class="menu-select">
-              <option value="">Seleziona filtro...</option>
-            </select>
+          <button class="menu-item" onclick="mostraMappa()">
+            <span class="menu-icon">🗺️</span>
+            <span class="menu-label">Visualizza Mappa</span>
           </button>
           <button class="menu-item" id="sortMenuBtn">
             <span class="menu-icon">📊</span>
@@ -71,6 +68,13 @@
               <option value="struttura">Nome</option>
               <option value="luogo">Luogo</option>
               <option value="provincia">Provincia</option>
+            </select>
+          </button>
+          <button class="menu-item" id="savedFiltersBtn">
+            <span class="menu-icon">💾</span>
+            <span class="menu-label">Filtri Salvati</span>
+            <select id="saved-filters" class="menu-select">
+              <option value="">Seleziona filtro...</option>
             </select>
           </button>
         </div>
@@ -88,24 +92,6 @@
         </div>
       </section>
 
-      <!-- Maps & Location -->
-      <section class="menu-section">
-        <h3 class="menu-section-title">🗺️ Mappe & Posizione</h3>
-        <div class="menu-items">
-          <button class="menu-item" onclick="mostraMappa()">
-            <span class="menu-icon">🗺️</span>
-            <span class="menu-label">Visualizza Mappa</span>
-          </button>
-          <button class="menu-item" onclick="trovaVicinoAMe()">
-            <span class="menu-icon">📍</span>
-            <span class="menu-label">Trova Vicino a Me</span>
-          </button>
-          <button class="menu-item" onclick="geocodificaTutteStrutture()">
-            <span class="menu-icon">🌍</span>
-            <span class="menu-label">Geocoding Automatico</span>
-          </button>
-        </div>
-      </section>
 
 
       <!-- Actions -->

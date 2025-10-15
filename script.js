@@ -1068,11 +1068,18 @@ function rimuoviRicercaAvanzata() {
 // === Filtri e ricerca ===
 
 function filtra(lista) {
-  const q = document.getElementById("search").value.toLowerCase();
-  const prov = document.getElementById("filter-prov").value;
-  const casa = document.getElementById("filter-casa").checked;
-  const terreno = document.getElementById("filter-terreno").checked;
-  const stato = document.getElementById("filter-stato").value;
+  // Controlli di sicurezza per evitare errori null reference
+  const searchEl = document.getElementById("search");
+  const provEl = document.getElementById("filter-prov");
+  const casaEl = document.getElementById("filter-casa");
+  const terrenoEl = document.getElementById("filter-terreno");
+  const statoEl = document.getElementById("filter-stato");
+  
+  const q = searchEl ? searchEl.value.toLowerCase() : "";
+  const prov = provEl ? provEl.value : "";
+  const casa = casaEl ? casaEl.checked : false;
+  const terreno = terrenoEl ? terrenoEl.checked : false;
+  const stato = statoEl ? statoEl.value : "";
 
   let filtrata = lista.filter((s) => {
     // Filtri base

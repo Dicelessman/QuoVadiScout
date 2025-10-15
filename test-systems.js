@@ -44,11 +44,10 @@ class SystemTester {
       throw new Error('Geolocalizzazione non supportata');
     }
 
-    // Test funzioni globali - CORRETTO: usa findNearbyStructures invece di searchNearbyStructures
+    // Test funzioni globali - CORRETTO: rimuovi calculateDistance che non è esportata globalmente
     const functions = [
       'getUserLocation',
       'findNearbyStructures', 
-      'calculateDistance',
       'trovaVicinoAMe'
     ];
 
@@ -56,6 +55,11 @@ class SystemTester {
       if (typeof window[fn] !== 'function') {
         throw new Error(`Funzione ${fn} non trovata`);
       }
+    }
+
+    // Test che le funzioni di calcolo distanza esistano nelle classi
+    if (!window.mapsManager?.calculateDistance) {
+      throw new Error('Metodo calculateDistance non trovato in MapsManager');
     }
 
     return { functions: functions.length, status: 'available' };
@@ -230,12 +234,12 @@ class SystemTester {
       throw new Error('OfflineSyncManager non inizializzato');
     }
 
-    // CORRETTO: usa resolveConflict invece di resolveConflicts
+    // CORRETTO: rimuovi loadPendingChanges che non esiste, aggiungi openIndexedDB
     const methods = [
       'queueChange',
       'syncWhenOnline',
       'resolveConflict',
-      'loadPendingChanges'
+      'openIndexedDB'
     ];
 
     for (const method of methods) {

@@ -44,10 +44,10 @@ class SystemTester {
       throw new Error('Geolocalizzazione non supportata');
     }
 
-    // Test funzioni globali
+    // Test funzioni globali - CORRETTO: usa findNearbyStructures invece di searchNearbyStructures
     const functions = [
       'getUserLocation',
-      'searchNearbyStructures', 
+      'findNearbyStructures', 
       'calculateDistance',
       'trovaVicinoAMe'
     ];
@@ -212,7 +212,8 @@ class SystemTester {
       throw new Error('TouchGestureManager non disponibile');
     }
 
-    const methods = ['enableDoubleTap', 'enableLongPress', 'enableSwipe'];
+    // CORRETTO: usa i nomi corretti dei metodi
+    const methods = ['enableDoubleTapZoom', 'enableLongPress', 'enableSwipeToDelete'];
 
     for (const method of methods) {
       if (typeof window.TouchGestureManager[method] !== 'function') {
@@ -229,10 +230,11 @@ class SystemTester {
       throw new Error('OfflineSyncManager non inizializzato');
     }
 
+    // CORRETTO: usa resolveConflict invece di resolveConflicts
     const methods = [
       'queueChange',
       'syncWhenOnline',
-      'resolveConflicts',
+      'resolveConflict',
       'loadPendingChanges'
     ];
 
@@ -269,8 +271,8 @@ class SystemTester {
       }
     }
 
-    // Test utility methods
-    if (typeof window.AppConfig.utils.get !== 'function') {
+    // Test utility methods - CORRETTO: usa window.Config.get invece di window.AppConfig.utils.get
+    if (typeof window.Config.get !== 'function') {
       throw new Error('Config utility method get non trovata');
     }
 

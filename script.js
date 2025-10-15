@@ -2763,9 +2763,9 @@ class ThemeManager {
   updateToggleIcon(theme) {
     const toggle = document.getElementById('themeToggle');
     if (toggle) {
-      const sunIcon = toggle.querySelector('.sun-icon');
-      if (sunIcon) {
-        sunIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      const menuIcon = toggle.querySelector('.menu-icon');
+      if (menuIcon) {
+        menuIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
       }
     }
   }
@@ -6510,8 +6510,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Inizializza ottimizzazioni performance
   setupLazyLoading();
   
-  // Inizializza gestione temi
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  // Inizializza gestione temi - RIMOSSO: già gestito in initializeNewUI()
 });
 
 // === Gestione Filtri Salvati Dropdown ===

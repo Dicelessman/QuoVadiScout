@@ -2215,11 +2215,10 @@ async function mostraMappa() {
     
     await window.initializeMap('map');
     
-    // Mostra tutte le strutture sulla mappa
-    const listaFiltrata = filtra(strutture);
-    window.showStructuresOnMap(listaFiltrata);
+    // Mostra tutte le strutture sulla mappa (non usare filtra() che dipende dal form)
+    window.showStructuresOnMap(strutture);
     
-    console.log('✅ Mappa inizializzata con', listaFiltrata.length, 'strutture');
+    console.log('✅ Mappa inizializzata con', strutture.length, 'strutture');
   } catch (error) {
     console.error('❌ Errore inizializzazione mappa:', error);
     mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';

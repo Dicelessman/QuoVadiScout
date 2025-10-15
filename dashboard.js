@@ -27,6 +27,45 @@ let markers = [];
 let currentFilter = 'all';
 let markerCluster;
 
+// === Funzioni Utility ===
+function estraiCoordinateDaGoogleMaps(googleMapsLink) {
+  if (!googleMapsLink) return null;
+  
+  try {
+    // Pattern per diversi formati di link Google Maps
+    const patterns = [
+      // https://maps.google.com/maps?q=lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      // https://maps.google.com/?q=lat,lng
+      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      // https://www.google.com/maps/place/.../@lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+z/,
+      // https://maps.google.com/maps/place/.../@lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+\.?\d*z/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = googleMapsLink.match(pattern);
+      if (match) {
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        
+        // Valida coordinate
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          console.log(`🗺️ Coordinate estratte da Google Maps: ${lat}, ${lng}`);
+          return { lat, lng };
+        }
+      }
+    }
+    
+    console.log('⚠️ Nessuna coordinate valida trovata nel link Google Maps');
+    return null;
+  } catch (error) {
+    console.error('❌ Errore nell\'estrazione coordinate da Google Maps:', error);
+    return null;
+  }
+}
+
 // === Caricamento Dati ===
 async function caricaStrutture() {
   try {
@@ -221,13 +260,26 @@ function aggiungiMarkers() {
       }
     }
     
-    // Se non ci sono coordinate, usa geocoding approssimativo per provincia
+    // Se non ci sono coordinate, prova geocoding automatico
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      const coord = getCoordinateProvincia(struttura.Prov);
-      if (coord) {
-        lat = coord.lat + (Math.random() - 0.5) * 0.1; // Aggiungi variazione per evitare sovrapposizione
-        lng = coord.lng + (Math.random() - 0.5) * 0.1;
-        provinciaCount++;
+      // Prova prima a estrarre da Google Maps
+      if (struttura.google_maps_link) {
+        const coordinate = estraiCoordinateDaGoogleMaps(struttura.google_maps_link);
+        if (coordinate) {
+          lat = coordinate.lat;
+          lng = coordinate.lng;
+          coordinateCount++;
+        }
+      }
+      
+      // Se ancora non ci sono coordinate, usa fallback provincia
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        const coord = getCoordinateProvincia(struttura.Prov);
+        if (coord) {
+          lat = coord.lat + (Math.random() - 0.5) * 0.1; // Aggiungi variazione per evitare sovrapposizione
+          lng = coord.lng + (Math.random() - 0.5) * 0.1;
+          provinciaCount++;
+        }
       }
     }
     

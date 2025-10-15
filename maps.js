@@ -387,19 +387,114 @@ class MapsManager {
     console.log('🗑️ Marker rimossi dalla mappa');
   }
 
-  updateMarkers(strutture) {
+  async updateMarkers(strutture) {
     this.clearMarkers();
-    strutture.forEach(struttura => {
-      // Mostra strutture con coordinate esistenti (entrambi i formati)
+    
+    // Processa ogni struttura per ottenere coordinate
+    for (const struttura of strutture) {
+      // Se ha coordinate precise, mostra direttamente
       if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
           (struttura.coordinate_lat && struttura.coordinate_lng)) {
         this.addStructureMarker(struttura);
       } else {
-        // Per strutture senza coordinate, usa coordinate di fallback basate sulla provincia
-        this.addStructureMarkerWithFallback(struttura);
+        // Prova geocoding automatico per ottenere coordinate
+        const strutturaConCoordinate = await this.tentaGeocodingAutomatico(struttura);
+        if (strutturaConCoordinate.coordinate || strutturaConCoordinate.coordinate_lat) {
+          this.addStructureMarker(strutturaConCoordinate);
+        } else {
+          // Fallback: usa coordinate di provincia
+          this.addStructureMarkerWithFallback(struttura);
+        }
       }
-    });
+    }
     console.log(`📍 ${strutture.length} marker aggiornati sulla mappa`);
+  }
+  
+  async tentaGeocodingAutomatico(struttura) {
+    // Se ha già coordinate precise, non fare nulla
+    if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
+        (struttura.coordinate_lat && struttura.coordinate_lng)) {
+      return struttura;
+    }
+    
+    // Prova prima a estrarre da Google Maps
+    if (struttura.google_maps_link) {
+      const coordinate = this.estraiCoordinateDaGoogleMaps(struttura.google_maps_link);
+      if (coordinate) {
+        struttura.coordinate = coordinate;
+        struttura.coordinate_lat = coordinate.lat;
+        struttura.coordinate_lng = coordinate.lng;
+        console.log(`🗺️ Coordinate estratte da Google Maps per: ${struttura.Struttura}`);
+        return struttura;
+      }
+    }
+    
+    // Prova geocoding per indirizzo completo
+    if (struttura.Indirizzo && struttura.Luogo && struttura.Prov) {
+      const address = `${struttura.Indirizzo}, ${struttura.Luogo}, ${struttura.Prov}, Italia`;
+      try {
+        await this.geocodeStructure(struttura);
+        if (struttura.coordinate && struttura.coordinate.lat) {
+          return struttura;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Geocoding indirizzo fallito per ${struttura.Struttura}:`, error.message);
+      }
+    }
+    
+    // Prova geocoding per luogo + provincia
+    if (struttura.Luogo && struttura.Prov) {
+      const address = `${struttura.Luogo}, ${struttura.Prov}, Italia`;
+      try {
+        const strutturaConIndirizzo = { ...struttura, Indirizzo: address };
+        await this.geocodeStructure(strutturaConIndirizzo);
+        if (struttura.coordinate && struttura.coordinate.lat) {
+          return struttura;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Geocoding luogo fallito per ${struttura.Struttura}:`, error.message);
+      }
+    }
+    
+    return struttura;
+  }
+  
+  estraiCoordinateDaGoogleMaps(googleMapsLink) {
+    if (!googleMapsLink) return null;
+    
+    try {
+      // Pattern per diversi formati di link Google Maps
+      const patterns = [
+        // https://maps.google.com/maps?q=lat,lng
+        /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // https://maps.google.com/?q=lat,lng
+        /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+        // https://www.google.com/maps/place/.../@lat,lng
+        /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+z/,
+        // https://maps.google.com/maps/place/.../@lat,lng
+        /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+\.?\d*z/
+      ];
+      
+      for (const pattern of patterns) {
+        const match = googleMapsLink.match(pattern);
+        if (match) {
+          const lat = parseFloat(match[1]);
+          const lng = parseFloat(match[2]);
+          
+          // Valida coordinate
+          if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            console.log(`🗺️ Coordinate estratte da Google Maps: ${lat}, ${lng}`);
+            return { lat, lng };
+          }
+        }
+      }
+      
+      console.log('⚠️ Nessuna coordinate valida trovata nel link Google Maps');
+      return null;
+    } catch (error) {
+      console.error('❌ Errore nell\'estrazione coordinate da Google Maps:', error);
+      return null;
+    }
   }
 
   async geocodeStructure(struttura) {

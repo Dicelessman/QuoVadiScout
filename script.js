@@ -83,6 +83,17 @@ async function caricaStrutture() {
         struttura.coordinate_lng = struttura.coordinate.lng;
       }
       
+      // Prova a ottenere coordinate da Google Maps se non ci sono coordinate precise
+      if (!struttura.coordinate && !struttura.coordinate_lat && struttura.google_maps_link) {
+        const coordinate = estraiCoordinateDaGoogleMaps(struttura.google_maps_link);
+        if (coordinate) {
+          struttura.coordinate = coordinate;
+          struttura.coordinate_lat = coordinate.lat;
+          struttura.coordinate_lng = coordinate.lng;
+          console.log(`🗺️ Coordinate estratte da Google Maps per: ${struttura.Struttura}`);
+        }
+      }
+      
       return struttura;
     });
     
@@ -1330,6 +1341,29 @@ async function salvaModifiche() {
       changes: Object.keys(formData).filter(key => formData[key] !== strutturaCorrente[key])
     });
     
+    // Se sono stati modificati campi di posizione, prova geocoding automatico
+    const campiPosizione = ['Luogo', 'Prov', 'Indirizzo', 'google_maps_link'];
+    const campiModificati = Object.keys(formData).filter(key => formData[key] !== strutturaCorrente[key]);
+    const posizioneModificata = campiPosizione.some(campo => campiModificati.includes(campo));
+    
+    if (posizioneModificata && (!formData.coordinate_lat || !formData.coordinate_lng)) {
+      console.log('🔄 Campi di posizione modificati, tentativo geocoding automatico...');
+      
+      // Aggiorna la struttura locale con i nuovi dati
+      const strutturaAggiornata = { ...strutturaCorrente, ...formData };
+      const strutturaConCoordinate = await geocodificaStrutturaAutomatico(strutturaAggiornata);
+      
+      if (strutturaConCoordinate.coordinate || strutturaConCoordinate.coordinate_lat) {
+        // Salva le coordinate ottenute automaticamente
+        await updateDoc(doc(db, "strutture", strutturaCorrente.id), {
+          coordinate: strutturaConCoordinate.coordinate,
+          coordinate_lat: strutturaConCoordinate.coordinate_lat,
+          coordinate_lng: strutturaConCoordinate.coordinate_lng
+        });
+        console.log('✅ Coordinate ottenute automaticamente e salvate');
+      }
+    }
+    
     chiudiModale();
     // Forza ricaricamento completo da Firestore
     await aggiornaLista();
@@ -2292,6 +2326,103 @@ async function aggiornaMappaConDatiFreschi() {
   }
 }
 
+// Funzione per estrarre coordinate da link Google Maps
+function estraiCoordinateDaGoogleMaps(googleMapsLink) {
+  if (!googleMapsLink) return null;
+  
+  try {
+    // Pattern per diversi formati di link Google Maps
+    const patterns = [
+      // https://maps.google.com/maps?q=lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      // https://maps.google.com/?q=lat,lng
+      /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
+      // https://www.google.com/maps/place/.../@lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+z/,
+      // https://maps.google.com/maps/place/.../@lat,lng
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*),\d+\.?\d*z/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = googleMapsLink.match(pattern);
+      if (match) {
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        
+        // Valida coordinate
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          console.log(`🗺️ Coordinate estratte da Google Maps: ${lat}, ${lng}`);
+          return { lat, lng };
+        }
+      }
+    }
+    
+    console.log('⚠️ Nessuna coordinate valida trovata nel link Google Maps');
+    return null;
+  } catch (error) {
+    console.error('❌ Errore nell\'estrazione coordinate da Google Maps:', error);
+    return null;
+  }
+}
+
+// Funzione per geocoding automatico di una struttura
+async function geocodificaStrutturaAutomatico(struttura) {
+  // Se ha già coordinate precise, non fare nulla
+  if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
+      (struttura.coordinate_lat && struttura.coordinate_lng)) {
+    return struttura;
+  }
+  
+  // Prova prima a estrarre da Google Maps
+  if (struttura.google_maps_link) {
+    const coordinate = estraiCoordinateDaGoogleMaps(struttura.google_maps_link);
+    if (coordinate) {
+      struttura.coordinate = coordinate;
+      struttura.coordinate_lat = coordinate.lat;
+      struttura.coordinate_lng = coordinate.lng;
+      console.log(`✅ Coordinate estratte da Google Maps per: ${struttura.Struttura}`);
+      return struttura;
+    }
+  }
+  
+  // Prova geocoding per indirizzo completo
+  if (struttura.Indirizzo && struttura.Luogo && struttura.Prov) {
+    const address = `${struttura.Indirizzo}, ${struttura.Luogo}, ${struttura.Prov}, Italia`;
+    try {
+      const coordinate = await geocodificaStruttura(struttura);
+      if (coordinate) {
+        struttura.coordinate = coordinate;
+        struttura.coordinate_lat = coordinate.lat;
+        struttura.coordinate_lng = coordinate.lng;
+        console.log(`✅ Coordinate ottenute da geocoding per: ${struttura.Struttura}`);
+        return struttura;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Geocoding fallito per ${struttura.Struttura}:`, error.message);
+    }
+  }
+  
+  // Prova geocoding per luogo + provincia
+  if (struttura.Luogo && struttura.Prov) {
+    const address = `${struttura.Luogo}, ${struttura.Prov}, Italia`;
+    try {
+      const coordinate = await geocodificaStruttura({ ...struttura, Indirizzo: address });
+      if (coordinate) {
+        struttura.coordinate = coordinate;
+        struttura.coordinate_lat = coordinate.lat;
+        struttura.coordinate_lng = coordinate.lng;
+        console.log(`✅ Coordinate ottenute da luogo per: ${struttura.Struttura}`);
+        return struttura;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Geocoding luogo fallito per ${struttura.Struttura}:`, error.message);
+    }
+  }
+  
+  console.log(`⚠️ Nessuna coordinate ottenuta per: ${struttura.Struttura}`);
+  return struttura;
+}
+
 // Funzione di debug per verificare coordinate strutture
 function debugCoordinateStrutture() {
   const strutture = window.strutture || [];
@@ -2306,15 +2437,82 @@ function debugCoordinateStrutture() {
       coordinate_lat: struttura.coordinate_lat,
       coordinate_lng: struttura.coordinate_lng,
       hasBoth: hasCoordinateObj && hasCoordinateFields,
-      hasEither: hasCoordinateObj || hasCoordinateFields
+      hasEither: hasCoordinateObj || hasCoordinateFields,
+      google_maps_link: struttura.google_maps_link,
+      Indirizzo: struttura.Indirizzo,
+      Luogo: struttura.Luogo,
+      Prov: struttura.Prov
     });
   });
+}
+
+// Funzione per processare tutte le strutture senza coordinate
+async function processaStruttureSenzaCoordinate() {
+  console.log('🔄 Avvio processamento strutture senza coordinate...');
+  
+  const strutture = window.strutture || [];
+  let processate = 0;
+  let coordinateOttenute = 0;
+  
+  for (const struttura of strutture) {
+    // Salta se già ha coordinate precise
+    if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
+        (struttura.coordinate_lat && struttura.coordinate_lng)) {
+      continue;
+    }
+    
+    // Prova a ottenere coordinate automaticamente
+    const strutturaConCoordinate = await geocodificaStrutturaAutomatico(struttura);
+    
+    if (strutturaConCoordinate.coordinate || strutturaConCoordinate.coordinate_lat) {
+      try {
+        // Salva su Firestore
+        await updateDoc(doc(db, "strutture", struttura.id), {
+          coordinate: strutturaConCoordinate.coordinate,
+          coordinate_lat: strutturaConCoordinate.coordinate_lat,
+          coordinate_lng: strutturaConCoordinate.coordinate_lng,
+          lastModified: new Date(),
+          lastModifiedBy: utenteCorrente?.uid || null
+        });
+        
+        // Aggiorna struttura locale
+        struttura.coordinate = strutturaConCoordinate.coordinate;
+        struttura.coordinate_lat = strutturaConCoordinate.coordinate_lat;
+        struttura.coordinate_lng = strutturaConCoordinate.coordinate_lng;
+        
+        coordinateOttenute++;
+        console.log(`✅ Coordinate ottenute per: ${struttura.Struttura}`);
+      } catch (error) {
+        console.error(`❌ Errore salvataggio coordinate per ${struttura.Struttura}:`, error);
+      }
+    }
+    
+    processate++;
+    
+    // Pausa per evitare rate limiting
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  
+  // Invalida cache per forzare ricaricamento
+  localStorage.removeItem('strutture_cache');
+  localStorage.removeItem('strutture_cache_timestamp');
+  
+  console.log(`🏁 Processamento completato: ${coordinateOttenute} coordinate ottenute su ${processate} strutture processate`);
+  
+  if (coordinateOttenute > 0) {
+    alert(`✅ Processamento completato!\n${coordinateOttenute} strutture ora hanno coordinate GPS`);
+    // Ricarica la lista
+    await aggiornaLista();
+  } else {
+    alert('ℹ️ Nessuna nuova coordinate è stata ottenuta automaticamente');
+  }
 }
 
 // Rendi le funzioni accessibili globalmente
 window.mostraMappa = mostraMappa;
 window.aggiornaMappaConDatiFreschi = aggiornaMappaConDatiFreschi;
 window.debugCoordinateStrutture = debugCoordinateStrutture;
+window.processaStruttureSenzaCoordinate = processaStruttureSenzaCoordinate;
 
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {

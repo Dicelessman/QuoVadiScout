@@ -2774,6 +2774,11 @@ class ThemeManager {
     const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
     this.applyTheme(newTheme);
     
+    // Chiudi il menu automaticamente
+    if (typeof window.closeMenu === 'function') {
+      window.closeMenu();
+    }
+    
     // Mostra notifica
     if (window.showNotification) {
       window.showNotification(

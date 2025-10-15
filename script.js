@@ -2202,7 +2202,15 @@ async function mostraMappa() {
       console.error('❌ window.initializeMap non è disponibile');
       console.log('🔍 Funzioni disponibili su window:', Object.keys(window).filter(key => key.includes('Map')));
       console.log('🔍 window.mapsManager disponibile:', typeof window.mapsManager);
+      console.log('🔍 Leaflet disponibile:', typeof L !== 'undefined');
       throw new Error('Funzione initializeMap non disponibile');
+    }
+    
+    // Debug: verifica Leaflet prima dell'inizializzazione
+    console.log('🗺️ Debug: Leaflet disponibile prima init:', typeof L !== 'undefined');
+    if (typeof L === 'undefined') {
+      console.error('❌ Leaflet non disponibile durante inizializzazione mappa');
+      throw new Error('Leaflet non disponibile');
     }
     
     await window.initializeMap('map');

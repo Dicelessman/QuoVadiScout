@@ -1,5 +1,6 @@
 // === QuoVadiScout Maps v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
 console.log('🔄 Maps.js caricato con versione v1.2.1 - Cache bust applicato');
+console.log('🗺️ Debug: Leaflet disponibile al caricamento:', typeof L !== 'undefined');
 
 // Aggiungi script per Leaflet Routing Machine
 const routingScript = document.createElement('script');
@@ -33,7 +34,17 @@ class MapsManager {
       // Verifica che Leaflet sia disponibile
       if (typeof L === 'undefined') {
         console.error('❌ Leaflet non disponibile');
-        return false;
+        console.log('🔍 Debug: typeof L =', typeof L);
+        console.log('🔍 Debug: window.L =', typeof window.L);
+        console.log('🔍 Debug: Leaflet disponibile dopo 1s:', typeof L);
+        
+        // Aspetta un po' e riprova
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (typeof L === 'undefined') {
+          console.error('❌ Leaflet ancora non disponibile dopo 1 secondo');
+          return false;
+        }
+        console.log('✅ Leaflet disponibile dopo attesa');
       }
 
       // Inizializza la mappa

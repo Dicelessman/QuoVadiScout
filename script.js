@@ -425,6 +425,9 @@ function generaNumeriPagina(totalePagine, paginaCorrente) {
 function mostraRicercaAvanzata() {
   console.log('🔍 Apertura ricerca avanzata...');
   
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('ricercaAvanzataModal');
   if (existingModal) {
@@ -966,6 +969,9 @@ async function applicaFiltriSalvati(filtroId) {
     
     // Mostra indicatore
     mostraIndicatoreRicercaAvanzata(Object.keys(filtroData.filtri).length);
+    
+    // Chiudi il menu automaticamente dopo aver applicato i filtri
+    closeMenu();
     
     console.log('✅ Filtri applicati:', filtroData.nome);
   } catch (error) {
@@ -2082,6 +2088,9 @@ function createResponsiveModal(id, title, content) {
 
 // === Gestione Mappe ===
 async function mostraMappa() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('mapModal');
   if (existingModal) {
@@ -5620,6 +5629,9 @@ function initializeNewUI() {
 
 // === Gestione Preferenze Notifiche ===
 function mostraPreferenzeNotifiche() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('preferenzeNotificheModal');
   if (existingModal) {
@@ -5876,6 +5888,9 @@ document.addEventListener('cardOpened', (e) => {
 
 // === Gestione Download Offline ===
 function mostraGestioneOffline() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('gestioneOfflineModal');
   if (existingModal) {
@@ -6433,6 +6448,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     sortBy.addEventListener("change", () => {
       paginaCorrente = 1; // Reset alla prima pagina
       renderStrutture(filtra(strutture));
+      // Chiudi il menu automaticamente dopo l'ordinamento
+      closeMenu();
     });
   }
   
@@ -6532,6 +6549,9 @@ async function caricaFiltriSalvatiDropdown() {
 
 // === Modale Opzioni Esportazione ===
 function mostraOpzioniEsportazioneGenerale() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('exportOptionsModal');
   if (existingModal) {
@@ -6883,6 +6903,9 @@ function eseguiEsportazione() {
 
 // === Feed Attività ===
 async function mostraFeedAttivita() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('feedAttivitaModal');
   if (existingModal) {
@@ -7785,6 +7808,9 @@ window.mostraFeedAttivita = mostraFeedAttivita;
 
 // === FUNZIONE STATISTICHE APP ===
 function mostraStatisticheApp() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   
@@ -7919,6 +7945,21 @@ function showNotification(title, options = {}) {
   } else {
     // Fallback: mostra alert o toast
     console.log('🔔 Notifica:', title, options.body);
+  }
+}
+
+// Funzione per chiudere il menu automaticamente
+function closeMenu() {
+  const mainMenu = document.getElementById('mainMenu');
+  const menuToggle = document.getElementById('menuToggle');
+  
+  if (mainMenu && !mainMenu.classList.contains('hidden')) {
+    console.log('📱 Chiusura automatica menu');
+    mainMenu.classList.add('hidden');
+    if (menuToggle) {
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
+    document.body.style.overflow = '';
   }
 }
 

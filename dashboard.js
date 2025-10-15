@@ -213,6 +213,12 @@ function aggiungiMarkers() {
       if (!isNaN(lat) && !isNaN(lng)) {
         coordinateCount++;
       }
+    } else if (struttura.coordinate_lat && struttura.coordinate_lng) {
+      lat = struttura.coordinate_lat;
+      lng = struttura.coordinate_lng;
+      if (!isNaN(lat) && !isNaN(lng)) {
+        coordinateCount++;
+      }
     }
     
     // Se non ci sono coordinate, usa geocoding approssimativo per provincia

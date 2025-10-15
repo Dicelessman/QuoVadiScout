@@ -72,7 +72,18 @@ async function caricaStrutture() {
     const dati = snapshot.docs.map((d) => {
       const docData = d.data();
       console.log(`📋 Documento ${d.id}:`, docData);
-      return { id: d.id, ...docData };
+      
+      // Sincronizza formato coordinate per compatibilità
+      const struttura = { id: d.id, ...docData };
+      if (struttura.coordinate_lat && struttura.coordinate_lng && !struttura.coordinate) {
+        struttura.coordinate = { lat: struttura.coordinate_lat, lng: struttura.coordinate_lng };
+      } else if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng && 
+                 !struttura.coordinate_lat && !struttura.coordinate_lng) {
+        struttura.coordinate_lat = struttura.coordinate.lat;
+        struttura.coordinate_lng = struttura.coordinate.lng;
+      }
+      
+      return struttura;
     });
     
     console.log(`✅ Caricate ${dati.length} strutture da Firestore`);
@@ -1271,6 +1282,9 @@ async function modificaStruttura(id) {
 async function salvaModifiche() {
   if (!strutturaCorrente) return;
   
+  const coordinate_lat = document.getElementById('edit-coordinate_lat').value ? parseFloat(document.getElementById('edit-coordinate_lat').value) : null;
+  const coordinate_lng = document.getElementById('edit-coordinate_lng').value ? parseFloat(document.getElementById('edit-coordinate_lng').value) : null;
+  
   const formData = {
     Struttura: document.getElementById('edit-struttura').value.trim(),
     Luogo: document.getElementById('edit-luogo').value.trim(),
@@ -1278,8 +1292,10 @@ async function salvaModifiche() {
     Referente: document.getElementById('edit-referente').value.trim(),
     Contatto: document.getElementById('edit-contatto').value.trim(),
     Email: document.getElementById('edit-email').value.trim(),
-    coordinate_lat: document.getElementById('edit-coordinate_lat').value ? parseFloat(document.getElementById('edit-coordinate_lat').value) : null,
-    coordinate_lng: document.getElementById('edit-coordinate_lng').value ? parseFloat(document.getElementById('edit-coordinate_lng').value) : null,
+    coordinate_lat: coordinate_lat,
+    coordinate_lng: coordinate_lng,
+    // Sincronizza anche il formato coordinate per compatibilità
+    coordinate: coordinate_lat && coordinate_lng ? { lat: coordinate_lat, lng: coordinate_lng } : null,
     google_maps_link: document.getElementById('edit-google_maps_link').value.trim(),
     Casa: document.getElementById('edit-casa').checked,
     Terreno: document.getElementById('edit-terreno').checked,
@@ -1304,13 +1320,19 @@ async function salvaModifiche() {
     // Aggiorna struttura
     await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
     
+    // INVALIDARE CACHE LOCALE per forzare ricaricamento
+    localStorage.removeItem('strutture_cache');
+    localStorage.removeItem('strutture_cache_timestamp');
+    console.log('🗑️ Cache invalidata dopo modifica struttura');
+    
     // Log attività
     await logActivity('structure_updated', strutturaCorrente.id, utenteCorrente?.uid, {
       changes: Object.keys(formData).filter(key => formData[key] !== strutturaCorrente[key])
     });
     
     chiudiModale();
-    aggiornaLista();
+    // Forza ricaricamento completo da Firestore
+    await aggiornaLista();
   } catch (error) {
     console.error('Errore nel salvataggio:', error);
     alert('Errore nel salvataggio delle modifiche');
@@ -2231,10 +2253,13 @@ async function mostraMappa() {
     
     await window.initializeMap('map');
     
-    // Mostra tutte le strutture sulla mappa (non usare filtra() che dipende dal form)
-    window.showStructuresOnMap(strutture);
+    // Carica dati freschi da Firestore per la mappa
+    const struttureFresche = await aggiornaMappaConDatiFreschi();
     
-    console.log('✅ Mappa inizializzata con', strutture.length, 'strutture');
+    // Mostra tutte le strutture sulla mappa (non usare filtra() che dipende dal form)
+    window.showStructuresOnMap(struttureFresche);
+    
+    console.log('✅ Mappa inizializzata con', struttureFresche.length, 'strutture (dati freschi)');
   } catch (error) {
     console.error('❌ Errore inizializzazione mappa:', error);
     mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';
@@ -2248,8 +2273,48 @@ async function mostraMappa() {
   });
 }
 
-// Rendi la funzione accessibile globalmente
+// Funzione per forzare aggiornamento mappa con dati freschi
+async function aggiornaMappaConDatiFreschi() {
+  try {
+    // Invalida cache e ricarica dati
+    localStorage.removeItem('strutture_cache');
+    localStorage.removeItem('strutture_cache_timestamp');
+    
+    // Ricarica strutture da Firestore
+    const struttureFresche = await caricaStrutture();
+    window.strutture = struttureFresche;
+    
+    console.log('🔄 Mappa aggiornata con dati freschi da Firestore');
+    return struttureFresche;
+  } catch (error) {
+    console.error('❌ Errore nell\'aggiornamento mappa:', error);
+    return window.strutture || [];
+  }
+}
+
+// Funzione di debug per verificare coordinate strutture
+function debugCoordinateStrutture() {
+  const strutture = window.strutture || [];
+  console.log('🔍 Debug coordinate strutture:');
+  
+  strutture.forEach(struttura => {
+    const hasCoordinateObj = struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng;
+    const hasCoordinateFields = struttura.coordinate_lat && struttura.coordinate_lng;
+    
+    console.log(`📍 ${struttura.Struttura}:`, {
+      coordinate: struttura.coordinate,
+      coordinate_lat: struttura.coordinate_lat,
+      coordinate_lng: struttura.coordinate_lng,
+      hasBoth: hasCoordinateObj && hasCoordinateFields,
+      hasEither: hasCoordinateObj || hasCoordinateFields
+    });
+  });
+}
+
+// Rendi le funzioni accessibili globalmente
 window.mostraMappa = mostraMappa;
+window.aggiornaMappaConDatiFreschi = aggiornaMappaConDatiFreschi;
+window.debugCoordinateStrutture = debugCoordinateStrutture;
 
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {
@@ -5396,6 +5461,14 @@ function mostraSchedaCompleta(strutturaId) {
         // Salva versione precedente prima di modificare
         await salvaVersione(struttura, utenteCorrente?.uid);
         
+        // Sincronizza formato coordinate se presenti
+        if (struttura.coordinate_lat && struttura.coordinate_lng) {
+          struttura.coordinate = { lat: struttura.coordinate_lat, lng: struttura.coordinate_lng };
+        } else if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
+          struttura.coordinate_lat = struttura.coordinate.lat;
+          struttura.coordinate_lng = struttura.coordinate.lng;
+        }
+        
         // Aggiorna metadati
         struttura.lastModified = new Date();
         struttura.lastModifiedBy = utenteCorrente?.uid || null;
@@ -5404,6 +5477,11 @@ function mostraSchedaCompleta(strutturaId) {
         // Aggiorna struttura esistente
         const docRef = doc(db, "strutture", strutturaId);
         await updateDoc(docRef, struttura);
+        
+        // INVALIDARE CACHE LOCALE per forzare ricaricamento
+        localStorage.removeItem('strutture_cache');
+        localStorage.removeItem('strutture_cache_timestamp');
+        console.log('🗑️ Cache invalidata dopo modifica scheda completa');
         
         // Aggiorna la struttura locale
         const index = strutture.findIndex(s => s.id === strutturaId);
@@ -7334,16 +7412,24 @@ async function geocodificaTutteStrutture() {
     
     if (coordinates) {
       try {
-        // Aggiorna la struttura su Firestore
-        await updateDoc(doc(db, "strutture", struttura.id), {
-          coordinate: coordinates,
-          lastModified: new Date(),
-          lastModifiedBy: utenteCorrente?.uid || null
-        });
-        
-        // Aggiorna anche l'array locale
-        struttura.coordinate = coordinates;
-        success++;
+      // Aggiorna la struttura su Firestore
+      await updateDoc(doc(db, "strutture", struttura.id), {
+        coordinate: coordinates,
+        coordinate_lat: coordinates.lat,
+        coordinate_lng: coordinates.lng,
+        lastModified: new Date(),
+        lastModifiedBy: utenteCorrente?.uid || null
+      });
+      
+      // INVALIDARE CACHE LOCALE per forzare ricaricamento
+      localStorage.removeItem('strutture_cache');
+      localStorage.removeItem('strutture_cache_timestamp');
+      
+      // Aggiorna anche l'array locale
+      struttura.coordinate = coordinates;
+      struttura.coordinate_lat = coordinates.lat;
+      struttura.coordinate_lng = coordinates.lng;
+      success++;
         
         console.log(`✅ Coordinate salvate per: ${struttura.Struttura}`);
       } catch (error) {
@@ -7384,12 +7470,20 @@ async function geocodificaSingolaStruttura(strutturaId) {
       // Aggiorna la struttura su Firestore
       await updateDoc(doc(db, "strutture", strutturaId), {
         coordinate: coordinates,
+        coordinate_lat: coordinates.lat,
+        coordinate_lng: coordinates.lng,
         lastModified: new Date(),
         lastModifiedBy: utenteCorrente?.uid || null
       });
       
+      // INVALIDARE CACHE LOCALE per forzare ricaricamento
+      localStorage.removeItem('strutture_cache');
+      localStorage.removeItem('strutture_cache_timestamp');
+      
       // Aggiorna anche l'array locale
       struttura.coordinate = coordinates;
+      struttura.coordinate_lat = coordinates.lat;
+      struttura.coordinate_lng = coordinates.lng;
       
       alert(`✅ Coordinate aggiornate per: ${struttura.Struttura}\nLat: ${coordinates.lat}, Lng: ${coordinates.lng}`);
       

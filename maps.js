@@ -78,10 +78,15 @@ class MapsManager {
     try {
       let lat = null, lng = null;
 
-      // Usa coordinate se disponibili
+      // Usa coordinate se disponibili - gestisce entrambi i formati
       if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
         lat = struttura.coordinate.lat;
         lng = struttura.coordinate.lng;
+      } else if (struttura.coordinate_lat && struttura.coordinate_lng) {
+        lat = struttura.coordinate_lat;
+        lng = struttura.coordinate_lng;
+        // Sincronizza anche il formato coordinate per compatibilità futura
+        struttura.coordinate = { lat, lng };
       } else {
         // Non fare geocoding automatico, usa fallback
         console.warn('⚠️ Nessuna posizione disponibile per:', struttura.Struttura);
@@ -385,8 +390,9 @@ class MapsManager {
   updateMarkers(strutture) {
     this.clearMarkers();
     strutture.forEach(struttura => {
-      // Mostra solo strutture con coordinate esistenti
-      if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
+      // Mostra strutture con coordinate esistenti (entrambi i formati)
+      if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
+          (struttura.coordinate_lat && struttura.coordinate_lng)) {
         this.addStructureMarker(struttura);
       } else {
         // Per strutture senza coordinate, usa coordinate di fallback basate sulla provincia

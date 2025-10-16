@@ -2303,11 +2303,34 @@ async function mostraMappa() {
     
     await window.initializeMap('map');
     
-    // Usa sempre i dati locali (anche se vuoti) senza sincronizzazione automatica
-    const struttureLocali = window.strutture || [];
-    window.showStructuresOnMap(struttureLocali);
+    // Assicurati che i dati locali siano caricati
+    if (!window.strutture || window.strutture.length === 0) {
+      console.log('📦 Caricamento dati locali...');
+      try {
+        const datiCache = localStorage.getItem('strutture_cache');
+        if (datiCache) {
+          window.strutture = JSON.parse(datiCache);
+          console.log('✅ Dati locali caricati da cache:', window.strutture.length, 'strutture');
+        } else {
+          console.log('ℹ️ Nessuna cache disponibile, inizializzo array vuoto');
+          window.strutture = [];
+        }
+      } catch (error) {
+        console.warn('⚠️ Errore caricamento cache, inizializzo array vuoto:', error);
+        window.strutture = [];
+      }
+    }
     
-    console.log('✅ Mappa inizializzata con', struttureLocali.length, 'strutture (dati locali)');
+    const struttureLocali = window.strutture || [];
+    console.log('🗺️ Dati locali disponibili:', struttureLocali.length, 'strutture');
+    
+    // Inizializza la mappa con i dati locali
+    if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
+      window.showStructuresOnMap(struttureLocali);
+      console.log('✅ Mappa inizializzata con', struttureLocali.length, 'strutture (dati locali)');
+    } else {
+      console.warn('⚠️ Funzione showStructuresOnMap non disponibile');
+    }
   } catch (error) {
     console.error('❌ Errore inizializzazione mappa:', error);
     mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';
@@ -2405,8 +2428,19 @@ function mostraModaleSincronizzazione() {
   });
 }
 
+// Flag per evitare sincronizzazioni multiple
+let sincronizzazioneInCorso = false;
+
 // Funzione per eseguire la sincronizzazione
 async function eseguiSincronizzazione() {
+  // Evita sincronizzazioni multiple
+  if (sincronizzazioneInCorso) {
+    console.log('⚠️ Sincronizzazione già in corso, ignoro richiesta');
+    return;
+  }
+  
+  sincronizzazioneInCorso = true;
+  
   try {
     // Mostra indicatore di caricamento
     const loadingModal = document.createElement('div');
@@ -2455,17 +2489,29 @@ async function eseguiSincronizzazione() {
     console.log('🔄 Inizio sincronizzazione con Firestore...');
     const struttureFresche = await aggiornaMappaConDatiFreschi();
     
-    // Aggiorna la mappa se è aperta
+    console.log('✅ Sincronizzazione dati completata:', struttureFresche.length, 'strutture');
+    
+    // Aggiorna la mappa se è aperta (solo se diversa dai dati attuali)
     if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
-      window.showStructuresOnMap(struttureFresche);
+      const struttureAttuali = window.strutture || [];
+      if (struttureFresche.length !== struttureAttuali.length) {
+        console.log('🔄 Aggiornamento mappa con dati freschi');
+        window.showStructuresOnMap(struttureFresche);
+      } else {
+        console.log('ℹ️ Mappa già aggiornata, nessun cambiamento necessario');
+      }
     }
     
-    // Aggiorna la lista principale
-    await aggiornaLista();
+    // Aggiorna la lista principale solo se necessario
+    const struttureAttuali = window.strutture || [];
+    if (struttureFresche.length !== struttureAttuali.length) {
+      console.log('🔄 Aggiornamento lista principale');
+      await aggiornaLista();
+    } else {
+      console.log('ℹ️ Lista già aggiornata, nessun cambiamento necessario');
+    }
     
-    loadingModal.remove();
-    
-    // Mostra messaggio di successo
+    // Mostra messaggio di successo solo dopo aver completato tutto
     const successModal = document.createElement('div');
     successModal.style.cssText = `
       position: fixed;
@@ -2491,6 +2537,9 @@ async function eseguiSincronizzazione() {
     
     document.body.appendChild(successModal);
     
+    // Rimuovi il loading modal
+    loadingModal.remove();
+    
     // Rimuovi messaggio dopo 5 secondi
     setTimeout(() => {
       if (successModal.parentNode) {
@@ -2511,6 +2560,9 @@ async function eseguiSincronizzazione() {
     
     // Mostra messaggio di errore
     alert('❌ Errore durante la sincronizzazione. Riprova più tardi.');
+  } finally {
+    // Reset flag di sincronizzazione
+    sincronizzazioneInCorso = false;
   }
 }
 

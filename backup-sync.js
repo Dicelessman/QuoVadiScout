@@ -461,12 +461,15 @@ class BackupSyncManager {
           </div>
         </div>
         
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="window.backupSyncManager.performBackup()" style="background: #2f6b2f; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
             💾 Crea Backup
           </button>
           <button onclick="window.backupSyncManager.performSync()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
             🔄 Sincronizza Ora
+          </button>
+          <button onclick="window.backupSyncManager.eliminaBackupPrecedenti()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+            🗑️ Elimina Backup
           </button>
         </div>
         
@@ -500,6 +503,47 @@ class BackupSyncManager {
     `).join('');
   }
 
+  // Funzione per eliminare tutti i backup precedenti
+  eliminaBackupPrecedenti() {
+    if (this.backupHistory.length === 0) {
+      alert('Nessun backup da eliminare');
+      return;
+    }
+    
+    const conferma = confirm(`Sei sicuro di voler eliminare tutti i ${this.backupHistory.length} backup precedenti?\n\nQuesta azione non può essere annullata.`);
+    
+    if (!conferma) {
+      return;
+    }
+    
+    try {
+      // Elimina tutti i backup dalla cronologia
+      this.backupHistory = [];
+      
+      // Salva la cronologia aggiornata
+      localStorage.setItem('backupHistory', JSON.stringify(this.backupHistory));
+      
+      // Aggiorna l'interfaccia
+      this.showBackupManager();
+      
+      // Mostra notifica di successo
+      if (window.showNotification) {
+        window.showNotification('✅ Backup eliminati', {
+          body: 'Tutti i backup precedenti sono stati eliminati con successo',
+          tag: 'backup-deleted'
+        });
+      } else {
+        alert('✅ Tutti i backup precedenti sono stati eliminati con successo');
+      }
+      
+      console.log('🗑️ Tutti i backup precedenti eliminati');
+      
+    } catch (error) {
+      console.error('❌ Errore durante eliminazione backup:', error);
+      alert('Errore durante l\'eliminazione dei backup: ' + error.message);
+    }
+  }
+
   formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -515,6 +559,10 @@ window.backupSyncManager = new BackupSyncManager();
 // Aggiungi al menu principale
 if (typeof window !== 'undefined') {
   window.mostraGestioneBackup = () => {
+    // Chiudi il menu automaticamente
+    if (typeof closeMenu === 'function') {
+      closeMenu();
+    }
     window.backupSyncManager.showBackupManager();
   };
 }

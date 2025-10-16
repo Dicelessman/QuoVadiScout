@@ -8620,6 +8620,7 @@ window.mostraStatisticheApp = mostraStatisticheApp;
 window.showNotification = showNotification;
 window.testMenuToggle = testMenuToggle;
 window.mostraPreferenzeNotifiche = mostraPreferenzeNotifiche;
+window.testNotification = testNotification;
 // window.mostraGestioneOffline = mostraGestioneOffline; // Funzione rimossa
 window.getUserLocation = trovaVicinoAMe; // Alias per compatibilità test
 

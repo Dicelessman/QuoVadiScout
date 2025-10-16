@@ -6371,7 +6371,7 @@ function mostraPreferenzeNotifiche() {
       top: 0;
       background: white;
       border-radius: 20px 20px 0 0;
-      padding: 16px 20px 8px 20px;
+      padding: 16px 20px 20px 20px;
       border-bottom: 1px solid #e5e7eb;
       z-index: 10;
     ">
@@ -6381,26 +6381,33 @@ function mostraPreferenzeNotifiche() {
         height: 4px;
         background: #d1d5db;
         border-radius: 2px;
-        margin: 0 auto 12px auto;
+        margin: 0 auto 16px auto;
       "></div>
       
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">🔔 Preferenze Notifiche</h2>
-        <button onclick="this.closest('.modal-overlay').remove()" style="
-          background: none; 
-          border: none; 
-          font-size: 1.5rem; 
-          cursor: pointer; 
-          color: #6b7280;
-          padding: 4px;
-          border-radius: 50%;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">×</button>
+      <!-- Titolo centrato -->
+      <div style="text-align: center; margin-bottom: 8px;">
+        <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">🔔 Preferenze Notifiche</h2>
       </div>
+      
+      <!-- Pulsante chiusura posizionato in alto a destra -->
+      <button onclick="this.closest('.modal-overlay').remove()" style="
+        position: absolute;
+        top: 16px;
+        right: 20px;
+        background: none; 
+        border: none; 
+        font-size: 1.5rem; 
+        cursor: pointer; 
+        color: #6b7280;
+        padding: 8px;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      " onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='none'">×</button>
     </div>
     
     <!-- Contenuto scrollabile -->

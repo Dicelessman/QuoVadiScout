@@ -2303,10 +2303,11 @@ async function mostraMappa() {
     
     await window.initializeMap('map');
     
-    // Mostra le strutture già caricate (senza sincronizzazione automatica)
-    window.showStructuresOnMap(strutture);
+    // Usa sempre i dati locali (anche se vuoti) senza sincronizzazione automatica
+    const struttureLocali = window.strutture || [];
+    window.showStructuresOnMap(struttureLocali);
     
-    console.log('✅ Mappa inizializzata con', strutture.length, 'strutture (dati locali)');
+    console.log('✅ Mappa inizializzata con', struttureLocali.length, 'strutture (dati locali)');
   } catch (error) {
     console.error('❌ Errore inizializzazione mappa:', error);
     mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';
@@ -2716,7 +2717,8 @@ async function processaStruttureSenzaCoordinate() {
 
 // Funzione per centrare la mappa su una struttura specifica
 function centerMapOnStructure(strutturaId) {
-  const struttura = strutture.find(s => s.id === strutturaId);
+  const struttureLocali = window.strutture || [];
+  const struttura = struttureLocali.find(s => s.id === strutturaId);
   if (!struttura || !struttura.Coordinate) {
     console.warn('Struttura non trovata o senza coordinate:', strutturaId);
     return;
@@ -2747,6 +2749,7 @@ window.processaStruttureSenzaCoordinate = processaStruttureSenzaCoordinate;
 window.centerMapOnStructure = centerMapOnStructure;
 window.mostraModaleSincronizzazione = mostraModaleSincronizzazione;
 window.eseguiSincronizzazione = eseguiSincronizzazione;
+window.aggiornaListaLocale = aggiornaListaLocale;
 
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {
@@ -5915,17 +5918,17 @@ function mostraSchedaCompleta(strutturaId) {
         // Sincronizzazione automatica dopo creazione struttura
         console.log('🔄 Avvio sincronizzazione automatica dopo creazione struttura...');
         try {
-          // Aggiorna la mappa se è aperta
+          // Aggiorna la mappa se è aperta (usa dati locali aggiornati)
           if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
-            // Ricarica dati freschi per la mappa
-            const struttureFresche = await aggiornaMappaConDatiFreschi();
-            window.showStructuresOnMap(struttureFresche);
-            console.log('✅ Mappa aggiornata con dati freschi');
+            // Usa i dati locali già aggiornati, non ricaricare da Firestore
+            const struttureLocali = window.strutture || [];
+            window.showStructuresOnMap(struttureLocali);
+            console.log('✅ Mappa aggiornata con dati locali');
           }
           
-          // Aggiorna la lista principale
-          await aggiornaLista();
-          console.log('✅ Lista principale aggiornata');
+          // Aggiorna la lista principale (usa dati locali)
+          aggiornaListaLocale();
+          console.log('✅ Lista principale aggiornata con dati locali');
         } catch (syncError) {
           console.warn('⚠️ Errore durante sincronizzazione automatica:', syncError);
           // Non bloccare l'utente per errori di sincronizzazione
@@ -5978,17 +5981,17 @@ function mostraSchedaCompleta(strutturaId) {
         // Sincronizzazione automatica dopo modifica struttura
         console.log('🔄 Avvio sincronizzazione automatica dopo modifica struttura...');
         try {
-          // Aggiorna la mappa se è aperta
+          // Aggiorna la mappa se è aperta (usa dati locali aggiornati)
           if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
-            // Ricarica dati freschi per la mappa
-            const struttureFresche = await aggiornaMappaConDatiFreschi();
-            window.showStructuresOnMap(struttureFresche);
-            console.log('✅ Mappa aggiornata con dati freschi');
+            // Usa i dati locali già aggiornati, non ricaricare da Firestore
+            const struttureLocali = window.strutture || [];
+            window.showStructuresOnMap(struttureLocali);
+            console.log('✅ Mappa aggiornata con dati locali');
           }
           
-          // Aggiorna la lista principale
-          await aggiornaLista();
-          console.log('✅ Lista principale aggiornata');
+          // Aggiorna la lista principale (usa dati locali)
+          aggiornaListaLocale();
+          console.log('✅ Lista principale aggiornata con dati locali');
         } catch (syncError) {
           console.warn('⚠️ Errore durante sincronizzazione automatica:', syncError);
           // Non bloccare l'utente per errori di sincronizzazione
@@ -6110,6 +6113,14 @@ async function aggiornaLista() {
   // Rendi le strutture globali per accesso dalla dashboard
   window.strutture = strutture;
   renderStrutture(filtra(strutture));
+}
+
+// === Aggiorna lista locale (senza ricaricare da Firestore) ===
+function aggiornaListaLocale() {
+  // Usa i dati locali già presenti
+  const struttureLocali = window.strutture || [];
+  renderStrutture(filtra(struttureLocali));
+  console.log('✅ Lista aggiornata con dati locali:', struttureLocali.length, 'strutture');
 }
 
 // === Indicatore di caricamento ===

@@ -397,67 +397,16 @@ class MapsManager {
           (struttura.coordinate_lat && struttura.coordinate_lng)) {
         this.addStructureMarker(struttura);
       } else {
-        // Prova geocoding automatico per ottenere coordinate
-        const strutturaConCoordinate = await this.tentaGeocodingAutomatico(struttura);
-        if (strutturaConCoordinate.coordinate || strutturaConCoordinate.coordinate_lat) {
-          this.addStructureMarker(strutturaConCoordinate);
-        } else {
-          // Fallback: usa coordinate di provincia
-          this.addStructureMarkerWithFallback(struttura);
-        }
+        // Fallback: usa coordinate di provincia (senza geocoding automatico)
+        this.addStructureMarkerWithFallback(struttura);
       }
     }
     console.log(`📍 ${strutture.length} marker aggiornati sulla mappa`);
   }
   
-  async tentaGeocodingAutomatico(struttura) {
-    // Se ha già coordinate precise, non fare nulla
-    if ((struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) ||
-        (struttura.coordinate_lat && struttura.coordinate_lng)) {
-      return struttura;
-    }
-    
-    // Prova prima a estrarre da Google Maps
-    if (struttura.google_maps_link) {
-      const coordinate = this.estraiCoordinateDaGoogleMaps(struttura.google_maps_link);
-      if (coordinate) {
-        struttura.coordinate = coordinate;
-        struttura.coordinate_lat = coordinate.lat;
-        struttura.coordinate_lng = coordinate.lng;
-        console.log(`🗺️ Coordinate estratte da Google Maps per: ${struttura.Struttura}`);
-        return struttura;
-      }
-    }
-    
-    // Prova geocoding per indirizzo completo
-    if (struttura.Indirizzo && struttura.Luogo && struttura.Prov) {
-      const address = `${struttura.Indirizzo}, ${struttura.Luogo}, ${struttura.Prov}, Italia`;
-      try {
-        await this.geocodeStructure(struttura);
-        if (struttura.coordinate && struttura.coordinate.lat) {
-          return struttura;
-        }
-      } catch (error) {
-        console.warn(`⚠️ Geocoding indirizzo fallito per ${struttura.Struttura}:`, error.message);
-      }
-    }
-    
-    // Prova geocoding per luogo + provincia
-    if (struttura.Luogo && struttura.Prov) {
-      const address = `${struttura.Luogo}, ${struttura.Prov}, Italia`;
-      try {
-        const strutturaConIndirizzo = { ...struttura, Indirizzo: address };
-        await this.geocodeStructure(strutturaConIndirizzo);
-        if (struttura.coordinate && struttura.coordinate.lat) {
-          return struttura;
-        }
-      } catch (error) {
-        console.warn(`⚠️ Geocoding luogo fallito per ${struttura.Struttura}:`, error.message);
-      }
-    }
-    
-    return struttura;
-  }
+  // Funzione rimossa: tentaGeocodingAutomatico
+  // Il geocoding automatico è stato disabilitato per evitare loop infiniti
+  // Usa solo coordinate manuali o fallback di provincia
   
   estraiCoordinateDaGoogleMaps(googleMapsLink) {
     if (!googleMapsLink) return null;
@@ -497,134 +446,14 @@ class MapsManager {
     }
   }
 
-  async geocodeStructure(struttura) {
-    const address = struttura.Indirizzo || `${struttura.Luogo}, ${struttura.Prov}, Italia`;
-    
-    // Controlla cache
-    if (MapsManager.geocodingCache.has(address)) {
-      const cached = MapsManager.geocodingCache.get(address);
-      if (cached) {
-        struttura.coordinate = cached;
-        this.addStructureMarker(struttura);
-        console.log(`📋 Geocoding da cache per: ${struttura.Struttura}`);
-        return;
-      }
-    }
+  // Funzione rimossa: geocodeStructure
+  // Il geocoding automatico è stato disabilitato
 
-    // Aggiungi alla coda
-    MapsManager.geocodingQueue.push({ struttura, address });
-    await this.processGeocodingQueue();
-  }
+  // Funzione rimossa: processGeocodingQueue
+  // Il geocoding automatico è stato disabilitato
 
-  async processGeocodingQueue() {
-    if (MapsManager.isProcessingGeocoding || MapsManager.geocodingQueue.length === 0) {
-      return;
-    }
-
-    MapsManager.isProcessingGeocoding = true;
-
-    while (MapsManager.geocodingQueue.length > 0) {
-      const { struttura, address } = MapsManager.geocodingQueue.shift();
-      
-      try {
-        await this.performGeocoding(struttura, address);
-      } catch (error) {
-        console.warn(`⚠️ Geocoding fallito per: ${struttura.Struttura}`, error.message);
-      }
-
-      // Rate limiting
-      const now = Date.now();
-      const timeSinceLastRequest = now - MapsManager.lastGeocodingRequest;
-      if (timeSinceLastRequest < MapsManager.GEOCODING_DELAY) {
-        await new Promise(resolve => 
-          setTimeout(resolve, MapsManager.GEOCODING_DELAY - timeSinceLastRequest)
-        );
-      }
-      MapsManager.lastGeocodingRequest = Date.now();
-    }
-
-    MapsManager.isProcessingGeocoding = false;
-  }
-
-  async performGeocoding(struttura, address) {
-    try {
-      // Usa un proxy CORS per evitare errori CORS
-      const proxyUrl = 'https://api.allorigins.win/raw?url=';
-      const targetUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-      
-      const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        const result = data[0];
-        const lat = parseFloat(result.lat);
-        const lng = parseFloat(result.lon);
-
-        // Valida coordinate
-        if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-          throw new Error('Coordinate non valide');
-        }
-
-        const coordinates = { lat, lng };
-        
-        // Aggiorna struttura
-        struttura.coordinate = coordinates;
-        
-        // Salva in cache
-        MapsManager.geocodingCache.set(address, coordinates);
-        
-        // Salva su Firestore (opzionale, non bloccante)
-        this.saveCoordinatesToFirestore(struttura.id, lat, lng).catch(err => 
-          console.warn('⚠️ Errore salvataggio coordinate:', err.message)
-        );
-
-        // Aggiungi marker alla mappa
-        this.addStructureMarker(struttura);
-
-        console.log(`🌍 Geocoding completato per: ${struttura.Struttura}`);
-        return coordinates;
-      } else {
-        // Salva fallimento in cache per evitare richieste ripetute
-        MapsManager.geocodingCache.set(address, null);
-        console.warn(`⚠️ Nessun risultato per: ${struttura.Struttura}`);
-      }
-    } catch (error) {
-      // Gestione errori specifici
-      if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-        console.warn(`⚠️ Errore CORS per: ${struttura.Struttura}, provo servizio alternativo`);
-        return await this.fallbackGeocoding(struttura, address);
-      }
-      
-      throw error;
-    }
-  }
-
-  async fallbackGeocoding(struttura, address) {
-    try {
-      // Servizio alternativo: MapBox (richiede API key)
-      // Per ora usiamo un approccio semplificato
-      console.log(`🔄 Tentativo geocoding alternativo per: ${struttura.Struttura}`);
-      
-      // Salva fallimento in cache
-      MapsManager.geocodingCache.set(address, null);
-      
-      // Per ora, non facciamo nulla, ma in futuro potremmo usare altri servizi
-      return null;
-    } catch (error) {
-      console.warn(`⚠️ Fallback geocoding fallito per: ${struttura.Struttura}`);
-      return null;
-    }
-  }
+  // Funzioni rimosse: performGeocoding, fallbackGeocoding
+  // Il geocoding automatico è stato disabilitato per evitare loop infiniti
 
   async saveCoordinatesToFirestore(strutturaId, lat, lng) {
     try {
@@ -861,12 +690,8 @@ class MapsManager {
   }
 }
 
-// Cache per geocoding (proprietà statiche della classe)
-MapsManager.geocodingCache = new Map();
-MapsManager.geocodingQueue = [];
-MapsManager.isProcessingGeocoding = false;
-MapsManager.lastGeocodingRequest = 0;
-MapsManager.GEOCODING_DELAY = 1200; // 1.2 secondi tra richieste
+// Variabili statiche di geocoding rimosse
+// Il geocoding automatico è stato disabilitato
 
 // Inizializza il manager delle mappe
 const mapsManager = new MapsManager();

@@ -2768,27 +2768,82 @@ async function processaStruttureSenzaCoordinate() {
 }
 
 // Funzione per centrare la mappa su una struttura specifica
-function centerMapOnStructure(strutturaId) {
+function centerMapOnStructure(strutturaId, retryCount = 0) {
+  console.log('🎯 Tentativo di centrare mappa su struttura:', strutturaId, '(retry:', retryCount, ')');
+  
   const struttureLocali = window.strutture || [];
   const struttura = struttureLocali.find(s => s.id === strutturaId);
-  if (!struttura || !struttura.Coordinate) {
-    console.warn('Struttura non trovata o senza coordinate:', strutturaId);
+  
+  if (!struttura) {
+    console.warn('❌ Struttura non trovata:', strutturaId);
+    return;
+  }
+  
+  console.log('📍 Struttura trovata:', struttura.Struttura);
+  
+  // Cerca coordinate in diversi formati
+  let lat, lng;
+  
+  // Formato 1: coordinate_lat e coordinate_lng
+  if (struttura.coordinate_lat && struttura.coordinate_lng) {
+    lat = parseFloat(struttura.coordinate_lat);
+    lng = parseFloat(struttura.coordinate_lng);
+    console.log('📍 Coordinate trovate (lat/lng):', lat, lng);
+  }
+  // Formato 2: oggetto coordinate
+  else if (struttura.coordinate && struttura.coordinate.lat && struttura.coordinate.lng) {
+    lat = parseFloat(struttura.coordinate.lat);
+    lng = parseFloat(struttura.coordinate.lng);
+    console.log('📍 Coordinate trovate (oggetto):', lat, lng);
+  }
+  // Formato 3: stringa Coordinate
+  else if (struttura.Coordinate) {
+    const coords = struttura.Coordinate.split(',').map(coord => parseFloat(coord.trim()));
+    if (coords.length === 2) {
+      lat = coords[0];
+      lng = coords[1];
+      console.log('📍 Coordinate trovate (stringa):', lat, lng);
+    }
+  }
+  
+  // Verifica che le coordinate siano valide
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+    console.warn('❌ Coordinate non valide per struttura:', struttura.Struttura);
+    console.log('📍 Dati struttura:', {
+      coordinate_lat: struttura.coordinate_lat,
+      coordinate_lng: struttura.coordinate_lng,
+      coordinate: struttura.coordinate,
+      Coordinate: struttura.Coordinate
+    });
     return;
   }
   
   // Se la mappa è già inizializzata, centra su questa struttura
   if (window.mapsManager && window.mapsManager.map) {
-    const coords = struttura.Coordinate.split(',').map(coord => parseFloat(coord.trim()));
-    if (coords.length === 2) {
-      window.mapsManager.map.setView([coords[0], coords[1]], 15);
-      
-      // Evidenzia il marker se esiste
-      if (window.mapsManager.markers) {
-        const marker = window.mapsManager.markers.find(m => m.structureId === strutturaId);
-        if (marker) {
-          marker.openPopup();
-        }
+    console.log('🗺️ Centrando mappa su:', lat, lng);
+    window.mapsManager.map.setView([lat, lng], 15);
+    
+    // Evidenzia il marker se esiste
+    if (window.mapsManager.markers) {
+      const marker = window.mapsManager.markers.find(m => m.structureId === strutturaId);
+      if (marker) {
+        console.log('📍 Apertura popup marker');
+        marker.openPopup();
+      } else {
+        console.log('⚠️ Marker non trovato per struttura:', strutturaId);
       }
+    }
+    
+    console.log('✅ Mappa centrata con successo');
+  } else {
+    if (retryCount < 5) {
+      console.warn('❌ Mappa non inizializzata, retry in 500ms (tentativo', retryCount + 1, '/5)');
+      // Retry dopo 500ms se la mappa non è ancora pronta
+      setTimeout(() => {
+        centerMapOnStructure(strutturaId, retryCount + 1);
+      }, 500);
+    } else {
+      console.error('❌ Impossibile centrare mappa dopo 5 tentativi');
     }
   }
 }
@@ -4795,10 +4850,10 @@ function mostraSchedaCompleta(strutturaId) {
     modalScheda.remove();
     // Apri la mappa
     mostraMappa();
-    // Centra sulla struttura
+    // Centra sulla struttura (aumentato timeout per inizializzazione completa)
     setTimeout(() => {
       centerMapOnStructure(strutturaId);
-    }, 500);
+    }, 1500);
   };
   
   controls.appendChild(editBtn);

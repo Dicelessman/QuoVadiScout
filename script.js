@@ -2508,11 +2508,37 @@ async function processaStruttureSenzaCoordinate() {
   }
 }
 
+// Funzione per centrare la mappa su una struttura specifica
+function centerMapOnStructure(strutturaId) {
+  const struttura = strutture.find(s => s.id === strutturaId);
+  if (!struttura || !struttura.Coordinate) {
+    console.warn('Struttura non trovata o senza coordinate:', strutturaId);
+    return;
+  }
+  
+  // Se la mappa è già inizializzata, centra su questa struttura
+  if (window.mapsManager && window.mapsManager.map) {
+    const coords = struttura.Coordinate.split(',').map(coord => parseFloat(coord.trim()));
+    if (coords.length === 2) {
+      window.mapsManager.map.setView([coords[0], coords[1]], 15);
+      
+      // Evidenzia il marker se esiste
+      if (window.mapsManager.markers) {
+        const marker = window.mapsManager.markers.find(m => m.structureId === strutturaId);
+        if (marker) {
+          marker.openPopup();
+        }
+      }
+    }
+  }
+}
+
 // Rendi le funzioni accessibili globalmente
 window.mostraMappa = mostraMappa;
 window.aggiornaMappaConDatiFreschi = aggiornaMappaConDatiFreschi;
 window.debugCoordinateStrutture = debugCoordinateStrutture;
 window.processaStruttureSenzaCoordinate = processaStruttureSenzaCoordinate;
+window.centerMapOnStructure = centerMapOnStructure;
 
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {
@@ -4490,21 +4516,30 @@ function mostraSchedaCompleta(strutturaId) {
     modalScheda.remove();
   };
   
-  const reportBtn = document.createElement('button');
-  reportBtn.innerHTML = '⚠️ Segnala';
-  reportBtn.style.cssText = `
-    background: #ffc107;
-    color: #212529;
+  const mapBtn = document.createElement('button');
+  mapBtn.innerHTML = '🗺️ Vedi su mappa';
+  mapBtn.style.cssText = `
+    background: #007bff;
+    color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
   `;
-  reportBtn.onclick = () => mostraSegnalazione(strutturaId);
+  mapBtn.onclick = () => {
+    // Chiudi la scheda
+    modalScheda.remove();
+    // Apri la mappa
+    mostraMappa();
+    // Centra sulla struttura
+    setTimeout(() => {
+      centerMapOnStructure(strutturaId);
+    }, 500);
+  };
   
   controls.appendChild(editBtn);
-  controls.appendChild(reportBtn);
+  controls.appendChild(mapBtn);
   controls.appendChild(saveBtn);
   controls.appendChild(cancelBtn);
   controls.appendChild(closeBtn);
@@ -5589,8 +5624,24 @@ function mostraSchedaCompleta(strutturaId) {
         eliminaStrutturaConConferma(strutturaId);
       };
       
+      // Aggiungi pulsante Segnala nella sezione Zona Pericolosa
+      const reportBtn = document.createElement('button');
+      reportBtn.innerHTML = '⚠️ Segnala';
+      reportBtn.style.cssText = `
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-left: 10px;
+      `;
+      reportBtn.onclick = () => mostraSegnalazione(strutturaId);
+      
       if (deleteSection && deleteBtn) {
         deleteSection.appendChild(deleteBtn);
+        deleteSection.appendChild(reportBtn);
       }
       if (content && deleteSection) {
         content.appendChild(deleteSection);

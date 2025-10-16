@@ -6341,117 +6341,417 @@ function mostraPreferenzeNotifiche() {
   modal.style.cssText = `
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 1000;
-    padding: 20px;
+    padding: 0;
+    animation: fadeIn 0.3s ease-out;
   `;
 
   const modalContent = document.createElement('div');
   modalContent.className = 'modal';
   modalContent.style.cssText = `
     background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
+    border-radius: 20px 20px 0 0;
+    padding: 0;
     width: 100%;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+    position: relative;
   `;
 
   modalContent.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">🔔 Preferenze Notifiche</h2>
-      <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <h3 style="color: #374151; margin-bottom: 15px;">Tipi di Notifiche</h3>
+    <!-- Header con handle per drag -->
+    <div style="
+      position: sticky;
+      top: 0;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 16px 20px 8px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      z-index: 10;
+    ">
+      <!-- Handle per drag -->
+      <div style="
+        width: 40px;
+        height: 4px;
+        background: #d1d5db;
+        border-radius: 2px;
+        margin: 0 auto 12px auto;
+      "></div>
       
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <div>
-            <div style="font-weight: 500;">🏕️ Nuove Strutture</div>
-            <div style="font-size: 0.9rem; color: #666;">Notifica quando viene aggiunta una nuova struttura</div>
-          </div>
-          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
-            <input type="checkbox" id="newStructures" style="opacity: 0; width: 0; height: 0;">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <div>
-            <div style="font-weight: 500;">📝 Aggiornamenti Strutture</div>
-            <div style="font-size: 0.9rem; color: #666;">Notifica quando una struttura viene modificata</div>
-          </div>
-          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
-            <input type="checkbox" id="structureUpdates" style="opacity: 0; width: 0; height: 0;">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <div>
-            <div style="font-weight: 500;">⭐ Elenco Personale</div>
-            <div style="font-size: 0.9rem; color: #666;">Notifica per aggiornamenti del tuo elenco personale</div>
-          </div>
-          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
-            <input type="checkbox" id="personalListUpdates" style="opacity: 0; width: 0; height: 0;">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <div>
-            <div style="font-weight: 500;">📍 Strutture Vicine</div>
-            <div style="font-size: 0.9rem; color: #666;">Notifica per strutture nelle vicinanze</div>
-          </div>
-          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
-            <input type="checkbox" id="nearbyStructures" style="opacity: 0; width: 0; height: 0;">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <div>
-            <div style="font-weight: 500;">⚠️ Segnalazioni</div>
-            <div style="font-size: 0.9rem; color: #666;">Notifica per nuove segnalazioni</div>
-          </div>
-          <label style="position: relative; display: inline-block; width: 50px; height: 24px;">
-            <input type="checkbox" id="reports" style="opacity: 0; width: 0; height: 0;">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">🔔 Preferenze Notifiche</h2>
+        <button onclick="this.closest('.modal-overlay').remove()" style="
+          background: none; 
+          border: none; 
+          font-size: 1.5rem; 
+          cursor: pointer; 
+          color: #6b7280;
+          padding: 4px;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">×</button>
       </div>
     </div>
     
-    <div style="margin-bottom: 20px;">
-      <h3 style="color: #374151; margin-bottom: 15px;">Distanza per Notifiche Vicinanza</h3>
-      <div style="padding: 12px; background: #f8f9fa; border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span>Raggio notifiche:</span>
-          <span id="distanceValue" style="font-weight: 500;">10 km</span>
+    <!-- Contenuto scrollabile -->
+    <div style="padding: 20px;">
+      <!-- Tipi di Notifiche -->
+      <div style="margin-bottom: 24px;">
+        <h3 style="color: #374151; margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;">Tipi di Notifiche</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: #f9fafb; 
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          ">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">🏕️ Nuove Strutture</div>
+              <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Notifica quando viene aggiunta una nuova struttura</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="newStructures" style="opacity: 0; width: 0; height: 0;">
+              <span style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #d1d5db;
+                border-radius: 24px;
+                transition: 0.3s;
+              "></span>
+              <span style="
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.3s;
+              "></span>
+            </label>
+          </div>
+          
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: #f9fafb; 
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          ">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">📝 Aggiornamenti Strutture</div>
+              <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Notifica quando una struttura viene modificata</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="structureUpdates" style="opacity: 0; width: 0; height: 0;">
+              <span style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #d1d5db;
+                border-radius: 24px;
+                transition: 0.3s;
+              "></span>
+              <span style="
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.3s;
+              "></span>
+            </label>
+          </div>
+          
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: #f9fafb; 
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          ">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">⭐ Elenco Personale</div>
+              <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Notifica per aggiornamenti del tuo elenco personale</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="personalListUpdates" style="opacity: 0; width: 0; height: 0;">
+              <span style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #d1d5db;
+                border-radius: 24px;
+                transition: 0.3s;
+              "></span>
+              <span style="
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.3s;
+              "></span>
+            </label>
+          </div>
+          
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: #f9fafb; 
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          ">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">📍 Strutture Vicine</div>
+              <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Notifica per strutture nelle vicinanze</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="nearbyStructures" style="opacity: 0; width: 0; height: 0;">
+              <span style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #d1d5db;
+                border-radius: 24px;
+                transition: 0.3s;
+              "></span>
+              <span style="
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.3s;
+              "></span>
+            </label>
+          </div>
+          
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: #f9fafb; 
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+          ">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: #1f2937; margin-bottom: 4px;">⚠️ Segnalazioni</div>
+              <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">Notifica per nuove segnalazioni</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="reports" style="opacity: 0; width: 0; height: 0;">
+              <span style="
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #d1d5db;
+                border-radius: 24px;
+                transition: 0.3s;
+              "></span>
+              <span style="
+                position: absolute;
+                content: '';
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.3s;
+              "></span>
+            </label>
+          </div>
         </div>
-        <input type="range" id="distanceSlider" min="1" max="50" value="10" style="width: 100%;">
       </div>
-    </div>
-    
-    <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button onclick="testNotification()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        🔔 Test Notifica
-      </button>
-      <button onclick="salvaPreferenzeNotifiche()" style="padding: 10px 20px; background: #2f6b2f; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        💾 Salva Preferenze
-      </button>
+      
+      <!-- Distanza per Notifiche Vicinanza -->
+      <div style="margin-bottom: 24px;">
+        <h3 style="color: #374151; margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;">Distanza per Notifiche Vicinanza</h3>
+        <div style="
+          padding: 20px; 
+          background: #f9fafb; 
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="color: #374151; font-weight: 500;">Raggio notifiche:</span>
+            <span id="distanceValue" style="
+              font-weight: 600; 
+              color: #2f6b2f; 
+              background: #dcfce7; 
+              padding: 4px 12px; 
+              border-radius: 20px;
+              font-size: 0.875rem;
+            ">10 km</span>
+          </div>
+          <input type="range" id="distanceSlider" min="1" max="50" value="10" style="
+            width: 100%; 
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+          ">
+        </div>
+      </div>
+      
+      <!-- Pulsanti azione -->
+      <div style="
+        display: flex; 
+        flex-direction: column; 
+        gap: 12px; 
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+      ">
+        <button onclick="testNotification()" style="
+          padding: 14px 20px; 
+          background: #6b7280; 
+          color: white; 
+          border: none; 
+          border-radius: 12px; 
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 0.95rem;
+          transition: all 0.2s ease;
+        ">
+          🔔 Test Notifica
+        </button>
+        <button onclick="salvaPreferenzeNotifiche()" style="
+          padding: 14px 20px; 
+          background: #2f6b2f; 
+          color: white; 
+          border: none; 
+          border-radius: 12px; 
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 0.95rem;
+          transition: all 0.2s ease;
+        ">
+          💾 Salva Preferenze
+        </button>
+      </div>
     </div>
   `;
 
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
+
+  // Aggiungi stili CSS per animazioni e toggle
+  if (!document.getElementById('notificationModalStyles')) {
+    const style = document.createElement('style');
+    style.id = 'notificationModalStyles';
+    style.textContent = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      
+      /* Toggle switch styles */
+      input[type="checkbox"]:checked + span {
+        background-color: #2f6b2f !important;
+      }
+      
+      input[type="checkbox"]:checked + span span {
+        transform: translateX(20px) !important;
+      }
+      
+      /* Range slider styles */
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #2f6b2f;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #2f6b2f;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      
+      /* Hover effects */
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      }
+      
+      /* Mobile responsive */
+      @media (max-width: 480px) {
+        .modal {
+          border-radius: 16px 16px 0 0 !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   // Carica preferenze attuali
   caricaPreferenzeNotifiche();

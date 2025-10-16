@@ -6583,98 +6583,9 @@ document.addEventListener('cardOpened', (e) => {
   }
 });
 
-// === Gestione Download Offline ===
-function mostraGestioneOffline() {
-  // Chiudi il menu automaticamente
-  closeMenu();
-  
-  // Rimuovi modal esistente se presente
-  const existingModal = document.getElementById('gestioneOfflineModal');
-  if (existingModal) {
-    existingModal.remove();
-  }
-
-  const modal = document.createElement('div');
-  modal.id = 'gestioneOfflineModal';
-  modal.className = 'modal-overlay';
-  modal.style.cssText = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  `;
-
-  const modalContent = document.createElement('div');
-  modalContent.className = 'modal';
-  modalContent.style.cssText = `
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 600px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  `;
-
-  modalContent.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">📥 Gestione Offline</h2>
-      <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">×</button>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <h3 style="color: #374151; margin-bottom: 15px;">Strutture Elenco Personale</h3>
-      <div id="offlineStructuresList" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px;">
-        <div style="text-align: center; color: #666; padding: 20px;">
-          Caricamento strutture...
-        </div>
-      </div>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <h3 style="color: #374151; margin-bottom: 15px;">Spazio Utilizzato</h3>
-      <div style="padding: 12px; background: #f8f9fa; border-radius: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span>Cache locale:</span>
-          <span id="cacheSize" style="font-weight: 500;">0 MB</span>
-        </div>
-        <div style="width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px;">
-          <div id="cacheBar" style="height: 100%; background: #2f6b2f; border-radius: 4px; width: 0%; transition: width 0.3s;"></div>
-        </div>
-      </div>
-    </div>
-    
-    <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button onclick="pulisciCacheOffline()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        🗑️ Pulisci Cache
-      </button>
-      <button onclick="downloadForOffline()" style="padding: 10px 20px; background: #2f6b2f; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        📥 Scarica Selezionate
-      </button>
-    </div>
-  `;
-
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-
-  // Carica strutture elenco personale
-  caricaStruttureOfflineList();
-  
-  // Aggiorna info cache
-  aggiornaInfoCache();
-
-  // Chiudi modal cliccando fuori
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.remove();
-    }
-  });
-}
+// === Funzioni Download Offline Rimosse ===
+// Funzione mostraGestioneOffline rimossa
+// La gestione download offline è stata disabilitata
 
 async function caricaStruttureOfflineList() {
   const listContainer = document.getElementById('offlineStructuresList');
@@ -6718,7 +6629,9 @@ async function caricaStruttureOfflineList() {
   }
 }
 
-async function downloadForOffline() {
+// Funzione downloadForOffline rimossa
+// La gestione download offline è stata disabilitata
+async function downloadForOffline_DISABLED() {
   const checkboxes = document.querySelectorAll('#offlineStructuresList input[type="checkbox"]:checked');
   const selectedIds = Array.from(checkboxes).map(cb => cb.id.replace('offline_', ''));
   
@@ -6796,7 +6709,8 @@ async function downloadForOffline() {
   }
 }
 
-async function salvaStrutturaOffline(struttura) {
+// Funzione salvaStrutturaOffline disabilitata
+async function salvaStrutturaOffline_DISABLED(struttura) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('QuoVadiScoutDB', 1);
     
@@ -6858,7 +6772,8 @@ async function salvaImmagineOffline(imageUrl, structureId) {
   }
 }
 
-async function aggiornaInfoCache() {
+// Funzione aggiornaInfoCache disabilitata
+async function aggiornaInfoCache_DISABLED() {
   try {
     const db = await new Promise((resolve, reject) => {
       const request = indexedDB.open('QuoVadiScoutDB', 1);
@@ -6902,7 +6817,8 @@ async function aggiornaInfoCache() {
   }
 }
 
-async function pulisciCacheOffline() {
+// Funzione pulisciCacheOffline disabilitata
+async function pulisciCacheOffline_DISABLED() {
   if (!confirm('Sei sicuro di voler cancellare tutta la cache offline? Questa azione non può essere annullata.')) {
     return;
   }
@@ -8704,7 +8620,7 @@ window.mostraStatisticheApp = mostraStatisticheApp;
 window.showNotification = showNotification;
 window.testMenuToggle = testMenuToggle;
 window.mostraPreferenzeNotifiche = mostraPreferenzeNotifiche;
-window.mostraGestioneOffline = mostraGestioneOffline;
+// window.mostraGestioneOffline = mostraGestioneOffline; // Funzione rimossa
 window.getUserLocation = trovaVicinoAMe; // Alias per compatibilità test
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');

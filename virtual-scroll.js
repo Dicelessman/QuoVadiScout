@@ -291,6 +291,6 @@ class SmartScrollManager {
 
 // Esponi globalmente
 window.VirtualScroller = VirtualScroller;
-window.VirtualScrollManager = VirtualScrollManager;
+// window.VirtualScrollManager = VirtualScrollManager; // Classe non definita
 
 console.log('🔄 VirtualScroll inizializzato');

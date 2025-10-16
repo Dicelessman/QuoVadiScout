@@ -306,16 +306,28 @@ class OfflineSyncManager {
   // Apre IndexedDB
   async openIndexedDB() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('QuoVadiScoutDB', 1);
+      const request = indexedDB.open('QuoVadiScoutDB', 2); // Incremento versione per forzare upgrade
       
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const db = request.result;
+        
+        // Verifica se le tabelle esistono, altrimenti le crea
+        if (!db.objectStoreNames.contains('offlineChanges')) {
+          console.log('🔧 OfflineSync: Creazione tabella offlineChanges...');
+          const transaction = db.transaction([], 'versionchange');
+          transaction.objectStore('offlineChanges', { keyPath: 'id', autoIncrement: true });
+        }
+        
+        resolve(db);
+      };
       
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
         
         // Store per modifiche offline (se non esiste)
         if (!db.objectStoreNames.contains('offlineChanges')) {
+          console.log('🔧 OfflineSync: Creazione tabella offlineChanges durante upgrade...');
           db.createObjectStore('offlineChanges', { keyPath: 'id', autoIncrement: true });
         }
       };

@@ -7089,7 +7089,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.log('✅ Pulsante ricerca avanzata trovato, aggiungo event listener');
     advancedSearchBtn.addEventListener("click", mostraRicercaAvanzata);
   } else {
-    console.error('❌ Pulsante ricerca avanzata non trovato!');
+    console.log('ℹ️ Pulsante ricerca avanzata non presente (opzionale)');
   }
   
   // Event listener per pulsante utente

@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏕️</text></svg>">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="geolocation-styles.css">
 <!-- Export libraries -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -63,6 +64,10 @@
           <button class="menu-item" onclick="processaStruttureSenzaCoordinate()" title="Ottieni coordinate automaticamente per strutture senza GPS">
             <span class="menu-icon">🌍</span>
             <span class="menu-label">Geocoding Automatico</span>
+          </button>
+          <button class="menu-item" onclick="geolocationUI.showModal()" title="Gestisci posizione strutture">
+            <span class="menu-icon">📍</span>
+            <span class="menu-label">Gestione Posizione</span>
           </button>
           <button class="menu-item" id="sortMenuBtn">
             <span class="menu-icon">📊</span>
@@ -234,6 +239,11 @@
   <script src="config.js"></script>
   <script src="test-systems.js"></script>
   <script src="debug-menu.js"></script>
+  <!-- Geolocalizzazione -->
+  <script src="geolocation-config.js"></script>
+  <script src="geolocation.js"></script>
+  <script src="geolocation-ui.js"></script>
+  <script src="geolocation-integration.js"></script>
   <script type="module" src="script.js"></script>
 
 <script>

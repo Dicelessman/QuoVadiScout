@@ -2229,6 +2229,21 @@ async function mostraMappa() {
     }
   };
   
+  const syncBtn = document.createElement('button');
+  syncBtn.innerHTML = '🔄 Sincronizza';
+  syncBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  `;
+  syncBtn.onclick = () => {
+    mostraModaleSincronizzazione();
+  };
+  
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
   closeBtn.style.cssText = `
@@ -2247,6 +2262,7 @@ async function mostraMappa() {
   closeBtn.onclick = () => modal.remove();
   
   controls.appendChild(centerBtn);
+  controls.appendChild(syncBtn);
   controls.appendChild(closeBtn);
   
   header.appendChild(title);
@@ -2287,13 +2303,10 @@ async function mostraMappa() {
     
     await window.initializeMap('map');
     
-    // Carica dati freschi da Firestore per la mappa
-    const struttureFresche = await aggiornaMappaConDatiFreschi();
+    // Mostra le strutture già caricate (senza sincronizzazione automatica)
+    window.showStructuresOnMap(strutture);
     
-    // Mostra tutte le strutture sulla mappa (non usare filtra() che dipende dal form)
-    window.showStructuresOnMap(struttureFresche);
-    
-    console.log('✅ Mappa inizializzata con', struttureFresche.length, 'strutture (dati freschi)');
+    console.log('✅ Mappa inizializzata con', strutture.length, 'strutture (dati locali)');
   } catch (error) {
     console.error('❌ Errore inizializzazione mappa:', error);
     mapContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Errore nel caricamento della mappa</div>';
@@ -2305,6 +2318,199 @@ async function mostraMappa() {
       modal.remove();
     }
   });
+}
+
+// Modale di avviso per sincronizzazione
+function mostraModaleSincronizzazione() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+  `;
+  
+  modalContent.innerHTML = `
+    <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
+    <h2 style="margin: 0 0 15px 0; color: #2f6b2f;">Sincronizzazione con Firestore</h2>
+    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+      <div style="font-weight: bold; color: #856404; margin-bottom: 10px;">⚠️ Avviso Importante</div>
+      <div style="color: #856404; font-size: 14px; line-height: 1.5;">
+        • La sincronizzazione può durare <strong>diversi minuti</strong><br>
+        • È consigliabile utilizzare una <strong>connessione WiFi</strong><br>
+        • Durante la sincronizzazione l'app potrebbe risultare lenta<br>
+        • Puoi interrompere il processo in qualsiasi momento
+      </div>
+    </div>
+    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+      <button id="rimandaSync" style="
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+      ">⏰ Rimanda</button>
+      <button id="procediSync" style="
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+      ">🚀 Procedi</button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Event listeners
+  document.getElementById('rimandaSync').onclick = () => {
+    modal.remove();
+  };
+  
+  document.getElementById('procediSync').onclick = async () => {
+    modal.remove();
+    await eseguiSincronizzazione();
+  };
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+// Funzione per eseguire la sincronizzazione
+async function eseguiSincronizzazione() {
+  try {
+    // Mostra indicatore di caricamento
+    const loadingModal = document.createElement('div');
+    loadingModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10002;
+    `;
+    
+    loadingModal.innerHTML = `
+      <div style="background: white; border-radius: 12px; padding: 30px; text-align: center; max-width: 400px;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
+        <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">Sincronizzazione in corso...</h3>
+        <div style="color: #666; margin-bottom: 20px;">Caricamento dati da Firestore</div>
+        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0;">
+          <div style="font-size: 12px; color: #666;">Questo processo può richiedere alcuni minuti</div>
+        </div>
+        <button id="annullaSync" style="
+          background: #dc3545;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        ">❌ Annulla</button>
+      </div>
+    `;
+    
+    document.body.appendChild(loadingModal);
+    
+    // Pulsante annulla
+    document.getElementById('annullaSync').onclick = () => {
+      loadingModal.remove();
+      return;
+    };
+    
+    // Esegui sincronizzazione
+    console.log('🔄 Inizio sincronizzazione con Firestore...');
+    const struttureFresche = await aggiornaMappaConDatiFreschi();
+    
+    // Aggiorna la mappa se è aperta
+    if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
+      window.showStructuresOnMap(struttureFresche);
+    }
+    
+    // Aggiorna la lista principale
+    await aggiornaLista();
+    
+    loadingModal.remove();
+    
+    // Mostra messaggio di successo
+    const successModal = document.createElement('div');
+    successModal.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10003;
+      animation: slideInRight 0.3s ease-out;
+    `;
+    successModal.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✅</span>
+        <div>
+          <div style="font-weight: 500;">Sincronizzazione completata!</div>
+          <div style="font-size: 12px; opacity: 0.9;">${struttureFresche.length} strutture aggiornate</div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(successModal);
+    
+    // Rimuovi messaggio dopo 5 secondi
+    setTimeout(() => {
+      if (successModal.parentNode) {
+        successModal.remove();
+      }
+    }, 5000);
+    
+    console.log('✅ Sincronizzazione completata con successo');
+    
+  } catch (error) {
+    console.error('❌ Errore durante sincronizzazione:', error);
+    
+    // Rimuovi loading modal se esiste
+    const loadingModal = document.querySelector('[style*="z-index: 10002"]');
+    if (loadingModal) {
+      loadingModal.remove();
+    }
+    
+    // Mostra messaggio di errore
+    alert('❌ Errore durante la sincronizzazione. Riprova più tardi.');
+  }
 }
 
 // Funzione per forzare aggiornamento mappa con dati freschi
@@ -2539,6 +2745,8 @@ window.aggiornaMappaConDatiFreschi = aggiornaMappaConDatiFreschi;
 window.debugCoordinateStrutture = debugCoordinateStrutture;
 window.processaStruttureSenzaCoordinate = processaStruttureSenzaCoordinate;
 window.centerMapOnStructure = centerMapOnStructure;
+window.mostraModaleSincronizzazione = mostraModaleSincronizzazione;
+window.eseguiSincronizzazione = eseguiSincronizzazione;
 
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {
@@ -5703,8 +5911,27 @@ function mostraSchedaCompleta(strutturaId) {
         }
         
         alert('✅ Nuova struttura creata con successo!');
+        
+        // Sincronizzazione automatica dopo creazione struttura
+        console.log('🔄 Avvio sincronizzazione automatica dopo creazione struttura...');
+        try {
+          // Aggiorna la mappa se è aperta
+          if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
+            // Ricarica dati freschi per la mappa
+            const struttureFresche = await aggiornaMappaConDatiFreschi();
+            window.showStructuresOnMap(struttureFresche);
+            console.log('✅ Mappa aggiornata con dati freschi');
+          }
+          
+          // Aggiorna la lista principale
+          await aggiornaLista();
+          console.log('✅ Lista principale aggiornata');
+        } catch (syncError) {
+          console.warn('⚠️ Errore durante sincronizzazione automatica:', syncError);
+          // Non bloccare l'utente per errori di sincronizzazione
+        }
+        
         modalScheda.remove();
-        aggiornaLista();
         
       } else {
         // Salva versione precedente prima di modificare
@@ -5747,6 +5974,26 @@ function mostraSchedaCompleta(strutturaId) {
         });
         
         alert('✅ Modifiche salvate con successo!');
+        
+        // Sincronizzazione automatica dopo modifica struttura
+        console.log('🔄 Avvio sincronizzazione automatica dopo modifica struttura...');
+        try {
+          // Aggiorna la mappa se è aperta
+          if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
+            // Ricarica dati freschi per la mappa
+            const struttureFresche = await aggiornaMappaConDatiFreschi();
+            window.showStructuresOnMap(struttureFresche);
+            console.log('✅ Mappa aggiornata con dati freschi');
+          }
+          
+          // Aggiorna la lista principale
+          await aggiornaLista();
+          console.log('✅ Lista principale aggiornata');
+        } catch (syncError) {
+          console.warn('⚠️ Errore durante sincronizzazione automatica:', syncError);
+          // Non bloccare l'utente per errori di sincronizzazione
+        }
+        
         toggleEditMode();
       }
       

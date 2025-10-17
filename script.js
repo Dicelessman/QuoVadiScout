@@ -559,7 +559,7 @@ function mostraRicercaAvanzata() {
       { campo: 'Escursioni', tipo: 'text', placeholder: 'Escursioni disponibili' },
       { campo: 'Trasporti', tipo: 'text', placeholder: 'Servizi di trasporto' }
     ],
-    'Gruppi Scout': [
+    'Adatto per': [
       { campo: 'Branco', tipo: 'checkbox', placeholder: 'Adatto per branco' },
       { campo: 'Reparto', tipo: 'checkbox', placeholder: 'Adatto per reparto' },
       { campo: 'Compagnia', tipo: 'checkbox', placeholder: 'Adatto per compagnia' }

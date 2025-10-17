@@ -1860,6 +1860,10 @@ function mostraAbout() {
   }, 100);
 }
 
+// === Rendere funzioni globali ===
+window.mostraAiuto = mostraAiuto;
+window.mostraAbout = mostraAbout;
+
 // === Sistema di Versioning e Activity Log ===
 async function salvaVersione(struttura, userId) {
   try {

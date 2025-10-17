@@ -580,7 +580,7 @@ function mostraRicercaAvanzata() {
       { campo: 'rating_min', tipo: 'number', placeholder: 'Rating minimo (1-5)' },
       { campo: 'rating_max', tipo: 'number', placeholder: 'Rating massimo (1-5)' },
       { campo: 'has_images', tipo: 'checkbox', placeholder: 'Ha immagini' },
-      { campo: 'has_reports', tipo: 'checkbox', placeholder: 'Ha segnalazioni' }
+      { campo: 'has_reports', tipo: 'checkbox', placeholder: 'Ha segnalazioni' },
       { campo: 'Note', tipo: 'textarea', placeholder: 'Note aggiuntive' }
     ],
     'Posizione Geografica': [

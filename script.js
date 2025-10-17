@@ -5098,11 +5098,9 @@ function mostraSchedaCompleta(strutturaId) {
       ],
       'Caratteristiche Struttura': [
         'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi'
+        'Hike', 'Trasporti'
       ],
-      'Attività e Servizi': [
-        'Escursioni', 'Trasporti'
-      ],
-      'Gruppi Scout': [
+      'Adatto per': [
         'Branco', 'Reparto', 'Compagnia'
       ],
       'Contatti': [
@@ -5112,7 +5110,7 @@ function mostraSchedaCompleta(strutturaId) {
         'coordinate_lat', 'coordinate_lng', 'google_maps_link'
       ],
       'Gestione': [
-        'Ultimo controllo'
+        'Ultimo controllo', 'stato'
       ],
       'Valutazioni': [
         'rating'
@@ -5162,6 +5160,7 @@ function mostraSchedaCompleta(strutturaId) {
           const isWebsiteField = campo === 'Sito';
           const isEmailField = campo === 'Email';
           const isPhoneField = ['Contatto', 'IIcontatto'].includes(campo);
+          const isStateField = campo === 'stato';
           
           if (isCheckboxField) {
             // Campo checkbox
@@ -5178,6 +5177,39 @@ function mostraSchedaCompleta(strutturaId) {
             
             campoDiv.appendChild(label);
             campoDiv.appendChild(input);
+          } else if (isStateField) {
+            // Campo select per stato
+            const select = document.createElement('select');
+            select.style.cssText = `
+              width: 100%;
+              padding: 8px;
+              border: 1px solid #ced4da;
+              border-radius: 4px;
+              background: white;
+            `;
+            
+            const options = [
+              { value: 'attiva', text: '🟢 Attiva' },
+              { value: 'temporaneamente_non_attiva', text: '🟡 Temporaneamente non attiva' },
+              { value: 'non_piu_attiva', text: '🔴 Non più attiva' }
+            ];
+            
+            options.forEach(option => {
+              const optionElement = document.createElement('option');
+              optionElement.value = option.value;
+              optionElement.textContent = option.text;
+              if (struttura[campo] === option.value) {
+                optionElement.selected = true;
+              }
+              select.appendChild(optionElement);
+            });
+            
+            select.onchange = (e) => {
+              struttura[campo] = e.target.value;
+            };
+            
+            campoDiv.appendChild(label);
+            campoDiv.appendChild(select);
           } else if (isGeoField) {
             // Campo numerico per coordinate
             const input = document.createElement('input');
@@ -5459,6 +5491,65 @@ function mostraSchedaCompleta(strutturaId) {
             ratingDiv.appendChild(ratingInfo);
             
             campoDiv.appendChild(ratingDiv);
+          } else if (campo === 'stato') {
+            // Gestione speciale per lo stato
+            const statoDiv = document.createElement('div');
+            statoDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const statoLabel = document.createElement('strong');
+            statoLabel.textContent = 'Stato: ';
+            statoLabel.style.color = '#495057';
+            
+            const statoValue = document.createElement('span');
+            const stato = struttura[campo];
+            
+            if (stato) {
+              let statoText = '';
+              let statoColor = '';
+              
+              switch (stato) {
+                case 'attiva':
+                  statoText = '🟢 Attiva';
+                  statoColor = '#28a745';
+                  break;
+                case 'temporaneamente_non_attiva':
+                  statoText = '🟡 Temporaneamente non attiva';
+                  statoColor = '#ffc107';
+                  break;
+                case 'non_piu_attiva':
+                  statoText = '🔴 Non più attiva';
+                  statoColor = '#dc3545';
+                  break;
+                default:
+                  statoText = '❓ Stato sconosciuto';
+                  statoColor = '#6c757d';
+              }
+              
+              statoValue.textContent = statoText;
+              statoValue.style.cssText = `
+                color: ${statoColor};
+                font-weight: 500;
+                padding: 4px 8px;
+                background: ${statoColor}20;
+                border-radius: 4px;
+                border: 1px solid ${statoColor};
+              `;
+            } else {
+              statoValue.textContent = 'Non specificato';
+              statoValue.style.cssText = `
+                color: #6c757d;
+                font-style: italic;
+              `;
+            }
+            
+            statoDiv.appendChild(statoLabel);
+            statoDiv.appendChild(statoValue);
+            campoDiv.appendChild(statoDiv);
           } else if (campo === 'google_maps_link') {
             // Gestione speciale per il link Google Maps
             const linkDiv = document.createElement('div');

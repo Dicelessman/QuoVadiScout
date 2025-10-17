@@ -544,8 +544,8 @@ function mostraRicercaAvanzata() {
     ],
     'Prezzi e Offerte': [
       { campo: '€ notte', tipo: 'text', placeholder: 'Prezzo per notte' },
-      { campo: 'Offerta', tipo: 'text', placeholder: 'Offerte speciali' },
-      { campo: 'Forfait', tipo: 'text', placeholder: 'Pacchetti forfait' }
+      { campo: 'Offerta', tipo: 'text', placeholder: 'Basta fare una offerta' },
+      { campo: 'Forfait', tipo: 'text', placeholder: 'Chiedono un forfait' }
     ],
     'Caratteristiche Struttura': [
       { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
@@ -565,16 +565,13 @@ function mostraRicercaAvanzata() {
     'Contatti': [
       { campo: 'Referente', tipo: 'text', placeholder: 'Nome del referente' },
       { campo: 'Email', tipo: 'email', placeholder: 'Indirizzo email' },
-      { campo: 'Sito', tipo: 'url', placeholder: 'Sito web' },
-      { campo: 'Contatto', tipo: 'tel', placeholder: 'Numero di telefono' },
-      { campo: 'IIcontatto', tipo: 'tel', placeholder: 'Secondo contatto' }
+      { campo: 'Sito', tipo: 'url', placeholder: 'Sito web o facebook' },
+      { campo: 'Contatto', tipo: 'tel', placeholder: 'Numero di telefono principale' },
+      { campo: 'IIcontatto', tipo: 'tel', placeholder: 'Contatto secondario' }
     ],
     'Gestione': [
       { campo: 'Ultimo controllo', tipo: 'date', placeholder: 'Data ultimo controllo' },
-      { campo: 'Note', tipo: 'textarea', placeholder: 'Note aggiuntive' }
-    ],
-    'Stato e Valutazioni': [
-      { campo: 'stato', tipo: 'select', placeholder: 'Stato struttura', options: [
+            { campo: 'stato', tipo: 'select', placeholder: 'Stato struttura', options: [
         { value: '', label: 'Tutti gli stati' },
         { value: 'attiva', label: '🟢 Attiva' },
         { value: 'temporaneamente_non_attiva', label: '🟡 Temporaneamente non attiva' },
@@ -584,6 +581,7 @@ function mostraRicercaAvanzata() {
       { campo: 'rating_max', tipo: 'number', placeholder: 'Rating massimo (1-5)' },
       { campo: 'has_images', tipo: 'checkbox', placeholder: 'Ha immagini' },
       { campo: 'has_reports', tipo: 'checkbox', placeholder: 'Ha segnalazioni' }
+      { campo: 'Note', tipo: 'textarea', placeholder: 'Note aggiuntive' }
     ],
     'Posizione Geografica': [
       { campo: 'coordinate_lat', tipo: 'number', placeholder: 'Latitudine' },

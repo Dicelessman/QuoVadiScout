@@ -385,6 +385,15 @@ class MediaManager {
       
     } catch (error) {
       console.error('❌ MediaManager: Errore recupero galleria:', error);
+      
+      // Utilizza il gestore errori centralizzato
+      if (window.errorHandler) {
+        const handled = await window.errorHandler.handleIndexedDBError(error, 'getGallery');
+        if (handled) {
+          console.log('✅ Errore gestito dal ErrorHandler');
+        }
+      }
+      
       return [];
     }
   }
@@ -474,11 +483,10 @@ class MediaManager {
   // Apre IndexedDB
   async openIndexedDB() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('QuoVadiScoutDB', 1);
+      const request = indexedDB.open('QuoVadiScoutDB', 2);
       
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
-      
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
         

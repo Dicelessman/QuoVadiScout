@@ -382,12 +382,19 @@ class MapsManager {
   }
 
   clearMarkers() {
-    this.markerCluster.clearLayers();
+    if (this.markerCluster) {
+      this.markerCluster.clearLayers();
+    }
     this.markers = [];
     console.log('🗑️ Marker rimossi dalla mappa');
   }
 
   async updateMarkers(strutture) {
+    if (!this.map) {
+      console.warn('⚠️ MapsManager: Mappa non inizializzata, salto aggiornamento marker');
+      return;
+    }
+    
     this.clearMarkers();
     
     // Processa ogni struttura per ottenere coordinate
@@ -705,7 +712,16 @@ window.initializeMap = async (containerId) => {
 };
 
 window.showStructuresOnMap = (strutture) => {
-  mapsManager.updateMarkers(strutture);
+  try {
+    mapsManager.updateMarkers(strutture);
+  } catch (error) {
+    console.error('❌ Errore aggiornamento marker mappa:', error);
+    
+    // Utilizza il gestore errori centralizzato
+    if (window.errorHandler) {
+      window.errorHandler.handleMapError(error, 'showStructuresOnMap');
+    }
+  }
 };
 
 window.centerMapOnUser = async () => {

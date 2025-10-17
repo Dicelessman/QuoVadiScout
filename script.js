@@ -4110,19 +4110,19 @@ function aggiornaUIUtente() {
     if (userIcon) userIcon.textContent = '👤';
     userBtn.title = `Utente: ${displayName} (${elencoPersonale.length} strutture) - Clicca per disconnetterti`;
     
-    // Aggiungi stile per utente autenticato
-    userBtn.style.background = '#28a745';
-    userBtn.style.color = 'white';
-    userBtn.style.borderColor = '#28a745';
+    // Rimuovi stili personalizzati per mantenere lo stile standard del menu
+    userBtn.style.background = '';
+    userBtn.style.color = '';
+    userBtn.style.borderColor = '';
   } else {
     if (userName) userName.textContent = 'Accedi';
     if (userIcon) userIcon.textContent = '🔑';
     userBtn.title = 'Accedi o registrati';
     
-    // Stile per utente non autenticato
-    userBtn.style.background = 'white';
-    userBtn.style.color = '#6c757d';
-    userBtn.style.borderColor = '#6c757d';
+    // Rimuovi stili personalizzati per mantenere lo stile standard del menu
+    userBtn.style.background = '';
+    userBtn.style.color = '';
+    userBtn.style.borderColor = '';
   }
 }
 

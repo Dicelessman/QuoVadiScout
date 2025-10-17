@@ -281,7 +281,7 @@ class MapsManager {
   }
 
   createStructureIcon(struttura) {
-    let iconHtml = '🏕️';
+    let iconHtml = '<i class="fas fa-campground"></i>';
     let iconColor = '#2f6b2f';
 
     // Colore basato sullo stato
@@ -295,11 +295,11 @@ class MapsManager {
 
     // Icona basata sul tipo
     if (struttura.Casa && struttura.Terreno) {
-      iconHtml = '🏘️';
+      iconHtml = '<i class="fas fa-building"></i>';
     } else if (struttura.Casa) {
-      iconHtml = '🏠';
+      iconHtml = '<i class="fas fa-home"></i>';
     } else if (struttura.Terreno) {
-      iconHtml = '🌱';
+      iconHtml = '<i class="fas fa-seedling"></i>';
     }
 
     return L.divIcon({

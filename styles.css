@@ -521,6 +521,67 @@ body {
   text-align: center;
 }
 
+/* Supporto per Font Awesome icons */
+.menu-icon i {
+  font-size: inherit;
+  width: 1em;
+  text-align: center;
+  display: inline-block;
+}
+
+/* Icone personalizzate */
+.custom-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+}
+
+.custom-icon i {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icone per stati */
+.icon-active {
+  color: #28a745;
+}
+
+.icon-inactive {
+  color: #ffc107;
+}
+
+.icon-closed {
+  color: #dc3545;
+}
+
+/* Icone per tipi strutture */
+.icon-house {
+  color: #2f6b2f;
+}
+
+.icon-land {
+  color: #28a745;
+}
+
+.icon-both {
+  color: #6f42c1;
+}
+
+/* Animazioni per icone */
+.menu-icon i.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .menu-label {
   flex: 1;
 }

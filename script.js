@@ -8089,14 +8089,14 @@ async function caricaAttivita() {
 
 function getAttivitaIcona(action) {
   const icone = {
-    'structure_created': '➕',
-    'structure_updated': '✏️',
-    'structure_deleted': '🗑️',
-    'note_created': '📝',
-    'note_deleted': '🗑️',
-    'filter_saved': '💾'
+    'structure_created': '<i class="fas fa-plus-circle"></i>',
+    'structure_updated': '<i class="fas fa-edit"></i>',
+    'structure_deleted': '<i class="fas fa-trash"></i>',
+    'note_created': '<i class="fas fa-sticky-note"></i>',
+    'note_deleted': '<i class="fas fa-trash"></i>',
+    'filter_saved': '<i class="fas fa-bookmark"></i>'
   };
-  return icone[action] || '📋';
+  return icone[action] || '<i class="fas fa-list"></i>';
 }
 
 function getAttivitaDescrizione(attivita) {

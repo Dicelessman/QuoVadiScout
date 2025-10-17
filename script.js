@@ -551,13 +551,11 @@ function mostraRicercaAvanzata() {
       { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
       { campo: 'Casa', tipo: 'checkbox', placeholder: 'Disponibile casa' },
       { campo: 'Letti', tipo: 'text', placeholder: 'Numero di letti' },
-      { campo: 'Cucina', tipo: 'text', placeholder: 'Tipo di cucina' },
-      { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili' },
-      { campo: 'Fuochi', tipo: 'text', placeholder: 'Disponibilità fuochi' }
-    ],
-    'Attività e Servizi': [
-      { campo: 'Escursioni', tipo: 'text', placeholder: 'Escursioni disponibili' },
-      { campo: 'Trasporti', tipo: 'text', placeholder: 'Servizi di trasporto' }
+      { campo: 'Cucina', tipo: 'text', placeholder: 'è presente una cucina e di che tipo' },
+      { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili per attività' },
+      { campo: 'Fuochi', tipo: 'text', placeholder: 'Si possono fare fuochi' }
+      { campo: 'Hike', tipo: 'text', placeholder: 'Hike disponibili nelle vicinanze' },
+      { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' }
     ],
     'Adatto per': [
       { campo: 'Branco', tipo: 'checkbox', placeholder: 'Adatto per branco' },

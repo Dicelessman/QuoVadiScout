@@ -5097,7 +5097,7 @@ function mostraSchedaCompleta(strutturaId) {
         '€ notte', 'Offerta', 'Forfait'
       ],
       'Caratteristiche Struttura': [
-        'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi'
+        'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
         'Hike', 'Trasporti'
       ],
       'Adatto per': [

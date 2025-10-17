@@ -553,7 +553,7 @@ function mostraRicercaAvanzata() {
       { campo: 'Letti', tipo: 'text', placeholder: 'Numero di letti' },
       { campo: 'Cucina', tipo: 'text', placeholder: 'è presente una cucina e di che tipo' },
       { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili per attività' },
-      { campo: 'Fuochi', tipo: 'text', placeholder: 'Si possono fare fuochi' }
+      { campo: 'Fuochi', tipo: 'text', placeholder: 'Si possono fare fuochi' },
       { campo: 'Hike', tipo: 'text', placeholder: 'Hike disponibili nelle vicinanze' },
       { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' }
     ],

@@ -1589,6 +1589,277 @@ async function aggiungiStruttura() {
   mostraSchedaCompleta(nuovaStruttura.id);
 }
 
+// === Sezione Aiuto ===
+function mostraAiuto() {
+  console.log('📚 Apertura sezione Aiuto...');
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('aiutoModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'aiutoModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95%;
+    max-height: 95%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 320px;
+    width: 100%;
+  `;
+  
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2f6b2f;">
+      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">📚 Guida Rapida</h2>
+      <button onclick="this.closest('#aiutoModal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+    </div>
+    
+    <div style="line-height: 1.6; color: #333;">
+      <h3 style="color: #2f6b2f; margin-top: 20px;">🔍 Come Cercare Strutture</h3>
+      <ul>
+        <li><strong>Ricerca Base:</strong> Digita nella barra di ricerca per nome, luogo o informazioni</li>
+        <li><strong>Ricerca Avanzata:</strong> Usa i filtri dettagliati per criteri specifici</li>
+        <li><strong>Filtri:</strong> Filtra per provincia, tipo (casa/terreno), stato</li>
+        <li><strong>Mappa:</strong> Visualizza strutture su mappa interattiva</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">📋 Elenco Personale</h3>
+      <ul>
+        <li><strong>Aggiungere:</strong> Tocca l'icona ➕ sulla scheda struttura</li>
+        <li><strong>Gestire:</strong> Accedi dal menu "Le Mie Liste"</li>
+        <li><strong>Esportare:</strong> Scarica in Excel o PDF</li>
+        <li><strong>Note:</strong> Aggiungi note personali a ogni struttura</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">➕ Aggiungere Strutture</h3>
+      <ul>
+        <li><strong>Nuova Struttura:</strong> Menu → "Aggiungi Struttura"</li>
+        <li><strong>Modificare:</strong> Tocca l'icona ✏️ sulla scheda</li>
+        <li><strong>Eliminare:</strong> Apri struttura → icona cestino</li>
+        <li><strong>Coordinate:</strong> Aggiungi GPS per navigazione</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">🗺️ Mappa e Navigazione</h3>
+      <ul>
+        <li><strong>Visualizzare:</strong> Menu → "Visualizza Mappa"</li>
+        <li><strong>Navigare:</strong> Tocca "Naviga" su una struttura</li>
+        <li><strong>Vicinanza:</strong> Trova strutture vicine alla tua posizione</li>
+        <li><strong>Filtri Mappa:</strong> Mostra solo case, terreni o entrambi</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">📤 Esportazione Dati</h3>
+      <ul>
+        <li><strong>Formati:</strong> Excel, PDF, JSON</li>
+        <li><strong>Opzioni:</strong> Elenco personale, risultati filtrati, tutto</li>
+        <li><strong>Layout:</strong> Completo, compatto, solo contatti</li>
+        <li><strong>Accesso:</strong> Menu → "Esporta Dati"</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">⚙️ Impostazioni</h3>
+      <ul>
+        <li><strong>Tema:</strong> Cambia tra chiaro e scuro</li>
+        <li><strong>Notifiche:</strong> Configura avvisi personalizzati</li>
+        <li><strong>Account:</strong> Login per sincronizzazione</li>
+        <li><strong>Backup:</strong> Gestisci salvataggi automatici</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">🔧 Risoluzione Problemi</h3>
+      <ul>
+        <li><strong>App non carica:</strong> Ricarica la pagina (F5)</li>
+        <li><strong>Dati non aggiornano:</strong> Menu → "Sincronizza"</li>
+        <li><strong>Mappa non funziona:</strong> Attiva geolocalizzazione</li>
+        <li><strong>Test sistema:</strong> Menu → "Test Sistemi"</li>
+      </ul>
+      
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
+        <h4 style="margin: 0 0 10px 0; color: #2f6b2f;">💡 Suggerimenti</h4>
+        <ul style="margin: 0;">
+          <li>Usa i <strong>filtri salvati</strong> per ricerche frequenti</li>
+          <li>Attiva le <strong>notifiche</strong> per non perdere aggiornamenti</li>
+          <li>Esporta regolarmente i tuoi <strong>dati personali</strong></li>
+          <li>Usa la <strong>mappa</strong> per pianificare itinerari</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div style="display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+      <button onclick="this.closest('#aiutoModal').remove()" style="background: #2f6b2f; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+        Chiudi
+      </button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+}
+
+// === Sezione About ===
+function mostraAbout() {
+  console.log('ℹ️ Apertura sezione About...');
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('aboutModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'aboutModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95%;
+    max-height: 95%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 320px;
+    width: 100%;
+  `;
+  
+  modalContent.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2f6b2f;">
+      <h2 style="margin: 0; color: #2f6b2f; font-size: 1.5rem;">ℹ️ Informazioni</h2>
+      <button onclick="this.closest('#aboutModal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+    </div>
+    
+    <div style="line-height: 1.6; color: #333;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <div style="font-size: 48px; margin-bottom: 10px;">🏕️</div>
+        <h3 style="color: #2f6b2f; margin: 0;">QuoVadiScout</h3>
+        <p style="margin: 5px 0; color: #666;">Sistema avanzato per la gestione di strutture e terreni scout</p>
+        <p style="margin: 5px 0; color: #888; font-size: 14px;">Versione 1.3.0</p>
+      </div>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">🚀 Funzionalità Principali</h3>
+      <ul>
+        <li><strong>Database Strutture:</strong> Gestione completa di case e terreni scout</li>
+        <li><strong>Ricerca Avanzata:</strong> Filtri multipli e ricerca intelligente</li>
+        <li><strong>Mappa Interattiva:</strong> Visualizzazione geografica e navigazione</li>
+        <li><strong>Elenco Personale:</strong> Strutture preferite con note personali</li>
+        <li><strong>Esportazione:</strong> Excel, PDF e formati multipli</li>
+        <li><strong>Notifiche:</strong> Avvisi intelligenti e personalizzati</li>
+        <li><strong>Sincronizzazione:</strong> Dati sempre aggiornati tra dispositivi</li>
+        <li><strong>Modalità Offline:</strong> Funziona anche senza connessione</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">👨‍💻 Sviluppatore</h3>
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <p style="margin: 0 0 10px 0;"><strong>Davide Rossi</strong></p>
+        <p style="margin: 0 0 15px 0; color: #666;">Sviluppatore e mantainer del progetto QuoVadiScout</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="https://wa.me/393888182045" target="_blank" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #25D366; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">
+            <span style="font-size: 20px;">📱</span>
+            <span>WhatsApp: 388 818 2045</span>
+          </a>
+          
+          <a href="mailto:davide.rossi@cngei.it" style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">
+            <span style="font-size: 20px;">📧</span>
+            <span>Email: davide.rossi@cngei.it</span>
+          </a>
+        </div>
+      </div>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">🛠️ Tecnologie</h3>
+      <ul>
+        <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript ES6+</li>
+        <li><strong>Database:</strong> Firebase Firestore</li>
+        <li><strong>Mappe:</strong> Leaflet + OpenStreetMap</li>
+        <li><strong>PWA:</strong> Service Worker, Manifest</li>
+        <li><strong>Esportazione:</strong> SheetJS, jsPDF</li>
+        <li><strong>Notifiche:</strong> Web Push API</li>
+      </ul>
+      
+      <h3 style="color: #2f6b2f; margin-top: 20px;">📊 Statistiche</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0;">
+        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalStructuresAbout">-</div>
+          <div style="font-size: 12px; color: #666;">Strutture Totali</div>
+        </div>
+        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalUsersAbout">-</div>
+          <div style="font-size: 12px; color: #666;">Utenti Attivi</div>
+        </div>
+        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+          <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalExportsAbout">-</div>
+          <div style="font-size: 12px; color: #666;">Esportazioni</div>
+        </div>
+      </div>
+      
+      <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
+        <h4 style="margin: 0 0 10px 0; color: #2f6b2f;">💡 Supporto e Feedback</h4>
+        <p style="margin: 0; font-size: 14px;">
+          Hai domande, suggerimenti o hai trovato un bug? Non esitare a contattarmi! 
+          Il tuo feedback è fondamentale per migliorare l'app.
+        </p>
+      </div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+      <button onclick="mostraAiuto()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+        📚 Guida
+      </button>
+      <button onclick="this.closest('#aboutModal').remove()" style="background: #2f6b2f; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+        Chiudi
+      </button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Carica statistiche
+  setTimeout(() => {
+    const totalStructures = strutture ? strutture.length : 0;
+    const totalUsers = localStorage.getItem('totalUsers') || 'N/A';
+    const totalExports = localStorage.getItem('totalExports') || '0';
+    
+    const totalStructuresEl = document.getElementById('totalStructuresAbout');
+    const totalUsersEl = document.getElementById('totalUsersAbout');
+    const totalExportsEl = document.getElementById('totalExportsAbout');
+    
+    if (totalStructuresEl) totalStructuresEl.textContent = totalStructures;
+    if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+    if (totalExportsEl) totalExportsEl.textContent = totalExports;
+  }, 100);
+}
+
 // === Sistema di Versioning e Activity Log ===
 async function salvaVersione(struttura, userId) {
   try {

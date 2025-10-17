@@ -34,6 +34,9 @@
         <h1 class="app-title">🏕️ QuoVadiScout </h1>
       </div>
       <div class="header-actions">
+        <button class="btn-help" onclick="mostraAiuto()" aria-label="Guida rapida" title="Guida rapida">
+          <i class="fas fa-question-circle"></i>
+        </button>
         <button id="menuToggle" class="btn-menu" aria-label="Menu principale">
           <span class="hamburger"></span>
         </button>
@@ -170,6 +173,21 @@
              <span class="menu-icon"><i class="fas fa-flask"></i></span>
              <span class="menu-label">Test Sistemi</span>
            </button>
+        </div>
+      </section>
+
+      <!-- Help & Support -->
+      <section class="menu-section">
+        <h3 class="menu-section-title">🆘 Aiuto & Supporto</h3>
+        <div class="menu-items">
+          <button class="menu-item" onclick="mostraAiuto()">
+            <span class="menu-icon"><i class="fas fa-question-circle"></i></span>
+            <span class="menu-label">Guida Rapida</span>
+          </button>
+          <button class="menu-item" onclick="mostraAbout()">
+            <span class="menu-icon"><i class="fas fa-info-circle"></i></span>
+            <span class="menu-label">Informazioni App</span>
+          </button>
         </div>
       </section>
     </div>

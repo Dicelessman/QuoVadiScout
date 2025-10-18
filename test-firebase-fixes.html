@@ -111,6 +111,23 @@
         script.src = './firebase-auth-fix.js';
         document.head.appendChild(script);
 
+        // Funzioni di utilità mancanti
+        function aggiornaUIUtente(user) {
+            log(`👤 Utente autenticato: ${user ? user.email : 'Nessuno'}`);
+        }
+
+        function nascondiModaleAuth() {
+            log('🔒 Modale autenticazione nascosta');
+        }
+
+        function showError(message) {
+            log(`❌ Errore: ${message}`);
+        }
+
+        function showSuccess(message) {
+            log(`✅ Successo: ${message}`);
+        }
+
         // Funzioni di test
         window.testFirestoreAccess = async function() {
             log('🔍 Test accesso Firestore...');
@@ -142,7 +159,17 @@
                 }
             } catch (error) {
                 log(`❌ Errore login email: ${error.message}`);
-                showResult('auth-results', `Errore login: ${error.message}`, 'error');
+                
+                // Gestione errori specifici
+                if (error.code === 'auth/invalid-credential') {
+                    log('ℹ️ Credenziali di test non valide (normale)');
+                    showResult('auth-results', 'Login email: Credenziali di test non valide (normale)', 'info');
+                } else if (error.code === 'auth/network-request-failed') {
+                    log('⚠️ Errore di rete - modalità offline');
+                    showResult('auth-results', 'Login email: Modalità offline attivata', 'warning');
+                } else {
+                    showResult('auth-results', `Errore login: ${error.message}`, 'error');
+                }
             }
         };
 

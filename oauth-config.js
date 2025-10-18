@@ -215,17 +215,19 @@ const OAuthConfig = {
       }
       
       // Verifica configurazione Firebase
-      if (!this.firebase.authDomain) {
+      if (!this.firebase || !this.firebase.authDomain) {
         errors.push('Auth domain Firebase non configurato');
       }
       
       // Verifica provider in Firebase
-      const missingProviders = enabledProviders.filter(p => 
-        !this.firebase.enabledProviders || !this.firebase.enabledProviders.includes(`${p.name}.com`)
-      );
-      
-      if (missingProviders.length > 0) {
-        errors.push(`Provider non configurati in Firebase: ${missingProviders.map(p => p.name).join(', ')}`);
+      if (this.firebase && this.firebase.enabledProviders) {
+        const missingProviders = enabledProviders.filter(p => 
+          !this.firebase.enabledProviders.includes(`${p.name}.com`)
+        );
+        
+        if (missingProviders.length > 0) {
+          errors.push(`Provider non configurati in Firebase: ${missingProviders.map(p => p.name).join(', ')}`);
+        }
       }
       
       return {
@@ -245,7 +247,7 @@ if (!validation.valid) {
   console.warn('⚠️ Configurazione OAuth non valida:', validation.errors);
 } else {
   console.log('✅ Configurazione OAuth valida');
-  console.log(`📋 Provider abilitati: ${OAuthConfig.getEnabledProviders().map(p => p.name).join(', ')}`);
+  console.log(`📋 Provider abilitati: ${OAuthConfig.utils.getEnabledProviders().map(p => p.name).join(', ')}`);
 }
 
 // Esponi configurazione globalmente

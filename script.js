@@ -3951,10 +3951,15 @@ async function loginWithEmail(email, password) {
     showLoading(true);
     hideError();
     
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('✅ Login riuscito:', userCredential.user.email);
-    
-    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    // Usa la versione corretta se disponibile
+    if (window.loginWithEmailFixed) {
+      await window.loginWithEmailFixed(email, password);
+    } else {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('✅ Login riuscito:', userCredential.user.email);
+      
+      // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    }
     
   } catch (error) {
     console.error('❌ Errore login:', error);
@@ -3973,6 +3978,11 @@ async function loginWithEmail(email, password) {
       case 'auth/too-many-requests':
         errorMessage = '❌ Troppi tentativi, riprova più tardi';
         break;
+      case 'auth/network-request-failed':
+        errorMessage = '❌ Errore di rete. Verifica la connessione.';
+        break;
+      default:
+        errorMessage = `❌ ${error.message}`;
     }
     
     showError(errorMessage);
@@ -3986,16 +3996,21 @@ async function registerWithEmail(nome, email, password) {
     showLoading(true);
     hideError();
     
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Aggiorna il profilo con il nome
-    await userCredential.user.updateProfile({
-      displayName: nome
-    });
-    
-    console.log('✅ Registrazione riuscita:', userCredential.user.email);
-    
-    // Il profilo verrà creato automaticamente in caricaProfiloUtente
+    // Usa la versione corretta se disponibile
+    if (window.registerWithEmailFixed) {
+      await window.registerWithEmailFixed(nome, email, password);
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Aggiorna il profilo con il nome
+      await userCredential.user.updateProfile({
+        displayName: nome
+      });
+      
+      console.log('✅ Registrazione riuscita:', userCredential.user.email);
+      
+      // Il profilo verrà creato automaticamente in caricaProfiloUtente
+    }
     
   } catch (error) {
     console.error('❌ Errore registrazione:', error);
@@ -4011,6 +4026,11 @@ async function registerWithEmail(nome, email, password) {
       case 'auth/invalid-email':
         errorMessage = '❌ Email non valida';
         break;
+      case 'auth/network-request-failed':
+        errorMessage = '❌ Errore di rete. Verifica la connessione.';
+        break;
+      default:
+        errorMessage = `❌ ${error.message}`;
     }
     
     showError(errorMessage);
@@ -4025,19 +4045,26 @@ async function loginWithGoogle() {
     showLoading(true);
     hideError();
     
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log('✅ Login Google riuscito:', result.user.email);
-    
-    // Salva informazioni provider
-    await salvaProviderInfo(result.user, 'google');
-    
-    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    // Usa la versione corretta se disponibile
+    if (window.loginWithGoogleFixed) {
+      await window.loginWithGoogleFixed();
+    } else {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log('✅ Login Google riuscito:', result.user.email);
+      
+      // Salva informazioni provider
+      await salvaProviderInfo(result.user, 'google');
+      
+      // La UI si aggiornerà automaticamente tramite onAuthStateChanged
+    }
     
   } catch (error) {
     console.error('❌ Errore login Google:', error);
     
     if (error.code === 'auth/popup-closed-by-user') {
       showError('❌ Login annullato');
+    } else if (error.code === 'auth/network-request-failed') {
+      showError('❌ Errore di rete. Verifica la connessione.');
     } else {
       showError('❌ Errore durante il login con Google');
     }
@@ -4051,16 +4078,23 @@ async function loginWithGithub() {
     showLoading(true);
     hideError();
     
-    const result = await signInWithPopup(auth, githubProvider);
-    console.log('✅ Login GitHub riuscito:', result.user.email);
-    
-    await salvaProviderInfo(result.user, 'github');
+    // Usa la versione corretta se disponibile
+    if (window.loginWithGithubFixed) {
+      await window.loginWithGithubFixed();
+    } else {
+      const result = await signInWithPopup(auth, githubProvider);
+      console.log('✅ Login GitHub riuscito:', result.user.email);
+      
+      await salvaProviderInfo(result.user, 'github');
+    }
     
   } catch (error) {
     console.error('❌ Errore login GitHub:', error);
     
     if (error.code === 'auth/popup-closed-by-user') {
       showError('❌ Login annullato');
+    } else if (error.code === 'auth/network-request-failed') {
+      showError('❌ Errore di rete. Verifica la connessione.');
     } else {
       showError('❌ Errore durante il login con GitHub');
     }

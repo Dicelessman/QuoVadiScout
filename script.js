@@ -55,6 +55,17 @@ const auth = getAuth(app);
 window.db = db;
 window.auth = auth;
 
+// Esponi funzioni Firebase Auth globalmente per firebase-auth-fix.js
+window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+window.signOut = signOut;
+window.signInWithPopup = signInWithPopup;
+window.GoogleAuthProvider = GoogleAuthProvider;
+window.GithubAuthProvider = GithubAuthProvider;
+window.FacebookAuthProvider = FacebookAuthProvider;
+window.TwitterAuthProvider = TwitterAuthProvider;
+window.OAuthProvider = OAuthProvider;
+
 // === Provider OAuth ===
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();

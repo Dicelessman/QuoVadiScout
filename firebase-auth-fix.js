@@ -62,7 +62,8 @@ async function loginWithEmailFixed(email, password) {
   try {
     console.log('🔐 Tentativo login email:', email);
     
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Usa le funzioni Firebase già disponibili globalmente
+    const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
     console.log('✅ Login email riuscito:', userCredential.user.uid);
     
     // Aggiorna UI
@@ -85,11 +86,12 @@ async function loginWithGoogleFixed() {
   try {
     console.log('🔐 Tentativo login Google');
     
-    const provider = new GoogleAuthProvider();
+    // Usa le funzioni Firebase già disponibili globalmente
+    const provider = new window.GoogleAuthProvider();
     provider.addScope('email');
     provider.addScope('profile');
     
-    const result = await signInWithPopup(auth, provider);
+    const result = await window.signInWithPopup(window.auth, provider);
     console.log('✅ Login Google riuscito:', result.user.uid);
     
     // Aggiorna UI
@@ -112,10 +114,11 @@ async function loginWithGithubFixed() {
   try {
     console.log('🔐 Tentativo login GitHub');
     
-    const provider = new GithubAuthProvider();
+    // Usa le funzioni Firebase già disponibili globalmente
+    const provider = new window.GithubAuthProvider();
     provider.addScope('user:email');
     
-    const result = await signInWithPopup(auth, provider);
+    const result = await window.signInWithPopup(window.auth, provider);
     console.log('✅ Login GitHub riuscito:', result.user.uid);
     
     // Aggiorna UI
@@ -135,12 +138,20 @@ async function loginWithGithubFixed() {
 }
 
 // === FUNZIONI REGISTRAZIONE CORRETTE ===
-async function registerWithEmailFixed(email, password) {
+async function registerWithEmailFixed(nome, email, password) {
   try {
     console.log('🔐 Tentativo registrazione email:', email);
     
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Usa le funzioni Firebase già disponibili globalmente
+    const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
     console.log('✅ Registrazione email riuscita:', userCredential.user.uid);
+    
+    // Aggiorna il profilo con il nome
+    if (nome && nome.trim() !== '') {
+      await userCredential.user.updateProfile({
+        displayName: nome.trim()
+      });
+    }
     
     // Aggiorna UI
     aggiornaUIUtente(userCredential.user);
@@ -161,7 +172,8 @@ async function registerWithEmailFixed(email, password) {
 // === GESTIONE LOGOUT ===
 async function logoutUserFixed() {
   try {
-    await signOut(auth);
+    // Usa le funzioni Firebase già disponibili globalmente
+    await window.signOut(window.auth);
     console.log('✅ Logout effettuato');
     
     // Aggiorna UI

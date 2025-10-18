@@ -18,8 +18,8 @@ service cloud.firestore {
     
     // Collection: strutture
     match /strutture/{structureId} {
-      // Lettura: solo autenticati
-      allow read: if isAuthenticated();
+      // Lettura: tutti (pubblico)
+      allow read: if true;
       
       // Creazione: solo autenticati, con validazione dati
       allow create: if isAuthenticated() 

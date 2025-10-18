@@ -3977,6 +3977,10 @@ async function loginWithEmail(email, password) {
     let errorMessage = 'Errore durante il login';
     
     switch (error.code) {
+      case 'auth/network-request-failed':
+        errorMessage = '⚠️ Errore di rete. Modalità offline attivata.';
+        console.warn('🔄 Continuando in modalità offline...');
+        break;
       case 'auth/user-not-found':
         errorMessage = '❌ Utente non trovato';
         break;
@@ -3988,9 +3992,6 @@ async function loginWithEmail(email, password) {
         break;
       case 'auth/too-many-requests':
         errorMessage = '❌ Troppi tentativi, riprova più tardi';
-        break;
-      case 'auth/network-request-failed':
-        errorMessage = '❌ Errore di rete. Verifica la connessione.';
         break;
       default:
         errorMessage = `❌ ${error.message}`;
@@ -4073,9 +4074,11 @@ async function loginWithGoogle() {
     console.error('❌ Errore login Google:', error);
     
     if (error.code === 'auth/popup-closed-by-user') {
-      showError('❌ Login annullato');
+      console.log('ℹ️ Login Google annullato dall\'utente');
+      return; // Non mostrare errore per chiusura volontaria
     } else if (error.code === 'auth/network-request-failed') {
-      showError('❌ Errore di rete. Verifica la connessione.');
+      console.warn('⚠️ OAuth non disponibile - modalità offline');
+      showError('⚠️ OAuth non disponibile. Usa login email o continua senza autenticazione.');
     } else {
       showError('❌ Errore durante il login con Google');
     }

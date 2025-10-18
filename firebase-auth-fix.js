@@ -8,13 +8,26 @@ const AUTHORIZED_DOMAINS = [
   'localhost',
   '127.0.0.1',
   'dicelessman.github.io',
-  'quovadiscout.firebaseapp.com'
+  'quovadiscout.firebaseapp.com',
+  'file://' // Per sviluppo locale con file://
 ];
 
 // === HELPER FUNCTIONS ===
 function isDomainAuthorized() {
   const currentDomain = window.location.hostname;
-  return AUTHORIZED_DOMAINS.includes(currentDomain);
+  const currentOrigin = window.location.origin;
+  
+  // Controlla hostname
+  if (AUTHORIZED_DOMAINS.includes(currentDomain)) {
+    return true;
+  }
+  
+  // Controlla origin per file://
+  if (currentOrigin.startsWith('file://')) {
+    return true;
+  }
+  
+  return false;
 }
 
 function getAuthDomain() {
@@ -45,13 +58,20 @@ function handleOAuthError(error) {
   console.error('❌ Errore OAuth:', error);
   
   if (error.code === 'auth/network-request-failed') {
-    showError('Errore di rete. Verifica la connessione e riprova.');
+    console.warn('⚠️ Errore di rete OAuth - modalità offline attivata');
+    showError('Modalità offline: OAuth non disponibile. Usa login email o continua senza autenticazione.');
     return;
   }
   
   if (error.message && error.message.includes('not authorized')) {
-    showError('Dominio non autorizzato per OAuth. Usa localhost per sviluppo.');
+    console.warn('⚠️ Dominio non autorizzato per OAuth');
+    showError('OAuth non disponibile su questo dominio. Usa login email o continua senza autenticazione.');
     return;
+  }
+  
+  if (error.code === 'auth/popup-closed-by-user') {
+    console.log('ℹ️ Popup OAuth chiuso dall\'utente');
+    return; // Non mostrare errore per chiusura volontaria
   }
   
   showError(`Errore autenticazione: ${error.message}`);
@@ -85,6 +105,11 @@ async function loginWithEmailFixed(email, password) {
 async function loginWithGoogleFixed() {
   try {
     console.log('🔐 Tentativo login Google');
+    
+    // Controlla se OAuth è disponibile
+    if (!isDomainAuthorized()) {
+      throw new Error('OAuth non disponibile su questo dominio');
+    }
     
     // Usa le funzioni Firebase già disponibili globalmente
     const provider = new window.GoogleAuthProvider();
@@ -249,6 +274,23 @@ function showSuccess(message) {
   }, 3000);
 }
 
+// === GESTIONE UI OAUTH ===
+function hideOAuthButtons() {
+  // Nascondi pulsanti OAuth se non disponibili
+  const googleBtn = document.getElementById('googleLogin');
+  const githubBtn = document.getElementById('githubLogin');
+  
+  if (googleBtn) {
+    googleBtn.style.display = 'none';
+    console.log('🔒 Pulsante Google OAuth nascosto');
+  }
+  
+  if (githubBtn) {
+    githubBtn.style.display = 'none';
+    console.log('🔒 Pulsante GitHub OAuth nascosto');
+  }
+}
+
 // === INIZIALIZZAZIONE ===
 function initFirebaseAuthFix() {
   console.log('🔧 Inizializzazione Firebase Auth Fix...');
@@ -257,6 +299,9 @@ function initFirebaseAuthFix() {
   if (!isDomainAuthorized()) {
     console.warn('⚠️ Dominio non autorizzato:', window.location.hostname);
     console.warn('💡 Per sviluppo locale, usa localhost:3000');
+    
+    // Nascondi pulsanti OAuth se non disponibili
+    hideOAuthButtons();
   }
   
   // Esponi funzioni corrette globalmente

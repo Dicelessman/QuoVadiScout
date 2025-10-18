@@ -171,8 +171,11 @@ const OAuthConfig = {
     
     // Ottieni provider abilitati
     getEnabledProviders: function() {
+      if (!this.providers || typeof this.providers !== 'object') {
+        return [];
+      }
       return Object.entries(this.providers)
-        .filter(([name, config]) => config.enabled)
+        .filter(([name, config]) => config && config.enabled)
         .map(([name, config]) => ({ name, ...config }));
     },
     
@@ -190,7 +193,7 @@ const OAuthConfig = {
     // Genera configurazione provider per Firebase
     getFirebaseProviderConfig: function(providerName) {
       const provider = this.getProvider(providerName);
-      if (!provider) return null;
+      if (!provider || !provider.scopes) return null;
       
       return {
         providerId: `${providerName}.com`,
@@ -218,7 +221,7 @@ const OAuthConfig = {
       
       // Verifica provider in Firebase
       const missingProviders = enabledProviders.filter(p => 
-        !this.firebase.enabledProviders.includes(`${p.name}.com`)
+        !this.firebase.enabledProviders || !this.firebase.enabledProviders.includes(`${p.name}.com`)
       );
       
       if (missingProviders.length > 0) {

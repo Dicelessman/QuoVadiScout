@@ -124,17 +124,17 @@ class SecurityMonitor {
   }
 
   async checkAuthState() {
-    if (!auth.currentUser) {
+    if (!window.auth?.currentUser) {
       return; // Non autenticato, OK
     }
     
     // Verifica che l'utente sia veramente autenticato con Firebase
     try {
-      await auth.currentUser.getIdToken(true);
+      await window.auth.currentUser.getIdToken(true);
     } catch (error) {
       this.logSuspiciousActivity('invalid_auth_state', {
         error: error.message,
-        userId: auth.currentUser?.uid
+        userId: window.auth?.currentUser?.uid
       });
       console.error('🚨 Stato autenticazione non valido:', error);
       await this.forceLogout();
@@ -142,26 +142,26 @@ class SecurityMonitor {
   }
 
   async checkTokenValidity() {
-    if (!auth.currentUser) return;
+    if (!window.auth?.currentUser) return;
     
     try {
-      const token = await auth.currentUser.getIdToken();
+      const token = await window.auth.currentUser.getIdToken();
       const decoded = this.parseJWT(token);
       
       // Verifica scadenza
       if (decoded.exp * 1000 < Date.now()) {
         this.logSuspiciousActivity('expired_token_used', {
           expired: true,
-          userId: auth.currentUser.uid
+          userId: window.auth.currentUser.uid
         });
         await this.forceLogout();
       }
       
       // Verifica issuer
-      if (decoded.iss !== `https://securetoken.google.com/${firebaseConfig.projectId}`) {
+      if (typeof window.firebaseConfig !== 'undefined' && decoded.iss !== `https://securetoken.google.com/${window.firebaseConfig.projectId}`) {
         this.logSuspiciousActivity('invalid_token_issuer', {
           issuer: decoded.iss,
-          expected: `https://securetoken.google.com/${firebaseConfig.projectId}`
+          expected: `https://securetoken.google.com/${window.firebaseConfig.projectId}`
         });
         await this.forceLogout();
       }
@@ -247,7 +247,7 @@ class SecurityMonitor {
       type: type,
       details: details,
       timestamp: new Date().toISOString(),
-      userId: auth.currentUser?.uid || 'anonymous',
+      userId: window.auth?.currentUser?.uid || 'anonymous',
       userAgent: navigator.userAgent,
       url: window.location.href,
       referrer: document.referrer
@@ -265,10 +265,10 @@ class SecurityMonitor {
   async reportToBackend() {
     try {
       if (typeof db !== 'undefined') {
-        await db.collection('security_incidents').add({
+        await window.db.collection('security_incidents').add({
           activities: this.suspiciousActivity,
           reportedAt: new Date(),
-          userId: auth.currentUser?.uid || 'anonymous',
+          userId: window.auth?.currentUser?.uid || 'anonymous',
           severity: this.calculateSeverity()
         });
         
@@ -295,7 +295,7 @@ class SecurityMonitor {
   }
 
   isAuthenticatedUser() {
-    return auth.currentUser && auth.currentUser.uid;
+    return window.auth?.currentUser && window.auth.currentUser.uid;
   }
 
   isLegitimateChange() {
@@ -329,8 +329,8 @@ class SecurityMonitor {
       
       if (typeof logoutUser === 'function') {
         await logoutUser();
-      } else if (auth.currentUser) {
-        await auth.signOut();
+      } else if (window.auth?.currentUser) {
+        await window.auth.signOut();
       }
       
       if (typeof showError === 'function') {
@@ -389,7 +389,7 @@ class SecurityMonitor {
 
 // Inizializza monitor solo se Firebase è caricato
 function initSecurityMonitor() {
-  if (typeof auth !== 'undefined' && typeof db !== 'undefined') {
+  if (typeof window.auth !== 'undefined' && typeof window.db !== 'undefined' && window.auth && window.db) {
     window.securityMonitor = new SecurityMonitor();
     
     // Funzioni helper globali
@@ -416,7 +416,10 @@ function initSecurityMonitor() {
   }
 }
 
-// Avvia inizializzazione
-initSecurityMonitor();
+// Avvia inizializzazione dopo che il DOM è pronto
+document.addEventListener('DOMContentLoaded', () => {
+  // Aspetta che Firebase sia caricato
+  setTimeout(initSecurityMonitor, 1000);
+});
 
 console.log('🛡️ Security Monitor caricato');

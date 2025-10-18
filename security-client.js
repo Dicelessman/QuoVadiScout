@@ -16,13 +16,13 @@ class SecurityClient {
       return this.tokenCache;
     }
 
-    if (!auth.currentUser) {
+    if (!window.auth.currentUser) {
       throw new Error('Utente non autenticato');
     }
 
     try {
       // Ottieni nuovo token
-      const token = await auth.currentUser.getIdToken(true);
+      const token = await window.auth.currentUser.getIdToken(true);
       this.tokenCache = token;
       // Token valido per 55 minuti (scade dopo 1 ora)
       this.tokenExpiry = Date.now() + (55 * 60 * 1000);
@@ -192,7 +192,7 @@ class SecurityClient {
       
       if (typeof logoutUser === 'function') {
         await logoutUser();
-      } else if (auth.currentUser) {
+      } else if (window.auth.currentUser) {
         await auth.signOut();
       }
       
@@ -246,7 +246,7 @@ window.securityClient = new SecurityClient();
 
 // Validazione automatica ogni 10 minuti
 setInterval(async () => {
-  if (auth.currentUser) {
+  if (window.auth?.currentUser) {
     try {
       await window.securityClient.validateToken();
     } catch (error) {
@@ -256,13 +256,15 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 // Pulisci cache token quando l'utente fa logout
-if (typeof auth !== 'undefined') {
-  auth.onAuthStateChanged((user) => {
-    if (!user) {
-      window.securityClient.clearTokenCache();
-    }
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof window.auth !== 'undefined') {
+    window.auth.onAuthStateChanged((user) => {
+      if (!user) {
+        window.securityClient.clearTokenCache();
+      }
+    });
+  }
+});
 
 // Funzioni helper globali
 window.checkSecurityConnection = async function() {

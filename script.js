@@ -43,10 +43,17 @@ const firebaseConfig = {
   appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
 };
 
+// Esponi configurazione globalmente per i moduli di sicurezza
+window.firebaseConfig = firebaseConfig;
+
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+// Esponi Firebase globalmente per i moduli di sicurezza
+window.db = db;
+window.auth = auth;
 
 // === Provider OAuth ===
 const googleProvider = new GoogleAuthProvider();
@@ -9633,6 +9640,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize new UI
   initializeNewUI();
   initializeUIEventListeners();
+  
+  // Setup authentication event listeners
+  setupAuthEventListeners();
   
   console.log('✅ Inizializzazione UI completata');
 });

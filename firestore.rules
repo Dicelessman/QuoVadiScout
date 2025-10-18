@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isStructureCreator() {
+      return isAuthenticated() && 
+             resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Collection: strutture
+    match /strutture/{structureId} {
+      // Lettura: solo autenticati
+      allow read: if isAuthenticated();
+      
+      // Creazione: solo autenticati, con validazione dati
+      allow create: if isAuthenticated() 
+        && request.resource.data.Struttura is string
+        && request.resource.data.Struttura.size() > 0
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.version == 1;
+      
+      // Aggiornamento: solo creatore o admin
+      allow update: if isAuthenticated()
+        && (isStructureCreator() || hasRole('admin'))
+        && request.resource.data.lastModifiedBy == request.auth.uid
+        && request.resource.data.lastModified == request.time;
+      
+      // Eliminazione: solo creatore o admin
+      allow delete: if isAuthenticated() 
+        && (isStructureCreator() || hasRole('admin'));
+    }
+    
+    // Collection: users (profili utente)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+    
+    // Collection: activity_log (audit trail)
+    match /activity_log/{logId} {
+      allow read: if hasRole('admin');
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutabile
+    }
+    
+    // Collection: user_notes (note personali)
+    match /user_notes/{noteId} {
+      allow read, write: if isAuthenticated() 
+        && request.auth.uid == resource.data.userId;
+    }
+    
+    // Collection: structure_versions (storico modifiche)
+    match /structure_versions/{versionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutabile
+    }
+    
+    // Collection: security_incidents (incidenti sicurezza)
+    match /security_incidents/{incidentId} {
+      allow read: if hasRole('admin');
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutabile
+    }
+    
+    // Helper per ruoli
+    function hasRole(role) {
+      return isAuthenticated() 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+  }
+}

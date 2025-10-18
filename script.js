@@ -1529,7 +1529,22 @@ async function eliminaStrutturaConConferma(id) {
       if (modalScheda) {
         modalScheda.remove();
       }
-      await deleteDoc(doc(db, "strutture", id));
+      
+      // AGGIUNTO: Validazione token
+      if (typeof window.securityClient !== 'undefined') {
+        const tokenValid = await window.securityClient.validateToken();
+        if (!tokenValid) {
+          if (typeof showError === 'function') {
+            showError('Sessione scaduta. Effettua nuovamente il login.');
+          } else {
+            alert('Sessione scaduta. Effettua nuovamente il login.');
+          }
+          return;
+        }
+        await window.securityClient.deleteStructure(id);
+      } else {
+        await deleteDoc(doc(db, "strutture", id));
+      }
       aggiornaLista();
       
       // Mostra messaggio di successo
@@ -1591,6 +1606,19 @@ async function eliminaStrutturaConConferma(id) {
 
 // === Aggiungi nuova struttura ===
 async function aggiungiStruttura() {
+  // AGGIUNTO: Validazione token prima di procedere
+  if (typeof window.securityClient !== 'undefined') {
+    const tokenValid = await window.securityClient.validateToken();
+    if (!tokenValid) {
+      if (typeof showError === 'function') {
+        showError('Sessione scaduta. Effettua nuovamente il login.');
+      } else {
+        alert('Sessione scaduta. Effettua nuovamente il login.');
+      }
+      return;
+    }
+  }
+  
   // Crea una struttura vuota per la nuova struttura
   const nuovaStruttura = {
     id: 'new_' + Date.now(), // ID temporaneo
@@ -6621,6 +6649,19 @@ function mostraSchedaCompleta(strutturaId) {
   // Funzione per salvare modifiche
   async function salvaModificheScheda(strutturaId) {
     try {
+      // AGGIUNTO: Validazione token
+      if (typeof window.securityClient !== 'undefined') {
+        const tokenValid = await window.securityClient.validateToken();
+        if (!tokenValid) {
+          if (typeof showError === 'function') {
+            showError('Sessione scaduta. Effettua nuovamente il login.');
+          } else {
+            alert('Sessione scaduta. Effettua nuovamente il login.');
+          }
+          return;
+        }
+      }
+      
       if (isNewStructure) {
         // Aggiorna metadati per nuova struttura
         struttura.lastModified = new Date();
@@ -6629,11 +6670,17 @@ function mostraSchedaCompleta(strutturaId) {
         struttura.createdBy = utenteCorrente?.uid || null;
         struttura.version = 1;
         
-        // Crea nuova struttura in Firestore
-        const docRef = await addDoc(colRef, struttura);
+        // MODIFICATO: Usa API sicura invece di Firestore diretto
+        if (typeof window.securityClient !== 'undefined') {
+          const result = await window.securityClient.createStructure(struttura);
+          struttura.id = result.id;
+        } else {
+          // Fallback al metodo originale se security client non disponibile
+          const docRef = await addDoc(colRef, struttura);
+          struttura.id = docRef.id;
+        }
         
-        // Aggiorna l'ID locale con quello di Firestore
-        struttura.id = docRef.id;
+        // Aggiorna l'ID locale
         const index = strutture.findIndex(s => s.id === strutturaId);
         if (index !== -1) {
           strutture[index] = { ...struttura };
@@ -6642,11 +6689,13 @@ function mostraSchedaCompleta(strutturaId) {
         // Aggiorna le strutture globali
         window.strutture = strutture;
         
-        // Log attività
-        await logActivity('structure_created', docRef.id, utenteCorrente?.uid, {
-          name: struttura.Struttura,
-          location: struttura.Luogo
-        });
+        // Log attività (solo se non usando API sicura)
+        if (typeof window.securityClient === 'undefined') {
+          await logActivity('structure_created', struttura.id, utenteCorrente?.uid, {
+            name: struttura.Struttura,
+            location: struttura.Luogo
+          });
+        }
         
         // Notifica push per nuova struttura
         if (window.notifyNewStructure) {

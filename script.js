@@ -1314,6 +1314,19 @@ async function modificaStruttura(id) {
 async function salvaModifiche() {
   if (!strutturaCorrente) return;
   
+  // AGGIUNTO: Validazione token prima di procedere
+  if (typeof window.securityClient !== 'undefined') {
+    const tokenValid = await window.securityClient.validateToken();
+    if (!tokenValid) {
+      if (typeof showError === 'function') {
+        showError('Sessione scaduta. Effettua nuovamente il login.');
+      } else {
+        alert('Sessione scaduta. Effettua nuovamente il login.');
+      }
+      return;
+    }
+  }
+  
   const coordinate_lat = document.getElementById('edit-coordinate_lat').value ? parseFloat(document.getElementById('edit-coordinate_lat').value) : null;
   const coordinate_lng = document.getElementById('edit-coordinate_lng').value ? parseFloat(document.getElementById('edit-coordinate_lng').value) : null;
   
@@ -1349,8 +1362,13 @@ async function salvaModifiche() {
     // Salva versione precedente prima di modificare
     await salvaVersione(strutturaCorrente, utenteCorrente?.uid);
     
-    // Aggiorna struttura
-    await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
+    // MODIFICATO: Usa API sicura invece di Firestore diretto
+    if (typeof window.securityClient !== 'undefined') {
+      await window.securityClient.updateStructure(strutturaCorrente.id, formData);
+    } else {
+      // Fallback al metodo originale se security client non disponibile
+      await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
+    }
     
     // INVALIDARE CACHE LOCALE per forzare ricaricamento
     localStorage.removeItem('strutture_cache');
@@ -1402,7 +1420,21 @@ function chiudiModale() {
 // === Elimina struttura ===
 async function eliminaStruttura(id) {
   if (confirm("Vuoi davvero eliminare questa struttura?")) {
-    await deleteDoc(doc(db, "strutture", id));
+    // AGGIUNTO: Validazione token
+    if (typeof window.securityClient !== 'undefined') {
+      const tokenValid = await window.securityClient.validateToken();
+      if (!tokenValid) {
+        if (typeof showError === 'function') {
+          showError('Sessione scaduta. Effettua nuovamente il login.');
+        } else {
+          alert('Sessione scaduta. Effettua nuovamente il login.');
+        }
+        return;
+      }
+      await window.securityClient.deleteStructure(id);
+    } else {
+      await deleteDoc(doc(db, "strutture", id));
+    }
     aggiornaLista();
   }
 }

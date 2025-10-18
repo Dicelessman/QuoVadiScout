@@ -150,6 +150,10 @@
       <section class="menu-section">
         <h3 class="menu-section-title">⚙️ Impostazioni</h3>
         <div class="menu-items">
+          <button id="loginBtn" class="menu-item">
+            <span class="menu-icon"><i class="fas fa-sign-in-alt"></i></span>
+            <span class="menu-label">Accedi</span>
+          </button>
           <button id="themeToggle" class="menu-item">
             <span class="menu-icon"><i class="fas fa-moon"></i></span>
             <span class="menu-label">Cambia Tema</span>
@@ -169,6 +173,10 @@
            <button class="menu-item" onclick="runSystemTests()">
              <span class="menu-icon"><i class="fas fa-flask"></i></span>
              <span class="menu-label">Test Sistemi</span>
+           </button>
+           <button class="menu-item" onclick="testOAuth()">
+             <span class="menu-icon"><i class="fas fa-shield-alt"></i></span>
+             <span class="menu-label">Test OAuth</span>
            </button>
         </div>
       </section>
@@ -234,6 +242,107 @@
     </div>
   </div>
 
+  <!-- Modale di Autenticazione OAuth -->
+  <div id="authModal" class="modal hidden">
+    <div class="modal-content auth-modal">
+      <button id="closeAuthModal" class="close"><i class="fas fa-times"></i></button>
+      
+      <!-- Header -->
+      <div class="auth-header">
+        <h2><i class="fas fa-user-circle"></i> Accedi a QuoVadiScout</h2>
+        <p>Accedi per salvare le tue liste personali e sincronizzare i dati</p>
+      </div>
+
+      <!-- Messaggi -->
+      <div id="errorMessage" class="error-message hidden"></div>
+      <div id="successMessage" class="success-message hidden"></div>
+
+      <!-- Login Form -->
+      <div id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="loginEmail"><i class="fas fa-envelope"></i> Email</label>
+          <input type="email" id="loginEmail" placeholder="Inserisci la tua email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="loginPassword" placeholder="Inserisci la tua password" required>
+        </div>
+        
+        <button id="emailLoginBtn" class="btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Accedi
+        </button>
+        
+        <div class="auth-divider">
+          <span>oppure</span>
+        </div>
+        
+        <!-- OAuth Buttons -->
+        <div class="oauth-buttons">
+          <button id="googleLoginBtn" class="oauth-btn google-btn">
+            <i class="fab fa-google"></i> Continua con Google
+          </button>
+          
+          <button id="githubLoginBtn" class="oauth-btn github-btn">
+            <i class="fab fa-github"></i> Continua con GitHub
+          </button>
+          
+          <button id="microsoftLoginBtn" class="oauth-btn microsoft-btn">
+            <i class="fab fa-microsoft"></i> Continua con Microsoft
+          </button>
+          
+          <button id="facebookLoginBtn" class="oauth-btn facebook-btn">
+            <i class="fab fa-facebook"></i> Continua con Facebook
+          </button>
+          
+          <button id="twitterLoginBtn" class="oauth-btn twitter-btn">
+            <i class="fab fa-twitter"></i> Continua con Twitter
+          </button>
+          
+          <button id="appleLoginBtn" class="oauth-btn apple-btn">
+            <i class="fab fa-apple"></i> Continua con Apple
+          </button>
+        </div>
+        
+        <div class="auth-footer">
+          <p>Non hai un account? <button id="showRegisterBtn" class="link-btn">Registrati</button></p>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="registerNome"><i class="fas fa-user"></i> Nome</label>
+          <input type="text" id="registerNome" placeholder="Inserisci il tuo nome" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="registerEmail"><i class="fas fa-envelope"></i> Email</label>
+          <input type="email" id="registerEmail" placeholder="Inserisci la tua email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="registerPassword"><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="registerPassword" placeholder="Crea una password (min. 6 caratteri)" required>
+        </div>
+        
+        <button id="registerBtn" class="btn-primary">
+          <i class="fas fa-user-plus"></i> Registrati
+        </button>
+        
+        <div class="auth-footer">
+          <p>Hai già un account? <button id="showLoginBtn" class="link-btn">Accedi</button></p>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="authLoading" class="auth-loading hidden">
+        <div class="loading-spinner"></div>
+        <p>Autenticazione in corso...</p>
+      </div>
+    </div>
+  </div>
+
   <script src="maps.js"></script>
   <script src="export.js"></script>
   <script src="push-notifications.js"></script>
@@ -257,6 +366,10 @@
   <script src="icons-config.js"></script>
   <!-- Gestione errori -->
   <script src="error-handler.js"></script>
+  <!-- Configurazione OAuth -->
+  <script src="oauth-config.js"></script>
+  <!-- Test OAuth (solo in debug) -->
+  <script src="oauth-test.js"></script>
   <script type="module" src="script.js"></script>
 
 <script>

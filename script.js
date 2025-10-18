@@ -23,7 +23,14 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  GithubAuthProvider,
+  FacebookAuthProvider,
+  TwitterAuthProvider,
+  OAuthProvider,
+  linkWithCredential,
+  signInWithRedirect,
+  getRedirectResult
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
@@ -40,7 +47,25 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+// === Provider OAuth ===
 const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+const twitterProvider = new TwitterAuthProvider();
+const microsoftProvider = new OAuthProvider('microsoft.com');
+const appleProvider = new OAuthProvider('apple.com');
+
+// Configurazione provider
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
+githubProvider.addScope('user:email');
+facebookProvider.addScope('email');
+microsoftProvider.addScope('email');
+microsoftProvider.addScope('profile');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
+
 const colRef = collection(db, "strutture");
 
 // === Caricamento dati da Firestore ===
@@ -3749,124 +3774,28 @@ async function caricaProfiloUtente(uid) {
 }
 
 function mostraSchermataLogin() {
-  // Nascondi il contenuto principale
-  const main = document.querySelector('main');
-  const header = document.querySelector('header');
-  if (main) main.style.display = 'none';
-  if (header) header.style.display = 'none';
-  
-  // Rimuovi modal esistente se presente
-  const existingModal = document.getElementById('loginModal');
-  if (existingModal) {
-    existingModal.remove();
-  }
-  
-  const modal = document.createElement('div');
-  modal.id = 'loginModal';
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #2f6b2f 0%, #28a745 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-  `;
-  
-  const modalContent = document.createElement('div');
-  modalContent.style.cssText = `
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    max-width: 95%;
-    width: 90%;
-    min-width: 320px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    text-align: center;
-  `;
-  
-  modalContent.innerHTML = `
-    <div style="margin-bottom: 30px;">
-      <h1 style="color: #2f6b2f; margin: 0 0 10px 0; font-size: 2rem;">🏕️ QuoVadiScout</h1>
-      <p style="color: #666; margin: 0;">Strutture e Terreni per Scout</p>
-    </div>
-    
-    <div id="loginForm" style="margin-bottom: 20px;">
-      <input type="email" id="loginEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="loginPassword" placeholder="Password" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="loginBtn" 
-              style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🔑 Accedi
-      </button>
-      
-      <button id="googleLoginBtn" 
-              style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🌐 Accedi con Google
-      </button>
-      
-      <button id="showRegisterBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        📝 Crea Account
-      </button>
-    </div>
-    
-    <div id="registerForm" style="margin-bottom: 20px; display: none;">
-      <input type="text" id="registerNome" placeholder="Nome utente" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="email" id="registerEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="registerBtn" 
-              style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        ✨ Registrati
-      </button>
-      
-      <button id="showLoginBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        ← Torna al Login
-      </button>
-    </div>
-    
-    <div id="loadingMessage" style="display: none; color: #28a745; font-weight: bold;">
-      <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #28a745; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
-      Caricamento...
-    </div>
-    
-    <div id="errorMessage" style="display: none; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin-top: 20px;"></div>
-  `;
-  
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-  
-  // Aggiungi CSS per animazione
-  if (!document.getElementById('authStyles')) {
-    const style = document.createElement('style');
-    style.id = 'authStyles';
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-  
-  // Event listeners
-  setupAuthEventListeners();
+  // Mostra il modale di autenticazione
+  mostraModaleAuth();
 }
 
 function setupAuthEventListeners() {
+  // Apri modale di autenticazione
+  document.getElementById('loginBtn').onclick = () => {
+    mostraModaleAuth();
+  };
+  
+  // Chiudi modale di autenticazione
+  document.getElementById('closeAuthModal').onclick = () => {
+    nascondiModaleAuth();
+  };
+  
+  // Chiudi modale cliccando fuori
+  document.getElementById('authModal').onclick = (e) => {
+    if (e.target.id === 'authModal') {
+      nascondiModaleAuth();
+    }
+  };
+  
   // Toggle tra login e registrazione
   document.getElementById('showRegisterBtn').onclick = () => {
     document.getElementById('loginForm').style.display = 'none';
@@ -3881,7 +3810,7 @@ function setupAuthEventListeners() {
   };
   
   // Login con email/password
-  document.getElementById('loginBtn').onclick = async () => {
+  document.getElementById('emailLoginBtn').onclick = async () => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
@@ -3917,10 +3846,35 @@ function setupAuthEventListeners() {
     await loginWithGoogle();
   };
   
+  // Login con GitHub
+  document.getElementById('githubLoginBtn').onclick = async () => {
+    await loginWithGithub();
+  };
+  
+  // Login con Facebook
+  document.getElementById('facebookLoginBtn').onclick = async () => {
+    await loginWithFacebook();
+  };
+  
+  // Login con Twitter
+  document.getElementById('twitterLoginBtn').onclick = async () => {
+    await loginWithTwitter();
+  };
+  
+  // Login con Microsoft
+  document.getElementById('microsoftLoginBtn').onclick = async () => {
+    await loginWithMicrosoft();
+  };
+  
+  // Login con Apple
+  document.getElementById('appleLoginBtn').onclick = async () => {
+    await loginWithApple();
+  };
+  
   // Enter per login
   document.getElementById('loginPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      document.getElementById('loginBtn').click();
+      document.getElementById('emailLoginBtn').click();
     }
   });
 }
@@ -3998,6 +3952,7 @@ async function registerWithEmail(nome, email, password) {
   }
 }
 
+// === Funzioni OAuth ===
 async function loginWithGoogle() {
   try {
     showLoading(true);
@@ -4005,6 +3960,9 @@ async function loginWithGoogle() {
     
     const result = await signInWithPopup(auth, googleProvider);
     console.log('✅ Login Google riuscito:', result.user.email);
+    
+    // Salva informazioni provider
+    await salvaProviderInfo(result.user, 'google');
     
     // La UI si aggiornerà automaticamente tramite onAuthStateChanged
     
@@ -4015,6 +3973,203 @@ async function loginWithGoogle() {
       showError('❌ Login annullato');
     } else {
       showError('❌ Errore durante il login con Google');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loginWithGithub() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, githubProvider);
+    console.log('✅ Login GitHub riuscito:', result.user.email);
+    
+    await salvaProviderInfo(result.user, 'github');
+    
+  } catch (error) {
+    console.error('❌ Errore login GitHub:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con GitHub');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loginWithFacebook() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, facebookProvider);
+    console.log('✅ Login Facebook riuscito:', result.user.email);
+    
+    await salvaProviderInfo(result.user, 'facebook');
+    
+  } catch (error) {
+    console.error('❌ Errore login Facebook:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con Facebook');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loginWithTwitter() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, twitterProvider);
+    console.log('✅ Login Twitter riuscito:', result.user.email);
+    
+    await salvaProviderInfo(result.user, 'twitter');
+    
+  } catch (error) {
+    console.error('❌ Errore login Twitter:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con Twitter');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loginWithMicrosoft() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, microsoftProvider);
+    console.log('✅ Login Microsoft riuscito:', result.user.email);
+    
+    await salvaProviderInfo(result.user, 'microsoft');
+    
+  } catch (error) {
+    console.error('❌ Errore login Microsoft:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con Microsoft');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loginWithApple() {
+  try {
+    showLoading(true);
+    hideError();
+    
+    const result = await signInWithPopup(auth, appleProvider);
+    console.log('✅ Login Apple riuscito:', result.user.email);
+    
+    await salvaProviderInfo(result.user, 'apple');
+    
+  } catch (error) {
+    console.error('❌ Errore login Apple:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      showError('❌ Login annullato');
+    } else {
+      showError('❌ Errore durante il login con Apple');
+    }
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Funzione per salvare informazioni del provider
+async function salvaProviderInfo(user, provider) {
+  try {
+    const providerInfo = {
+      provider: provider,
+      providerId: user.providerData[0]?.providerId || provider,
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      lastLogin: new Date().toISOString()
+    };
+    
+    // Salva nel profilo utente
+    await updateDoc(doc(db, "users", user.uid), {
+      [`providers.${provider}`]: providerInfo,
+      lastLoginProvider: provider,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log(`📝 Provider ${provider} salvato per utente:`, user.uid);
+  } catch (error) {
+    console.error('❌ Errore salvataggio provider info:', error);
+  }
+}
+
+// Funzione per collegare account esistenti
+async function linkProvider(provider) {
+  try {
+    if (!utenteCorrente) {
+      showError('❌ Devi essere autenticato per collegare un provider');
+      return;
+    }
+    
+    showLoading(true);
+    hideError();
+    
+    let selectedProvider;
+    switch (provider) {
+      case 'google':
+        selectedProvider = googleProvider;
+        break;
+      case 'github':
+        selectedProvider = githubProvider;
+        break;
+      case 'facebook':
+        selectedProvider = facebookProvider;
+        break;
+      case 'twitter':
+        selectedProvider = twitterProvider;
+        break;
+      case 'microsoft':
+        selectedProvider = microsoftProvider;
+        break;
+      case 'apple':
+        selectedProvider = appleProvider;
+        break;
+      default:
+        throw new Error('Provider non supportato');
+    }
+    
+    const result = await linkWithCredential(utenteCorrente, selectedProvider);
+    console.log(`✅ Provider ${provider} collegato:`, result.user.email);
+    
+    await salvaProviderInfo(result.user, provider);
+    showSuccess(`✅ Account ${provider} collegato con successo!`);
+    
+  } catch (error) {
+    console.error(`❌ Errore collegamento provider ${provider}:`, error);
+    
+    if (error.code === 'auth/provider-already-linked') {
+      showError(`❌ Account ${provider} già collegato`);
+    } else if (error.code === 'auth/credential-already-in-use') {
+      showError(`❌ Account ${provider} già utilizzato da un altro utente`);
+    } else {
+      showError(`❌ Errore durante il collegamento con ${provider}`);
     }
   } finally {
     showLoading(false);
@@ -4040,14 +4195,31 @@ async function logoutUser() {
 
 function showLoading(show) {
   const loading = document.getElementById('loadingMessage');
-  const loginBtn = document.getElementById('loginBtn');
+  const loadingBtn = document.getElementById('emailLoginBtn');
   const registerBtn = document.getElementById('registerBtn');
   const googleBtn = document.getElementById('googleLoginBtn');
+  const githubBtn = document.getElementById('githubLoginBtn');
+  const facebookBtn = document.getElementById('facebookLoginBtn');
+  const twitterBtn = document.getElementById('twitterLoginBtn');
+  const microsoftBtn = document.getElementById('microsoftLoginBtn');
+  const appleBtn = document.getElementById('appleLoginBtn');
   
-  if (loading) loading.style.display = show ? 'block' : 'none';
-  if (loginBtn) loginBtn.disabled = show;
+  // Disabilita tutti i pulsanti
+  if (loadingBtn) loadingBtn.disabled = show;
   if (registerBtn) registerBtn.disabled = show;
   if (googleBtn) googleBtn.disabled = show;
+  if (githubBtn) githubBtn.disabled = show;
+  if (facebookBtn) facebookBtn.disabled = show;
+  if (twitterBtn) twitterBtn.disabled = show;
+  if (microsoftBtn) microsoftBtn.disabled = show;
+  if (appleBtn) appleBtn.disabled = show;
+  
+  // Mostra/nascondi loading
+  if (loading) loading.style.display = show ? 'block' : 'none';
+  const authLoading = document.getElementById('authLoading');
+  if (authLoading) {
+    authLoading.classList.toggle('hidden', !show);
+  }
 }
 
 function showError(message) {
@@ -4063,6 +4235,41 @@ function hideError() {
   if (errorDiv) {
     errorDiv.style.display = 'none';
   }
+}
+
+function showSuccess(message) {
+  // Crea o aggiorna il div per i messaggi di successo
+  let successDiv = document.getElementById('successMessage');
+  if (!successDiv) {
+    successDiv = document.createElement('div');
+    successDiv.id = 'successMessage';
+    successDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      max-width: 350px;
+      font-size: 14px;
+      font-weight: 500;
+      animation: slideInRight 0.3s ease-out;
+    `;
+    document.body.appendChild(successDiv);
+  }
+  
+  successDiv.textContent = message;
+  successDiv.style.display = 'block';
+  
+  // Auto-rimuovi dopo 5 secondi
+  setTimeout(() => {
+    if (successDiv && successDiv.parentNode) {
+      successDiv.remove();
+    }
+  }, 5000);
 }
 
 // Funzioni rimosse - ora gestite da Firebase Auth
@@ -4260,6 +4467,38 @@ function nascondiSchermataLogin() {
   const loginModal = document.getElementById('loginModal');
   if (loginModal) {
     loginModal.remove();
+  }
+  
+  // Nascondi anche il modale di autenticazione
+  nascondiModaleAuth();
+}
+
+// === Funzioni Modale Autenticazione ===
+function mostraModaleAuth() {
+  const authModal = document.getElementById('authModal');
+  if (authModal) {
+    authModal.classList.remove('hidden');
+    // Reset form
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    hideError();
+    // Focus sul primo campo
+    setTimeout(() => {
+      const firstInput = document.getElementById('loginEmail');
+      if (firstInput) firstInput.focus();
+    }, 100);
+  }
+}
+
+function nascondiModaleAuth() {
+  const authModal = document.getElementById('authModal');
+  if (authModal) {
+    authModal.classList.add('hidden');
+    // Reset form
+    hideError();
+    // Pulisci i campi
+    const inputs = authModal.querySelectorAll('input');
+    inputs.forEach(input => input.value = '');
   }
 }
 
@@ -9292,6 +9531,17 @@ window.mostraPreferenzeNotifiche = mostraPreferenzeNotifiche;
 window.testNotification = testNotification;
 // window.mostraGestioneOffline = mostraGestioneOffline; // Funzione rimossa
 window.getUserLocation = trovaVicinoAMe; // Alias per compatibilità test
+
+// Funzioni OAuth
+window.mostraModaleAuth = mostraModaleAuth;
+window.nascondiModaleAuth = nascondiModaleAuth;
+window.loginWithGoogle = loginWithGoogle;
+window.loginWithGithub = loginWithGithub;
+window.loginWithFacebook = loginWithFacebook;
+window.loginWithTwitter = loginWithTwitter;
+window.loginWithMicrosoft = loginWithMicrosoft;
+window.loginWithApple = loginWithApple;
+window.linkProvider = linkProvider;
 
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Locale - QuoVadiScout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Login Locale - QuoVadiScout</h1>
+        
+        <div class="test-section">
+            <h3>📋 Stato Attuale</h3>
+            <p><strong>Dominio:</strong> <span id="currentDomain"></span></p>
+            <p><strong>Firebase Config:</strong> <span id="firebaseStatus"></span></p>
+            <p><strong>Auth Status:</strong> <span id="authStatus"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Test Firebase Functions</h3>
+            <button onclick="testFirebaseFunctions()">Test Funzioni Firebase</button>
+            <div id="firebaseResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Test Login Functions</h3>
+            <button onclick="testLoginFunctions()">Test Funzioni Login</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Test Dominio</h3>
+            <button onclick="testDomain()">Test Autorizzazione Dominio</button>
+            <div id="domainResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Istruzioni</h3>
+            <div class="warning">
+                <h4>Per risolvere il problema del login:</h4>
+                <ol>
+                    <li><strong>Vai su Firebase Console</strong>: <a href="https://console.firebase.google.com/" target="_blank">https://console.firebase.google.com/</a></li>
+                    <li><strong>Seleziona il progetto</strong>: quovadiscout</li>
+                    <li><strong>Vai su Authentication → Settings</strong></li>
+                    <li><strong>Nella tab "Authorized domains"</strong></li>
+                    <li><strong>Aggiungi il dominio</strong>: dicelessman.github.io</li>
+                    <li><strong>Salva le modifiche</strong></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mostra informazioni attuali
+        document.getElementById('currentDomain').textContent = window.location.hostname;
+        
+        // Test Firebase Functions
+        function testFirebaseFunctions() {
+            const result = document.getElementById('firebaseResult');
+            result.innerHTML = '';
+            
+            const tests = [
+                { name: 'signInWithEmailAndPassword', func: window.signInWithEmailAndPassword },
+                { name: 'createUserWithEmailAndPassword', func: window.createUserWithEmailAndPassword },
+                { name: 'signOut', func: window.signOut },
+                { name: 'signInWithPopup', func: window.signInWithPopup },
+                { name: 'GoogleAuthProvider', func: window.GoogleAuthProvider },
+                { name: 'GithubAuthProvider', func: window.GithubAuthProvider }
+            ];
+            
+            let html = '<h4>Risultati Test:</h4>';
+            tests.forEach(test => {
+                const status = typeof test.func === 'function' ? '✅' : '❌';
+                html += `<p>${status} ${test.name}: ${typeof test.func}</p>`;
+            });
+            
+            result.innerHTML = html;
+            result.className = 'result success';
+        }
+        
+        // Test Login Functions
+        function testLoginFunctions() {
+            const result = document.getElementById('loginResult');
+            result.innerHTML = '';
+            
+            const tests = [
+                { name: 'loginWithEmailFixed', func: window.loginWithEmailFixed },
+                { name: 'loginWithGoogleFixed', func: window.loginWithGoogleFixed },
+                { name: 'loginWithGithubFixed', func: window.loginWithGithubFixed },
+                { name: 'registerWithEmailFixed', func: window.registerWithEmailFixed },
+                { name: 'logoutUserFixed', func: window.logoutUserFixed }
+            ];
+            
+            let html = '<h4>Risultati Test:</h4>';
+            tests.forEach(test => {
+                const status = typeof test.func === 'function' ? '✅' : '❌';
+                html += `<p>${status} ${test.name}: ${typeof test.func}</p>`;
+            });
+            
+            result.innerHTML = html;
+            result.className = 'result success';
+        }
+        
+        // Test Dominio
+        function testDomain() {
+            const result = document.getElementById('domainResult');
+            result.innerHTML = '';
+            
+            const currentDomain = window.location.hostname;
+            const authorizedDomains = ['localhost', '127.0.0.1', 'quovadiscout.firebaseapp.com'];
+            
+            const isAuthorized = authorizedDomains.includes(currentDomain);
+            
+            let html = '<h4>Test Dominio:</h4>';
+            html += `<p><strong>Dominio attuale:</strong> ${currentDomain}</p>`;
+            html += `<p><strong>Autorizzato:</strong> ${isAuthorized ? '✅ Sì' : '❌ No'}</p>`;
+            
+            if (!isAuthorized) {
+                html += '<div class="warning">';
+                html += '<p><strong>⚠️ Dominio non autorizzato!</strong></p>';
+                html += '<p>Per risolvere:</p>';
+                html += '<ol>';
+                html += '<li>Vai su Firebase Console</li>';
+                html += '<li>Authentication → Settings</li>';
+                html += '<li>Aggiungi il dominio alla lista autorizzati</li>';
+                html += '</ol>';
+                html += '</div>';
+            }
+            
+            result.innerHTML = html;
+            result.className = `result ${isAuthorized ? 'success' : 'error'}`;
+        }
+        
+        // Inizializza
+        document.addEventListener('DOMContentLoaded', () => {
+            // Aggiorna stato Firebase
+            const firebaseStatus = window.firebaseConfig ? '✅ Configurato' : '❌ Non configurato';
+            document.getElementById('firebaseStatus').textContent = firebaseStatus;
+            
+            // Aggiorna stato Auth
+            const authStatus = window.auth ? '✅ Disponibile' : '❌ Non disponibile';
+            document.getElementById('authStatus').textContent = authStatus;
+        });
+    </script>
+</body>
+</html>

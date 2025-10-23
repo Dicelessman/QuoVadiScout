@@ -4571,75 +4571,294 @@ async function salvaElencoPersonaleUtente() {
 
 function cambiaUtente() {
   if (utenteCorrente) {
-    // Mostra conferma logout elegante
-    mostraConfermaLogout();
+    // Mostra modale profilo utente espanso
+    mostraModaleProfiloUtente();
   } else {
     // Se non c'è utente, mostra direttamente la schermata di login
     mostraSchermataLogin();
   }
 }
 
-function mostraConfermaLogout() {
+function mostraModaleProfiloUtente() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
   // Rimuovi modal esistente se presente
-  const existingModal = document.getElementById('logoutModal');
+  const existingModal = document.getElementById('profiloUtenteModal');
   if (existingModal) {
     existingModal.remove();
   }
   
   const modal = document.createElement('div');
-  modal.id = 'logoutModal';
+  modal.id = 'profiloUtenteModal';
+  modal.className = 'modal-overlay';
   modal.style.cssText = `
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10002;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-out;
   `;
   
   const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary, white);
     border-radius: 12px;
-    padding: 30px;
-    max-width: 95%;
-    width: 90%;
-    min-width: 320px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    text-align: center;
+    padding: 0;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1));
+    animation: slideUp 0.3s ease-out;
+    position: relative;
   `;
+  
+  // Carica dati utente dal localStorage
+  const profiloUtente = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const preferenzeNotifiche = JSON.parse(localStorage.getItem('notificationPreferences') || '{}');
+  const provinciaPreferita = localStorage.getItem('preferredProvince') || '';
   
   const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
   
   modalContent.innerHTML = `
-    <div style="margin-bottom: 20px;">
-      <div style="font-size: 48px; margin-bottom: 15px;">🚪</div>
-      <h2 style="color: #dc3545; margin: 0 0 10px 0;">Conferma Logout</h2>
-      <p style="color: #666; margin: 0;">
-        Ciao <strong>${displayName}</strong>!<br>
-        Vuoi disconnetterti dall'applicazione?
-      </p>
+    <!-- Header -->
+    <div style="position: sticky; top: 0; background: var(--bg-primary, white); border-radius: 12px 12px 0 0; padding: 20px; border-bottom: 1px solid var(--border-color, #e5e7eb); z-index: 10;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color: var(--text-primary, #1f2937); font-size: 1.5rem; font-weight: 600;">👤 Profilo Utente</h2>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary, #6b7280); padding: 8px; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onmouseover="this.style.background='var(--bg-secondary, #f3f4f6)'" onmouseout="this.style.background='none'">×</button>
+      </div>
     </div>
     
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-      <p style="margin: 0; color: #666; font-size: 14px;">
-        📋 La tua lista personale (${elencoPersonale.length} elementi) sarà salvata automaticamente e potrai riaccederci al prossimo login.
-      </p>
-    </div>
-    
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button id="cancelLogoutBtn" 
-              style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
-        ❌ Annulla
-      </button>
-      <button id="confirmLogoutBtn" 
-              style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px;">
-        🚪 Disconnetti
-      </button>
+    <!-- Contenuto -->
+    <div style="padding: 20px;">
+      <!-- Informazioni Profilo -->
+      <div style="margin-bottom: 24px;">
+        <h3 style="color: var(--text-primary, #374151); margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;">📋 Informazioni Profilo</h3>
+        
+        <div style="display: grid; gap: 12px;">
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Nome</label>
+            <input type="text" id="userNome" value="${profiloUtente.nome || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Cognome</label>
+            <input type="text" id="userCognome" value="${profiloUtente.cognome || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Email</label>
+            <input type="email" id="userEmail" value="${utenteCorrente.email || ''}" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-disabled, #f3f4f6); color: var(--text-secondary, #6b7280); font-size: 1rem;">
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Cellulare</label>
+            <input type="tel" id="userCell" value="${profiloUtente.cell || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Gruppo</label>
+            <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+              <option value="">Seleziona gruppo</option>
+              <option value="TO1" ${profiloUtente.gruppo === 'TO1' ? 'selected' : ''}>TO1</option>
+              <option value="TO2" ${profiloUtente.gruppo === 'TO2' ? 'selected' : ''}>TO2</option>
+              <option value="TO3" ${profiloUtente.gruppo === 'TO3' ? 'selected' : ''}>TO3</option>
+              <option value="TO4" ${profiloUtente.gruppo === 'TO4' ? 'selected' : ''}>TO4</option>
+              <option value="Gassino" ${profiloUtente.gruppo === 'Gassino' ? 'selected' : ''}>Gassino</option>
+              <option value="Chivasso" ${profiloUtente.gruppo === 'Chivasso' ? 'selected' : ''}>Chivasso</option>
+              <option value="San Mauro" ${profiloUtente.gruppo === 'San Mauro' ? 'selected' : ''}>San Mauro</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Ruolo</label>
+            <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+              <option value="">Seleziona ruolo</option>
+              <option value="SiSB" ${profiloUtente.ruolo === 'SiSB' ? 'selected' : ''}>SiSB</option>
+              <option value="SiSR" ${profiloUtente.ruolo === 'SiSR' ? 'selected' : ''}>SiSR</option>
+              <option value="VCB" ${profiloUtente.ruolo === 'VCB' ? 'selected' : ''}>VCB</option>
+              <option value="VCR" ${profiloUtente.ruolo === 'VCR' ? 'selected' : ''}>VCR</option>
+              <option value="CB" ${profiloUtente.ruolo === 'CB' ? 'selected' : ''}>CB</option>
+              <option value="CR" ${profiloUtente.ruolo === 'CR' ? 'selected' : ''}>CR</option>
+              <option value="CC" ${profiloUtente.ruolo === 'CC' ? 'selected' : ''}>CC</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Provincia di Ricerca Preferita</label>
+            <select id="preferredProvince" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
+              <option value="">Nessuna</option>
+              <option value="AL">Alessandria</option>
+              <option value="AN">Ancona</option>
+              <option value="AO">Aosta</option>
+              <option value="AR">Arezzo</option>
+              <option value="AP">Ascoli Piceno</option>
+              <option value="AT">Asti</option>
+              <option value="AV">Avellino</option>
+              <option value="BA">Bari</option>
+              <option value="BT">Barletta-Andria-Trani</option>
+              <option value="BL">Belluno</option>
+              <option value="BN">Benevento</option>
+              <option value="BG">Bergamo</option>
+              <option value="BI">Biella</option>
+              <option value="BO">Bologna</option>
+              <option value="BZ">Bolzano</option>
+              <option value="BS">Brescia</option>
+              <option value="BR">Brindisi</option>
+              <option value="CA">Cagliari</option>
+              <option value="CL">Caltanissetta</option>
+              <option value="CB">Campobasso</option>
+              <option value="CE">Caserta</option>
+              <option value="CT">Catania</option>
+              <option value="CZ">Catanzaro</option>
+              <option value="CH">Chieti</option>
+              <option value="CO">Como</option>
+              <option value="CS">Cosenza</option>
+              <option value="CR">Cremona</option>
+              <option value="KR">Crotone</option>
+              <option value="CN">Cuneo</option>
+              <option value="EN">Enna</option>
+              <option value="FM">Fermo</option>
+              <option value="FE">Ferrara</option>
+              <option value="FI">Firenze</option>
+              <option value="FG">Foggia</option>
+              <option value="FC">Forlì-Cesena</option>
+              <option value="FR">Frosinone</option>
+              <option value="GE">Genova</option>
+              <option value="GO">Gorizia</option>
+              <option value="GR">Grosseto</option>
+              <option value="IM">Imperia</option>
+              <option value="IS">Isernia</option>
+              <option value="SP">La Spezia</option>
+              <option value="AQ">L'Aquila</option>
+              <option value="LT">Latina</option>
+              <option value="LE">Lecce</option>
+              <option value="LC">Lecco</option>
+              <option value="LI">Livorno</option>
+              <option value="LO">Lodi</option>
+              <option value="LU">Lucca</option>
+              <option value="MC">Macerata</option>
+              <option value="MN">Mantova</option>
+              <option value="MS">Massa-Carrara</option>
+              <option value="MT">Matera</option>
+              <option value="ME">Messina</option>
+              <option value="MI">Milano</option>
+              <option value="MO">Modena</option>
+              <option value="MB">Monza e Brianza</option>
+              <option value="NA">Napoli</option>
+              <option value="NO">Novara</option>
+              <option value="NU">Nuoro</option>
+              <option value="OG">Ogliastra</option>
+              <option value="OT">Olbia-Tempio</option>
+              <option value="OR">Oristano</option>
+              <option value="PD">Padova</option>
+              <option value="PA">Palermo</option>
+              <option value="PR">Parma</option>
+              <option value="PV">Pavia</option>
+              <option value="PG">Perugia</option>
+              <option value="PU">Pesaro e Urbino</option>
+              <option value="PE">Pescara</option>
+              <option value="PC">Piacenza</option>
+              <option value="PI">Pisa</option>
+              <option value="PT">Pistoia</option>
+              <option value="PN">Pordenone</option>
+              <option value="PZ">Potenza</option>
+              <option value="PO">Prato</option>
+              <option value="RG">Ragusa</option>
+              <option value="RA">Ravenna</option>
+              <option value="RC">Reggio Calabria</option>
+              <option value="RE">Reggio Emilia</option>
+              <option value="RI">Rieti</option>
+              <option value="RN">Rimini</option>
+              <option value="RM">Roma</option>
+              <option value="RO">Rovigo</option>
+              <option value="SA">Salerno</option>
+              <option value="SS">Sassari</option>
+              <option value="SV">Savona</option>
+              <option value="SI">Siena</option>
+              <option value="SR">Siracusa</option>
+              <option value="SO">Sondrio</option>
+              <option value="SU">Sud Sardegna</option>
+              <option value="TA">Taranto</option>
+              <option value="TE">Teramo</option>
+              <option value="TR">Terni</option>
+              <option value="TO">Torino</option>
+              <option value="TP">Trapani</option>
+              <option value="TN">Trento</option>
+              <option value="TV">Treviso</option>
+              <option value="TS">Trieste</option>
+              <option value="UD">Udine</option>
+              <option value="VA">Varese</option>
+              <option value="VE">Venezia</option>
+              <option value="VB">Verbano-Cusio-Ossola</option>
+              <option value="VC">Vercelli</option>
+              <option value="VR">Verona</option>
+              <option value="VV">Vibo Valentia</option>
+              <option value="VI">Vicenza</option>
+              <option value="VT">Viterbo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Preferenze Notifiche -->
+      <div style="margin-bottom: 24px;">
+        <h3 style="color: var(--text-primary, #374151); margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;">🔔 Preferenze Notifiche</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-secondary, #f9fafb); border-radius: 12px; border: 1px solid var(--border-color, #e5e7eb);">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: var(--text-primary, #1f2937); margin-bottom: 4px;">🏕️ Nuove Strutture</div>
+              <div style="font-size: 0.875rem; color: var(--text-secondary, #6b7280);">Notifica quando viene aggiunta una nuova struttura</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="newStructures" ${preferenzeNotifiche.newStructures !== false ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; border-radius: 24px; transition: 0.3s;"></span>
+              <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;"></span>
+            </label>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-secondary, #f9fafb); border-radius: 12px; border: 1px solid var(--border-color, #e5e7eb);">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: var(--text-primary, #1f2937); margin-bottom: 4px;">📝 Aggiornamenti Strutture</div>
+              <div style="font-size: 0.875rem; color: var(--text-secondary, #6b7280);">Notifica quando una struttura viene modificata</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="structureUpdates" ${preferenzeNotifiche.structureUpdates !== false ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; border-radius: 24px; transition: 0.3s;"></span>
+              <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;"></span>
+            </label>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-secondary, #f9fafb); border-radius: 12px; border: 1px solid var(--border-color, #e5e7eb);">
+            <div style="flex: 1; margin-right: 12px;">
+              <div style="font-weight: 500; color: var(--text-primary, #1f2937); margin-bottom: 4px;">📍 Strutture Vicine</div>
+              <div style="font-size: 0.875rem; color: var(--text-secondary, #6b7280);">Notifica strutture nelle vicinanze</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;">
+              <input type="checkbox" id="nearbyStructures" ${preferenzeNotifiche.nearbyStructures !== false ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; border-radius: 24px; transition: 0.3s;"></span>
+              <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.3s;"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid var(--border-color, #e5e7eb);">
+        <button id="salvaProfiloBtn" style="background: var(--primary, #2f6b2f); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500;">
+          💾 Salva Modifiche
+        </button>
+        <button id="logoutBtn" style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500;">
+          🚪 Logout
+        </button>
+      </div>
     </div>
   `;
   
@@ -4647,11 +4866,12 @@ function mostraConfermaLogout() {
   document.body.appendChild(modal);
   
   // Event listeners
-  document.getElementById('cancelLogoutBtn').onclick = () => {
+  document.getElementById('salvaProfiloBtn').onclick = () => {
+    salvaProfiloUtente();
     modal.remove();
   };
   
-  document.getElementById('confirmLogoutBtn').onclick = async () => {
+  document.getElementById('logoutBtn').onclick = async () => {
     modal.remove();
     await logoutUser();
   };
@@ -4662,6 +4882,61 @@ function mostraConfermaLogout() {
       modal.remove();
     }
   });
+  
+  // CSS per toggle switches
+  const style = document.createElement('style');
+  style.textContent = `
+    #profiloUtenteModal input[type="checkbox"]:checked + span {
+      background-color: var(--primary, #2f6b2f) !important;
+    }
+    #profiloUtenteModal input[type="checkbox"]:checked + span + span {
+      transform: translateX(20px);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function salvaProfiloUtente() {
+  const profilo = {
+    nome: document.getElementById('userNome').value,
+    cognome: document.getElementById('userCognome').value,
+    cell: document.getElementById('userCell').value,
+    gruppo: document.getElementById('userGruppo').value,
+    ruolo: document.getElementById('userRuolo').value
+  };
+  
+  localStorage.setItem('userProfile', JSON.stringify(profilo));
+  
+  const preferredProvince = document.getElementById('preferredProvince').value;
+  localStorage.setItem('preferredProvince', preferredProvince);
+  
+  const preferenzeNotifiche = {
+    newStructures: document.getElementById('newStructures').checked,
+    structureUpdates: document.getElementById('structureUpdates').checked,
+    nearbyStructures: document.getElementById('nearbyStructures').checked
+  };
+  
+  localStorage.setItem('notificationPreferences', JSON.stringify(preferenzeNotifiche));
+  
+  // Salva anche su Firestore se possibile
+  if (window.auth && window.db && utenteCorrente) {
+    const docRef = doc(db, 'users', utenteCorrente.uid);
+    updateDoc(docRef, {
+      profile: profilo,
+      preferredProvince: preferredProvince,
+      notificationPreferences: preferenzeNotifiche,
+      lastUpdate: new Date().toISOString()
+    }).catch(err => console.error('Errore salvataggio profilo:', err));
+  }
+  
+  if (window.showToast) {
+    window.showToast('✅ Profilo salvato con successo!', 'success');
+  } else {
+    alert('✅ Profilo salvato con successo!');
+  }
+  
+  // Aggiorna UI
+  aggiornaUIUtente();
 }
 
 function nascondiSchermataLogin() {

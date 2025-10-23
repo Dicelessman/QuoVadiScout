@@ -638,6 +638,7 @@ async function inizializzaDashboard() {
     aggiornaStatistiche();
     aggiornaStatisticheProvince();
     creaGrafici();
+    aggiornaStatisticheApp();
     
     // Mappa rimossa - non più utilizzata nella dashboard
     // console.log('🗺️ Inizializzazione mappa Leaflet...');

@@ -556,15 +556,7 @@ class BackupSyncManager {
 // Inizializza backup sync manager
 window.backupSyncManager = new BackupSyncManager();
 
-// Aggiungi al menu principale
-if (typeof window !== 'undefined') {
-  window.mostraGestioneBackup = () => {
-    // Chiudi il menu automaticamente
-    if (typeof closeMenu === 'function') {
-      closeMenu();
-    }
-    window.backupSyncManager.showBackupManager();
-  };
-}
+// Funzione rimossa dal menu - backup ora gestito automaticamente
+// window.mostraGestioneBackup = () => { ... };
 
 console.log('🔄 Backup Sync Manager inizializzato');

@@ -9634,12 +9634,7 @@ function mostraStatisticheApp() {
 
       <!-- Azioni -->
       <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-        <button onclick="window.backupSyncManager?.performSync()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">
-          🔄 Sincronizza Ora
-        </button>
-        <button onclick="window.backupSyncManager?.performBackup()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">
-          💾 Crea Backup
-        </button>
+        <!-- Funzioni backup rimosse dal menu -->
         <button onclick="this.closest('.modal-overlay').remove()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
           ✅ Chiudi
         </button>

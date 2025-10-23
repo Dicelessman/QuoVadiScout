@@ -181,6 +181,21 @@ function aggiornaMetricheAvanzate() {
 function aggiornaStatisticheProvince() {
   const provinceStats = calcolaStatisticheProvince();
   const container = document.getElementById('provinceStats');
+  const filterSelect = document.getElementById('provinceFilter');
+  
+  // Popola il dropdown se non è già popolato
+  if (filterSelect && filterSelect.options.length === 1) {
+    const provinces = Object.keys(provinceStats).sort();
+    provinces.forEach(prov => {
+      const option = document.createElement('option');
+      option.value = prov;
+      option.textContent = prov;
+      filterSelect.appendChild(option);
+    });
+  }
+  
+  // Ottieni filtro selezionato
+  const selectedProvince = filterSelect ? filterSelect.value : 'all';
   
   container.innerHTML = '';
   
@@ -188,7 +203,12 @@ function aggiornaStatisticheProvince() {
   const sortedProvinces = Object.entries(provinceStats)
     .sort(([,a], [,b]) => b.totali - a.totali);
   
-  sortedProvinces.forEach(([provincia, stats]) => {
+  // Filtra per provincia selezionata
+  const provincesToShow = selectedProvince === 'all' 
+    ? sortedProvinces 
+    : sortedProvinces.filter(([prov]) => prov === selectedProvince);
+  
+  provincesToShow.forEach(([provincia, stats]) => {
     const card = document.createElement('div');
     card.className = 'province-card';
     card.innerHTML = `

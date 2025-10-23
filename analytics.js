@@ -247,6 +247,67 @@ class AnalyticsManager {
     });
   }
 
+  // === Nuovi metodi analytics avanzati ===
+  
+  trackFilterApplied(filterType, filterValue, resultsCount) {
+    this.trackEvent('filter_applied', {
+      filterType: filterType,
+      filterValue: filterValue,
+      resultsCount: resultsCount,
+      timestamp: Date.now()
+    });
+  }
+
+  trackPagination(page, totalPages, itemsPerPage) {
+    this.trackEvent('pagination_change', {
+      page: page,
+      totalPages: totalPages,
+      itemsPerPage: itemsPerPage,
+      timestamp: Date.now()
+    });
+  }
+
+  trackViewModeToggle(mode) {
+    this.trackEvent('view_mode_change', {
+      mode: mode,
+      timestamp: Date.now()
+    });
+  }
+
+  trackExport(format, itemCount) {
+    this.trackEvent('data_export', {
+      format: format,
+      itemCount: itemCount,
+      timestamp: Date.now()
+    });
+  }
+
+  trackAuthentication(action, method) {
+    this.trackEvent('authentication', {
+      action: action, // login, logout, register
+      method: method, // email, google
+      timestamp: Date.now()
+    });
+  }
+
+  trackErrorDetail(errorType, errorMessage, context) {
+    this.trackEvent('error_occurred', {
+      errorType: errorType,
+      errorMessage: errorMessage,
+      context: context,
+      timestamp: Date.now()
+    });
+  }
+
+  trackCustomMetric(metric, value, context = {}) {
+    this.trackEvent('custom_metric', {
+      metric: metric,
+      value: value,
+      context: context,
+      timestamp: Date.now()
+    });
+  }
+
   // Salvataggio e sincronizzazione dati
   saveEventsToStorage() {
     try {

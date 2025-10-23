@@ -27,7 +27,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
-const firebaseConfig = {
+// 🔒 Caricata da file separato per sicurezza
+// Se window.firebaseConfig è disponibile, usa quello (caricato da firebase-config-sync.js)
+// Altrimenti usa un fallback (solo per sviluppo locale)
+const firebaseConfig = window.firebaseConfig || {
   apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
   authDomain: "quovadiscout.firebaseapp.com",
   projectId: "quovadiscout",

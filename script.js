@@ -8167,25 +8167,36 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Applica filtro provincia preferita se impostata
   const preferredProvince = localStorage.getItem('preferredProvince');
   if (preferredProvince && preferredProvince !== '') {
-    console.log(`🔍 Applicando provincia preferita: ${preferredProvince}`);
+    console.log(`🔍 Provincia preferita trovata: ${preferredProvince}`);
     
-    // Imposta il dropdown provincia
-    const provSelect = document.getElementById('filter-prov');
-    if (provSelect) {
-      provSelect.value = preferredProvince;
-    }
-    
-    // Applica il filtro
-    const struttureFiltrate = filtra(strutture);
-    renderStrutture(struttureFiltrate);
-    aggiornaContatoreElenco();
-    
-    // Mostra indicatore filtro attivo
-    if (window.showToast) {
-      window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
-    }
+    // Aspetta che il DOM sia completamente caricato
+    setTimeout(() => {
+      const provSelect = document.getElementById('filter-prov');
+      console.log('🔍 Dropdown provincia:', provSelect);
+      
+      if (provSelect) {
+        provSelect.value = preferredProvince;
+        console.log(`✅ Provincia impostata: ${provSelect.value}`);
+        
+        // Applica il filtro
+        const struttureFiltrate = filtra(strutture);
+        console.log(`📊 Strutture filtrate: ${struttureFiltrate.length} su ${strutture.length}`);
+        renderStrutture(struttureFiltrate);
+        aggiornaContatoreElenco();
+        
+        // Mostra indicatore filtro attivo
+        if (window.showToast) {
+          window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
+        }
+      } else {
+        console.error('❌ Dropdown provincia non trovato');
+        renderStrutture(strutture);
+        aggiornaContatoreElenco();
+      }
+    }, 100);
   } else {
     // Nessuna provincia preferita, mostra tutte le strutture
+    console.log('ℹ️ Nessuna provincia preferita impostata');
     renderStrutture(strutture);
     aggiornaContatoreElenco();
   }

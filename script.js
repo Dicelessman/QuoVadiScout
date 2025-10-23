@@ -3696,6 +3696,154 @@ window.themeManager = themeManager;
 let utenteCorrente = null;
 let userProfile = null;
 
+// === SICUREZZA: Rate Limiting per Login ===
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minuti
+
+class LoginSecurity {
+  constructor() {
+    this.attempts = this.loadAttempts();
+  }
+
+  loadAttempts() {
+    try {
+      return JSON.parse(localStorage.getItem('loginAttempts') || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  saveAttempts() {
+    localStorage.setItem('loginAttempts', JSON.stringify(this.attempts));
+  }
+
+  recordFailedAttempt(email) {
+    const key = email.toLowerCase();
+    const attempt = this.attempts[key] || { count: 0, firstAttempt: Date.now(), lockouts: 0 };
+    
+    attempt.count++;
+    
+    // Blocco temporaneo dopo troppi tentativi
+    if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+      attempt.lockouts++;
+      attempt.lockedUntil = Date.now() + LOCKOUT_DURATION;
+      attempt.count = 0; // Reset counter
+      
+      this.attempts[key] = attempt;
+      this.saveAttempts();
+      
+      return { 
+        blocked: true, 
+        duration: LOCKOUT_DURATION,
+        reason: `Troppi tentativi falliti. Account bloccato per ${LOCKOUT_DURATION / 60000} minuti.`
+      };
+    }
+    
+    this.attempts[key] = attempt;
+    this.saveAttempts();
+    
+    return { 
+      blocked: false, 
+      remaining: MAX_LOGIN_ATTEMPTS - attempt.count 
+    };
+  }
+
+  recordSuccess(email) {
+    const key = email.toLowerCase();
+    delete this.attempts[key];
+    this.saveAttempts();
+  }
+
+  isBlocked(email) {
+    const key = email.toLowerCase();
+    const attempt = this.attempts[key];
+    
+    if (!attempt || !attempt.lockedUntil) {
+      return { blocked: false };
+    }
+    
+    if (attempt.lockedUntil > Date.now()) {
+      const minutesLeft = Math.ceil((attempt.lockedUntil - Date.now()) / 60000);
+      return { 
+        blocked: true, 
+        minutesLeft,
+        reason: `Account bloccato. Riprova tra ${minutesLeft} minuti.`
+      };
+    }
+    
+    // Blocco scaduto, reset
+    delete this.attempts[key];
+    this.saveAttempts();
+    
+    return { blocked: false };
+  }
+}
+
+// Instanza globale di LoginSecurity
+const loginSecurity = new LoginSecurity();
+
+// === SICUREZZA: Validazione Password Robusta ===
+function validatePasswordStrength(password) {
+  const checks = {
+    length: password.length >= 12,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>\[\]\\\/_+\-=]/.test(password),
+    noCommonPatterns: !hasCommonPatterns(password),
+    noCommonWords: !hasCommonWords(password)
+  };
+  
+  const passed = Object.values(checks).filter(v => v).length;
+  const strength = 
+    passed === 7 ? 'strong' :
+    passed >= 5 ? 'medium' :
+    'weak';
+  
+  return {
+    valid: strength !== 'weak',
+    strength,
+    checks,
+    feedback: generatePasswordFeedback(checks)
+  };
+}
+
+function hasCommonPatterns(password) {
+  const patterns = [
+    /12345678/,
+    /abcdefgh/,
+    /qwerty/,
+    /password/i,
+    /admin/i,
+    /welcome/i
+  ];
+  
+  return patterns.some(pattern => pattern.test(password));
+}
+
+function hasCommonWords(password) {
+  const commonWords = [
+    'password', 'password123', 'admin', 'welcome', 'hello',
+    'monkey', '123456', 'letmein', 'trustno1', 'dragon'
+  ];
+  
+  return commonWords.some(word => password.toLowerCase().includes(word));
+}
+
+function generatePasswordFeedback(checks) {
+  const feedback = [];
+  
+  if (!checks.length) feedback.push('La password deve essere di almeno 12 caratteri');
+  if (!checks.lowercase) feedback.push('Includi almeno una lettera minuscola');
+  if (!checks.uppercase) feedback.push('Includi almeno una lettera maiuscola');
+  if (!checks.number) feedback.push('Includi almeno un numero');
+  if (!checks.special) feedback.push('Includi almeno un carattere speciale (!@#$%^&*...)');
+  if (!checks.noCommonPatterns) feedback.push('Evita sequenze comuni (1234, abcd...)');
+  if (!checks.noCommonWords) feedback.push('Evita parole comuni o prevedibili');
+  
+  return feedback;
+}
+
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
   onAuthStateChanged(auth, async (user) => {
@@ -3910,8 +4058,11 @@ function setupAuthEventListeners() {
       return;
     }
     
-    if (password.length < 6) {
-      showError('⚠️ La password deve essere di almeno 6 caratteri');
+    // Validazione password robusta
+    const passwordCheck = validatePasswordStrength(password);
+    if (!passwordCheck.valid) {
+      const feedback = passwordCheck.feedback.join('\n');
+      showError(`⚠️ Password troppo debole:\n${feedback}`);
       return;
     }
     
@@ -3933,24 +4084,40 @@ function setupAuthEventListeners() {
 
 async function loginWithEmail(email, password) {
   try {
+    // 1. Verifica se account è bloccato (Rate Limiting)
+    const blocked = loginSecurity.isBlocked(email);
+    if (blocked.blocked) {
+      showError(blocked.reason);
+      return;
+    }
+    
     showLoading(true);
     hideError();
     
+    // 2. Tentativo login Firebase
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Login riuscito:', userCredential.user.email);
+    
+    // 3. Successo - reset tentativi falliti
+    loginSecurity.recordSuccess(email);
     
     // La UI si aggiornerà automaticamente tramite onAuthStateChanged
     
   } catch (error) {
     console.error('❌ Errore login:', error);
-    let errorMessage = 'Errore durante il login';
     
+    // 4. Record tentativo fallito
+    const result = loginSecurity.recordFailedAttempt(email);
+    
+    let errorMessage = '❌ Credenziali non valide';
+    
+    // Messaggi generici per evitare enumerazione utenti
     switch (error.code) {
       case 'auth/user-not-found':
-        errorMessage = '❌ Utente non trovato';
-        break;
       case 'auth/wrong-password':
-        errorMessage = '❌ Password errata';
+      case 'auth/invalid-credential':
+        // Messaggio generico per non rivelare quale campo è errato
+        errorMessage = '❌ Credenziali non valide';
         break;
       case 'auth/invalid-email':
         errorMessage = '❌ Email non valida';
@@ -3958,6 +4125,14 @@ async function loginWithEmail(email, password) {
       case 'auth/too-many-requests':
         errorMessage = '❌ Troppi tentativi, riprova più tardi';
         break;
+      case 'auth/user-disabled':
+        errorMessage = '❌ Account disabilitato';
+        break;
+    }
+    
+    // Se il blocco è stato attivato, mostra quel messaggio
+    if (result.blocked) {
+      errorMessage = result.reason;
     }
     
     showError(errorMessage);

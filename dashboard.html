@@ -1,23 +1,37 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" class="no-js">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dashboard - Strutture & Terreni</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes" />
+<title>Dashboard - QuoVadiScout</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏕️</text></svg>">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="dashboard.css">
+<script>
+  document.documentElement.classList.remove('no-js');
+  document.documentElement.classList.add('js');
+</script>
 </head>
 <body>
-  <header class="topbar">
-    <h1>📊 Dashboard Strutture & Terreni</h1>
-    <div class="controls">
-      <button onclick="location.href='index.html'" class="btn-secondary">🏠 Torna all'App</button>
-      <button id="refreshBtn" class="btn-primary">🔄 Aggiorna</button>
+  <!-- Mobile-First Header (come index.html) -->
+  <header class="app-header">
+    <div class="header-main">
+      <div class="header-brand">
+        <h1 class="app-title">📊 Dashboard QuoVadiScout</h1>
+      </div>
+      <div class="header-actions">
+        <button onclick="location.href='index.html'" class="btn-menu" aria-label="Torna all'app">
+          🏠 Home
+        </button>
+        <button id="refreshBtn" class="btn-menu" aria-label="Aggiorna dati">
+          🔄
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="dashboard">
+  <main id="main-content" class="main-content" role="main">
+    <div class="dashboard">
     <!-- Statistiche Generali -->
     <section class="stats-grid">
       <div class="stat-card total">
@@ -97,6 +111,7 @@
         </div>
       </div>
     </section>
+    </div>
   </main>
 
   <!-- Loading -->

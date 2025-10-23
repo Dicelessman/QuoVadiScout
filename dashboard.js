@@ -619,9 +619,9 @@ async function inizializzaDashboard() {
     aggiornaStatisticheProvince();
     creaGrafici();
     
-    // Inizializza la mappa Leaflet
-    console.log('🗺️ Inizializzazione mappa Leaflet...');
-    initMap();
+    // Mappa rimossa - non più utilizzata nella dashboard
+    // console.log('🗺️ Inizializzazione mappa Leaflet...');
+    // initMap();
     
     document.getElementById('loading').classList.add('hidden');
     
@@ -645,27 +645,9 @@ document.getElementById('refreshBtn').addEventListener('click', inizializzaDashb
 // === Avvio Dashboard ===
 window.addEventListener('DOMContentLoaded', inizializzaDashboard);
 
-// Fallback per Leaflet se non disponibile
-setTimeout(() => {
-  if (typeof L === 'undefined') {
-    console.warn('⚠️ Leaflet non caricato dopo 5 secondi, mostrando fallback');
-    const mapContainer = document.getElementById('map');
-    if (mapContainer && !map) {
-      mapContainer.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0; color: #666; flex-direction: column;">
-          <h3>🗺️ Mappa non disponibile</h3>
-          <p>Leaflet non è stato caricato correttamente</p>
-          <p style="font-size: 0.9rem; color: #999;">Le statistiche e i grafici sono comunque disponibili</p>
-          <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: #2f6b2f; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            🔄 Riprova
-          </button>
-        </div>
-      `;
-    }
-  }
-}, 5000); // Attendi 5 secondi per il caricamento di Leaflet
+// Fallback Leaflet rimosso - mappa non più utilizzata
 
-// Rendi le funzioni accessibili globalmente
-window.initMap = initMap;
-window.aggiungiMarkers = aggiungiMarkers;
-window.filtraMarkers = filtraMarkers;
+// Funzioni mappa rimosse dalla dashboard
+// window.initMap = initMap;
+// window.aggiungiMarkers = aggiungiMarkers;
+// window.filtraMarkers = filtraMarkers;

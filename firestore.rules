@@ -45,7 +45,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // COLLEZIONE: activityLog (log attività)
+    // COLLEZIONE: activityLog e activity_log (log attività)
     // Solo utenti autenticati possono leggere i propri log
     // ============================================
     match /activityLog/{logId} {
@@ -56,6 +56,17 @@ service cloud.firestore {
       // Solo utenti autenticati possono creare log
       allow create: if request.auth != null &&
                       request.resource.data.userId == request.auth.uid;
+
+      // Nessuno può modificare o eliminare i log
+      allow update, delete: if false;
+    }
+
+    match /activity_log/{logId} {
+      // Lettura: Accesso pubblico per visualizzazione feed
+      allow read: if true;
+
+      // Solo utenti autenticati possono creare log
+      allow create: if request.auth != null;
 
       // Nessuno può modificare o eliminare i log
       allow update, delete: if false;

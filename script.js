@@ -3844,6 +3844,101 @@ function generatePasswordFeedback(checks) {
   return feedback;
 }
 
+// === SICUREZZA: Session Timeout ===
+let sessionManager = null;
+
+class SessionManager {
+  constructor(timeoutMinutes = 30) {
+    this.timeoutMs = timeoutMinutes * 60 * 1000;
+    this.idleTimer = null;
+    this.warningTimer = null;
+    this.isShowingWarning = false;
+    this.init();
+  }
+  
+  init() {
+    // Reset timer su qualsiasi interazione utente
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+      document.addEventListener(event, () => this.resetTimer(), true);
+    });
+    
+    this.resetTimer();
+  }
+  
+  resetTimer() {
+    clearTimeout(this.idleTimer);
+    clearTimeout(this.warningTimer);
+    this.isShowingWarning = false;
+    
+    // Warning dopo 25 minuti
+    this.warningTimer = setTimeout(() => {
+      this.showWarning();
+    }, this.timeoutMs - (5 * 60 * 1000)); // 5 minuti prima del timeout
+    
+    // Timeout completo dopo 30 minuti
+    this.idleTimer = setTimeout(() => {
+      this.onTimeout();
+    }, this.timeoutMs);
+  }
+  
+  showWarning() {
+    if (this.isShowingWarning) return;
+    this.isShowingWarning = true;
+    
+    // Mostra avviso con opzione di restare connesso
+    const confirmed = confirm(
+      '⚠️ Sei inattivo da 25 minuti.\n\n' +
+      'Sarai disconnesso tra 5 minuti per sicurezza.\n\n' +
+      'Clicca OK per restare connesso.'
+    );
+    
+    if (confirmed) {
+      this.resetTimer();
+    }
+  }
+  
+  onTimeout() {
+    clearTimeout(this.idleTimer);
+    clearTimeout(this.warningTimer);
+    
+    console.log('⏰ Session timeout - Disconnessione automatica');
+    
+    // Logout Firebase
+    if (window.auth && window.signOut) {
+      signOut(window.auth).then(() => {
+        window.location.href = '/index.html';
+      }).catch(error => {
+        console.error('Errore logout:', error);
+        window.location.href = '/index.html';
+      });
+    } else {
+      window.location.href = '/index.html';
+    }
+  }
+  
+  destroy() {
+    clearTimeout(this.idleTimer);
+    clearTimeout(this.warningTimer);
+    this.isShowingWarning = false;
+  }
+}
+
+// === SICUREZZA: Inizializza Session Timeout ===
+function initSessionTimeout() {
+  if (sessionManager) {
+    sessionManager.destroy();
+  }
+  sessionManager = new SessionManager(30); // 30 minuti timeout
+}
+
+// === SICUREZZA: Cleanup Session ===
+function cleanupSession() {
+  if (sessionManager) {
+    sessionManager.destroy();
+    sessionManager = null;
+  }
+}
+
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
   onAuthStateChanged(auth, async (user) => {
@@ -3864,12 +3959,18 @@ function inizializzaAuth() {
       
       // Aggiorna contatore elenco
       aggiornaContatoreElenco();
+      
+      // 🔒 Inizializza session timeout
+      initSessionTimeout();
     } else {
       // Utente non autenticato
       utenteCorrente = null;
       userProfile = null;
       elencoPersonale = [];
       console.log('❌ Nessun utente autenticato');
+      
+      // 🔒 Cleanup session timeout
+      cleanupSession();
       
       // Mostra schermata di login
       mostraSchermataLogin();

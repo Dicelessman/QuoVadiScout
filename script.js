@@ -4624,6 +4624,9 @@ function mostraModaleProfiloUtente() {
   const preferenzeNotifiche = JSON.parse(localStorage.getItem('notificationPreferences') || '{}');
   const provinciaPreferita = localStorage.getItem('preferredProvince') || '';
   
+  // Ottieni province uniche dal database
+  const provinceNelDB = [...new Set(strutture.map(s => s.Prov).filter(p => p))].sort();
+  
   const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
   
   modalContent.innerHTML = `
@@ -4694,114 +4697,7 @@ function mostraModaleProfiloUtente() {
             <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Provincia di Ricerca Preferita</label>
             <select id="preferredProvince" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
               <option value="">Nessuna</option>
-              <option value="AL" ${provinciaPreferita === 'AL' ? 'selected' : ''}>Alessandria</option>
-              <option value="AN" ${provinciaPreferita === 'AN' ? 'selected' : ''}>Ancona</option>
-              <option value="AO" ${provinciaPreferita === 'AO' ? 'selected' : ''}>Aosta</option>
-              <option value="AR" ${provinciaPreferita === 'AR' ? 'selected' : ''}>Arezzo</option>
-              <option value="AP" ${provinciaPreferita === 'AP' ? 'selected' : ''}>Ascoli Piceno</option>
-              <option value="AT" ${provinciaPreferita === 'AT' ? 'selected' : ''}>Asti</option>
-              <option value="AV" ${provinciaPreferita === 'AV' ? 'selected' : ''}>Avellino</option>
-              <option value="BA" ${provinciaPreferita === 'BA' ? 'selected' : ''}>Bari</option>
-              <option value="BT" ${provinciaPreferita === 'BT' ? 'selected' : ''}>Barletta-Andria-Trani</option>
-              <option value="BL" ${provinciaPreferita === 'BL' ? 'selected' : ''}>Belluno</option>
-              <option value="BN" ${provinciaPreferita === 'BN' ? 'selected' : ''}>Benevento</option>
-              <option value="BG" ${provinciaPreferita === 'BG' ? 'selected' : ''}>Bergamo</option>
-              <option value="BI" ${provinciaPreferita === 'BI' ? 'selected' : ''}>Biella</option>
-              <option value="BO" ${provinciaPreferita === 'BO' ? 'selected' : ''}>Bologna</option>
-              <option value="BZ" ${provinciaPreferita === 'BZ' ? 'selected' : ''}>Bolzano</option>
-              <option value="BS" ${provinciaPreferita === 'BS' ? 'selected' : ''}>Brescia</option>
-              <option value="BR" ${provinciaPreferita === 'BR' ? 'selected' : ''}>Brindisi</option>
-              <option value="CA" ${provinciaPreferita === 'CA' ? 'selected' : ''}>Cagliari</option>
-              <option value="CL" ${provinciaPreferita === 'CL' ? 'selected' : ''}>Caltanissetta</option>
-              <option value="CB" ${provinciaPreferita === 'CB' ? 'selected' : ''}>Campobasso</option>
-              <option value="CE" ${provinciaPreferita === 'CE' ? 'selected' : ''}>Caserta</option>
-              <option value="CT" ${provinciaPreferita === 'CT' ? 'selected' : ''}>Catania</option>
-              <option value="CZ" ${provinciaPreferita === 'CZ' ? 'selected' : ''}>Catanzaro</option>
-              <option value="CH" ${provinciaPreferita === 'CH' ? 'selected' : ''}>Chieti</option>
-              <option value="CO" ${provinciaPreferita === 'CO' ? 'selected' : ''}>Como</option>
-              <option value="CS" ${provinciaPreferita === 'CS' ? 'selected' : ''}>Cosenza</option>
-              <option value="CR" ${provinciaPreferita === 'CR' ? 'selected' : ''}>Cremona</option>
-              <option value="KR" ${provinciaPreferita === 'KR' ? 'selected' : ''}>Crotone</option>
-              <option value="CN" ${provinciaPreferita === 'CN' ? 'selected' : ''}>Cuneo</option>
-              <option value="EN" ${provinciaPreferita === 'EN' ? 'selected' : ''}>Enna</option>
-              <option value="FM" ${provinciaPreferita === 'FM' ? 'selected' : ''}>Fermo</option>
-              <option value="FE" ${provinciaPreferita === 'FE' ? 'selected' : ''}>Ferrara</option>
-              <option value="FI" ${provinciaPreferita === 'FI' ? 'selected' : ''}>Firenze</option>
-              <option value="FG" ${provinciaPreferita === 'FG' ? 'selected' : ''}>Foggia</option>
-              <option value="FC" ${provinciaPreferita === 'FC' ? 'selected' : ''}>Forlì-Cesena</option>
-              <option value="FR" ${provinciaPreferita === 'FR' ? 'selected' : ''}>Frosinone</option>
-              <option value="GE" ${provinciaPreferita === 'GE' ? 'selected' : ''}>Genova</option>
-              <option value="GO" ${provinciaPreferita === 'GO' ? 'selected' : ''}>Gorizia</option>
-              <option value="GR" ${provinciaPreferita === 'GR' ? 'selected' : ''}>Grosseto</option>
-              <option value="IM" ${provinciaPreferita === 'IM' ? 'selected' : ''}>Imperia</option>
-              <option value="IS" ${provinciaPreferita === 'IS' ? 'selected' : ''}>Isernia</option>
-              <option value="SP" ${provinciaPreferita === 'SP' ? 'selected' : ''}>La Spezia</option>
-              <option value="AQ" ${provinciaPreferita === 'AQ' ? 'selected' : ''}>L'Aquila</option>
-              <option value="LT" ${provinciaPreferita === 'LT' ? 'selected' : ''}>Latina</option>
-              <option value="LE" ${provinciaPreferita === 'LE' ? 'selected' : ''}>Lecce</option>
-              <option value="LC" ${provinciaPreferita === 'LC' ? 'selected' : ''}>Lecco</option>
-              <option value="LI" ${provinciaPreferita === 'LI' ? 'selected' : ''}>Livorno</option>
-              <option value="LO" ${provinciaPreferita === 'LO' ? 'selected' : ''}>Lodi</option>
-              <option value="LU" ${provinciaPreferita === 'LU' ? 'selected' : ''}>Lucca</option>
-              <option value="MC" ${provinciaPreferita === 'MC' ? 'selected' : ''}>Macerata</option>
-              <option value="MN" ${provinciaPreferita === 'MN' ? 'selected' : ''}>Mantova</option>
-              <option value="MS" ${provinciaPreferita === 'MS' ? 'selected' : ''}>Massa-Carrara</option>
-              <option value="MT" ${provinciaPreferita === 'MT' ? 'selected' : ''}>Matera</option>
-              <option value="ME" ${provinciaPreferita === 'ME' ? 'selected' : ''}>Messina</option>
-              <option value="MI" ${provinciaPreferita === 'MI' ? 'selected' : ''}>Milano</option>
-              <option value="MO" ${provinciaPreferita === 'MO' ? 'selected' : ''}>Modena</option>
-              <option value="MB" ${provinciaPreferita === 'MB' ? 'selected' : ''}>Monza e Brianza</option>
-              <option value="NA" ${provinciaPreferita === 'NA' ? 'selected' : ''}>Napoli</option>
-              <option value="NO" ${provinciaPreferita === 'NO' ? 'selected' : ''}>Novara</option>
-              <option value="NU" ${provinciaPreferita === 'NU' ? 'selected' : ''}>Nuoro</option>
-              <option value="OG" ${provinciaPreferita === 'OG' ? 'selected' : ''}>Ogliastra</option>
-              <option value="OT" ${provinciaPreferita === 'OT' ? 'selected' : ''}>Olbia-Tempio</option>
-              <option value="OR" ${provinciaPreferita === 'OR' ? 'selected' : ''}>Oristano</option>
-              <option value="PD" ${provinciaPreferita === 'PD' ? 'selected' : ''}>Padova</option>
-              <option value="PA" ${provinciaPreferita === 'PA' ? 'selected' : ''}>Palermo</option>
-              <option value="PR" ${provinciaPreferita === 'PR' ? 'selected' : ''}>Parma</option>
-              <option value="PV" ${provinciaPreferita === 'PV' ? 'selected' : ''}>Pavia</option>
-              <option value="PG" ${provinciaPreferita === 'PG' ? 'selected' : ''}>Perugia</option>
-              <option value="PU" ${provinciaPreferita === 'PU' ? 'selected' : ''}>Pesaro e Urbino</option>
-              <option value="PE" ${provinciaPreferita === 'PE' ? 'selected' : ''}>Pescara</option>
-              <option value="PC" ${provinciaPreferita === 'PC' ? 'selected' : ''}>Piacenza</option>
-              <option value="PI" ${provinciaPreferita === 'PI' ? 'selected' : ''}>Pisa</option>
-              <option value="PT" ${provinciaPreferita === 'PT' ? 'selected' : ''}>Pistoia</option>
-              <option value="PN" ${provinciaPreferita === 'PN' ? 'selected' : ''}>Pordenone</option>
-              <option value="PZ" ${provinciaPreferita === 'PZ' ? 'selected' : ''}>Potenza</option>
-              <option value="PO" ${provinciaPreferita === 'PO' ? 'selected' : ''}>Prato</option>
-              <option value="RG" ${provinciaPreferita === 'RG' ? 'selected' : ''}>Ragusa</option>
-              <option value="RA" ${provinciaPreferita === 'RA' ? 'selected' : ''}>Ravenna</option>
-              <option value="RC" ${provinciaPreferita === 'RC' ? 'selected' : ''}>Reggio Calabria</option>
-              <option value="RE" ${provinciaPreferita === 'RE' ? 'selected' : ''}>Reggio Emilia</option>
-              <option value="RI" ${provinciaPreferita === 'RI' ? 'selected' : ''}>Rieti</option>
-              <option value="RN" ${provinciaPreferita === 'RN' ? 'selected' : ''}>Rimini</option>
-              <option value="RM" ${provinciaPreferita === 'RM' ? 'selected' : ''}>Roma</option>
-              <option value="RO" ${provinciaPreferita === 'RO' ? 'selected' : ''}>Rovigo</option>
-              <option value="SA" ${provinciaPreferita === 'SA' ? 'selected' : ''}>Salerno</option>
-              <option value="SS" ${provinciaPreferita === 'SS' ? 'selected' : ''}>Sassari</option>
-              <option value="SV" ${provinciaPreferita === 'SV' ? 'selected' : ''}>Savona</option>
-              <option value="SI" ${provinciaPreferita === 'SI' ? 'selected' : ''}>Siena</option>
-              <option value="SR" ${provinciaPreferita === 'SR' ? 'selected' : ''}>Siracusa</option>
-              <option value="SO" ${provinciaPreferita === 'SO' ? 'selected' : ''}>Sondrio</option>
-              <option value="SU" ${provinciaPreferita === 'SU' ? 'selected' : ''}>Sud Sardegna</option>
-              <option value="TA" ${provinciaPreferita === 'TA' ? 'selected' : ''}>Taranto</option>
-              <option value="TE" ${provinciaPreferita === 'TE' ? 'selected' : ''}>Teramo</option>
-              <option value="TR" ${provinciaPreferita === 'TR' ? 'selected' : ''}>Terni</option>
-              <option value="TO" ${provinciaPreferita === 'TO' ? 'selected' : ''}>Torino</option>
-              <option value="TP" ${provinciaPreferita === 'TP' ? 'selected' : ''}>Trapani</option>
-              <option value="TN" ${provinciaPreferita === 'TN' ? 'selected' : ''}>Trento</option>
-              <option value="TV" ${provinciaPreferita === 'TV' ? 'selected' : ''}>Treviso</option>
-              <option value="TS" ${provinciaPreferita === 'TS' ? 'selected' : ''}>Trieste</option>
-              <option value="UD" ${provinciaPreferita === 'UD' ? 'selected' : ''}>Udine</option>
-              <option value="VA" ${provinciaPreferita === 'VA' ? 'selected' : ''}>Varese</option>
-              <option value="VE" ${provinciaPreferita === 'VE' ? 'selected' : ''}>Venezia</option>
-              <option value="VB" ${provinciaPreferita === 'VB' ? 'selected' : ''}>Verbano-Cusio-Ossola</option>
-              <option value="VC" ${provinciaPreferita === 'VC' ? 'selected' : ''}>Vercelli</option>
-              <option value="VR" ${provinciaPreferita === 'VR' ? 'selected' : ''}>Verona</option>
-              <option value="VV" ${provinciaPreferita === 'VV' ? 'selected' : ''}>Vibo Valentia</option>
-              <option value="VI" ${provinciaPreferita === 'VI' ? 'selected' : ''}>Vicenza</option>
-              <option value="VT" ${provinciaPreferita === 'VT' ? 'selected' : ''}>Viterbo</option>
+              ${provinceNelDB.map(prov => `<option value="${prov}" ${provinciaPreferita === prov ? 'selected' : ''}>${prov}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -9763,15 +9659,15 @@ function initializeUIEventListeners() {
     });
   }
   
-  // User button
-  const userBtn = document.getElementById('userBtn');
-  if (userBtn) {
-    userBtn.addEventListener('click', () => {
-      if (typeof window.mostraGestioneElencoPersonale === 'function') {
-        window.mostraGestioneElencoPersonale();
-      }
-    });
-  }
+  // User button - rimosso listener per elenco personale, ora gestito da cambiaUtente()
+  // const userBtn = document.getElementById('userBtn');
+  // if (userBtn) {
+  //   userBtn.addEventListener('click', () => {
+  //     if (typeof window.mostraGestioneElencoPersonale === 'function') {
+  //       window.mostraGestioneElencoPersonale();
+  //     }
+  //   });
+  // }
   
   // Saved filters dropdown
   const savedFiltersSelect = document.getElementById('savedFiltersSelect');

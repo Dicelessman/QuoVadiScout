@@ -4694,6 +4694,7 @@ function mostraModaleProfiloUtente() {
             <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Provincia di Ricerca Preferita</label>
             <select id="preferredProvince" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
               <option value="">Nessuna</option>
+              ${profiloUtente.preferredProvince || provinciaPreferita ? `<option value="${profiloUtente.preferredProvince || provinciaPreferita}" selected>${profiloUtente.preferredProvince || provinciaPreferita}</option>` : ''}
               <option value="AL">Alessandria</option>
               <option value="AN">Ancona</option>
               <option value="AO">Aosta</option>

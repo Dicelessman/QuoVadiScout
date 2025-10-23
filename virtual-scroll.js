@@ -1,7 +1,7 @@
 // === QuoVadiScout v1.3.0 - Virtual Scrolling Optimized ===
 
 // Sistema di logging (usa il sistema globale se disponibile)
-const log = typeof window !== 'undefined' && window.log ? window.log : {
+const vScrollLog = typeof window !== 'undefined' && window.log ? window.log : {
   info: () => {},
   error: (...args) => console.error(...args),
   warn: () => {},
@@ -31,7 +31,7 @@ class VirtualScroller {
     // Container per placeholder
     this.placeholderContainer = null;
     
-    log.debug('VirtualScroller inizializzato per', items.length, 'elementi');
+    vScrollLog.debug('VirtualScroller inizializzato per', items.length, 'elementi');
   }
   
   // Inizializza la virtualizzazione
@@ -42,7 +42,7 @@ class VirtualScroller {
       return;
     }
     
-    log.debug('VirtualScroller: Attivando virtualizzazione per', this.items.length, 'elementi');
+    vScrollLog.debug('VirtualScroller: Attivando virtualizzazione per', this.items.length, 'elementi');
     
     // Pulisci container
     this.container.innerHTML = '';
@@ -135,7 +135,7 @@ class VirtualScroller {
         renderedElement.style.right = '0';
         renderedElement.style.height = `${this.placeholderHeight}px`;
         
-        log.debug('VirtualScroller: Renderizzato elemento', index);
+        vScrollLog.debug('VirtualScroller: Renderizzato elemento', index);
       }
     } catch (error) {
       console.error('❌ VirtualScroller: Errore rendering elemento', index, error);
@@ -154,7 +154,7 @@ class VirtualScroller {
       }
     });
     
-    log.debug('VirtualScroller: Renderizzati tutti gli elementi');
+    vScrollLog.debug('VirtualScroller: Renderizzati tutti gli elementi');
   }
   
   // Aggiorna la lista di elementi
@@ -210,7 +210,7 @@ class VirtualScroller {
     this.visibleItems.clear();
     this.container.innerHTML = '';
     
-    log.debug('VirtualScroller: Distrutto');
+    vScrollLog.debug('VirtualScroller: Distrutto');
   }
   
   // Scrolla a un elemento specifico
@@ -300,4 +300,4 @@ class SmartScrollManager {
 window.VirtualScroller = VirtualScroller;
 // window.VirtualScrollManager = VirtualScrollManager; // Classe non definita
 
-log.debug('VirtualScroll inizializzato');
+vScrollLog.debug('VirtualScroll inizializzato');

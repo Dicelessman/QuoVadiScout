@@ -320,5 +320,6 @@ window.showError = (message, options) => toastManager.error(message, options);
 window.showWarning = (message, options) => toastManager.warning(message, options);
 window.showInfo = (message, options) => toastManager.info(message, options);
 
-export default toastManager;
+// Rimossa dichiarazione export per compatibilità con script globale
+// export default toastManager;
 

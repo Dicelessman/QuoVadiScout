@@ -2381,7 +2381,8 @@ function createResponsiveModal(id, title, content) {
     if (e.matches) {
       // Mobile: modal a schermo intero
       modalContent.style.cssText = `
-        background: white;
+        background: var(--bg-primary, white);
+        color: var(--text-primary, #1a1a1a);
         border-radius: 0;
         padding: 15px;
         max-width: 100%;
@@ -2399,7 +2400,7 @@ function createResponsiveModal(id, title, content) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: white;
+        background: var(--bg-primary, white);
         display: flex;
         align-items: stretch;
         justify-content: stretch;
@@ -2410,13 +2411,14 @@ function createResponsiveModal(id, title, content) {
     } else {
       // Desktop: modal centrato
       modalContent.style.cssText = `
-        background: white;
+        background: var(--bg-primary, white);
+        color: var(--text-primary, #1a1a1a);
         border-radius: 12px;
         padding: 20px;
         max-width: 90%;
         max-height: 95vh;
         overflow-y: auto;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.3));
         position: relative;
         width: 100%;
         box-sizing: border-box;
@@ -2427,7 +2429,7 @@ function createResponsiveModal(id, title, content) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: var(--bg-overlay, rgba(0,0,0,0.5));
         display: flex;
         align-items: center;
         justify-content: center;

@@ -139,6 +139,43 @@ function aggiornaStatistiche() {
   document.getElementById('totalTerreni').textContent = stats.terreni;
   document.getElementById('totalEntrambe').textContent = stats.entrambe;
   document.getElementById('totalSenza').textContent = stats.senza;
+  
+  // Nuove metriche avanzate
+  aggiornaMetricheAvanzate();
+}
+
+function aggiornaMetricheAvanzate() {
+  const strutture = window.strutture || [];
+  
+  // Ultimo aggiornamento
+  const lastModified = strutture
+    .map(s => s.lastModified ? new Date(s.lastModified.seconds * 1000) : null)
+    .filter(d => d)
+    .sort((a, b) => b - a)[0];
+  
+  document.getElementById('lastUpdate').textContent = lastModified 
+    ? lastModified.toLocaleDateString('it-IT')
+    : 'N/A';
+  
+  // Strutture con coordinate
+  const withCoords = strutture.filter(s => 
+    (s.coordinate && s.coordinate.lat && s.coordinate.lng) ||
+    (s.coordinate_lat && s.coordinate_lng)
+  ).length;
+  document.getElementById('structuresWithCoords').textContent = `${withCoords} (${Math.round(withCoords/strutture.length*100)}%)`;
+  
+  // Strutture con note personali
+  const withNotes = strutture.filter(s => s.notePersonali && s.notePersonali.length > 0).length;
+  document.getElementById('structuresWithNotes').textContent = `${withNotes} (${Math.round(withNotes/strutture.length*100)}%)`;
+  
+  // Rating medio
+  const ratings = strutture
+    .map(s => s.rating?.average)
+    .filter(r => r !== undefined && r !== null);
+  const avgRating = ratings.length > 0 
+    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+    : 'N/A';
+  document.getElementById('avgRating').textContent = avgRating;
 }
 
 function aggiornaStatisticheProvince() {

@@ -84,16 +84,40 @@
       </div>
     </section>
 
-    <!-- Mappa -->
-    <section class="map-section">
-      <h2>🗺️ Geolocalizzazione</h2>
-      <div class="map-container">
-        <div id="map" class="map"></div>
-        <div class="map-controls">
-          <button id="showAllBtn" class="map-btn">Mostra Tutte</button>
-          <button id="showCaseBtn" class="map-btn">Solo Case</button>
-          <button id="showTerrenoBtn" class="map-btn">Solo Terreni</button>
-          <button id="showEntrambeBtn" class="map-btn">Casa + Terreno</button>
+    <!-- Metriche Avanzate -->
+    <section class="advanced-metrics">
+      <h2>📊 Metriche Avanzate</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">📅</div>
+          <div class="metric-content">
+            <h3 id="lastUpdate">-</h3>
+            <p>Ultimo Aggiornamento</p>
+          </div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">📍</div>
+          <div class="metric-content">
+            <h3 id="structuresWithCoords">-</h3>
+            <p>Strutture con Coordinate</p>
+          </div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">📝</div>
+          <div class="metric-content">
+            <h3 id="structuresWithNotes">-</h3>
+            <p>Strutture con Note</p>
+          </div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">⭐</div>
+          <div class="metric-content">
+            <h3 id="avgRating">-</h3>
+            <p>Rating Medio</p>
+          </div>
         </div>
       </div>
     </section>

@@ -482,13 +482,14 @@ function mostraRicercaAvanzata() {
   
   const modal = document.createElement('div');
   modal.id = 'ricercaAvanzataModal';
+  modal.className = 'modal-overlay'; // Usa classe per ereditare tema
   modal.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: var(--bg-overlay, rgba(0,0,0,0.5));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -496,14 +497,16 @@ function mostraRicercaAvanzata() {
   `;
   
   const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content'; // Usa classe per ereditare tema
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary, white);
+    color: var(--text-primary, #1a1a1a);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
     max-height: 95%;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.3));
     position: relative;
     min-width: 320px;
     width: 100%;
@@ -524,7 +527,7 @@ function mostraRicercaAvanzata() {
   title.textContent = '🔍 Ricerca Avanzata';
   title.style.cssText = `
     margin: 0;
-    color: #2f6b2f;
+    color: var(--primary, #2f6b2f);
     font-size: 1.5rem;
   `;
   
@@ -2290,13 +2293,14 @@ function createResponsiveModal(id, title, content) {
   
   const modal = document.createElement('div');
   modal.id = id;
+  modal.className = 'modal-overlay';
   modal.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: var(--bg-overlay, rgba(0,0,0,0.5));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2306,14 +2310,16 @@ function createResponsiveModal(id, title, content) {
   `;
   
   const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary, white);
+    color: var(--text-primary, #1a1a1a);
     border-radius: 12px;
     padding: 20px;
     max-width: 100%;
     max-height: 95vh;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.3));
     position: relative;
     width: 100%;
     box-sizing: border-box;
@@ -2327,14 +2333,14 @@ function createResponsiveModal(id, title, content) {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #2f6b2f;
+    border-bottom: 2px solid var(--primary, #2f6b2f);
   `;
   
   const titleEl = document.createElement('h2');
   titleEl.textContent = title;
   titleEl.style.cssText = `
     margin: 0;
-    color: #2f6b2f;
+    color: var(--primary, #2f6b2f);
     font-size: 1.5rem;
   `;
   

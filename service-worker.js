@@ -1,8 +1,8 @@
-// Service Worker per QuoVadiScout PWA v1.3.0
-const CACHE_NAME = 'quovadiscout-v1.3.0';
-const STATIC_CACHE = 'static-v1.3.0';
-const DYNAMIC_CACHE = 'dynamic-v1.3.0';
-const IMAGE_CACHE = 'images-v1.3.0';
+// Service Worker per QuoVadiScout PWA v1.3.1
+const CACHE_NAME = 'quovadiscout-v1.3.1';
+const STATIC_CACHE = 'static-v1.3.1';
+const DYNAMIC_CACHE = 'dynamic-v1.3.1';
+const IMAGE_CACHE = 'images-v1.3.1';
 const FREQUENTLY_USED_CACHE = 'frequently-used-v1';
 const MAX_CACHED_STRUCTURES = 50;
 

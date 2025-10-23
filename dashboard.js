@@ -640,6 +640,14 @@ async function inizializzaDashboard() {
 // === Event Listeners ===
 document.getElementById('refreshBtn').addEventListener('click', inizializzaDashboard);
 
+// Listener per filtro provincia
+const provinceFilter = document.getElementById('provinceFilter');
+if (provinceFilter) {
+  provinceFilter.addEventListener('change', () => {
+    aggiornaStatisticheProvince();
+  });
+}
+
 // La funzione mostraSchedaCompleta è ora gestita dal file script.js principale
 
 // === Avvio Dashboard ===

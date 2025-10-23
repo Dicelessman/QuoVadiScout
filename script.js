@@ -8163,8 +8163,32 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   try {
   strutture = await caricaStrutture();
-  renderStrutture(strutture);
+  
+  // Applica filtro provincia preferita se impostata
+  const preferredProvince = localStorage.getItem('preferredProvince');
+  if (preferredProvince && preferredProvince !== '') {
+    console.log(`🔍 Applicando provincia preferita: ${preferredProvince}`);
+    
+    // Imposta il dropdown provincia
+    const provSelect = document.getElementById('filter-prov');
+    if (provSelect) {
+      provSelect.value = preferredProvince;
+    }
+    
+    // Applica il filtro
+    const struttureFiltrate = filtra(strutture);
+    renderStrutture(struttureFiltrate);
     aggiornaContatoreElenco();
+    
+    // Mostra indicatore filtro attivo
+    if (window.showToast) {
+      window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
+    }
+  } else {
+    // Nessuna provincia preferita, mostra tutte le strutture
+    renderStrutture(strutture);
+    aggiornaContatoreElenco();
+  }
     
     // Applica filtro dalla dashboard se presente
     if (window.dashboardFilter) {

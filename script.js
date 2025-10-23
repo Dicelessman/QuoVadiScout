@@ -52,11 +52,13 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
-  if (!auth.currentUser) {
-    console.log('🔒 Accesso negato: autenticazione richiesta');
-    mostraSchermataLogin();
-    return [];
-  }
+  // Temporaneamente disabilitato per permettere accesso pubblico ai dati strutture
+  // Le Firebase Security Rules proteggono le operazioni di scrittura
+  // if (!auth || !auth.currentUser) {
+  //   console.log('🔒 Accesso negato: autenticazione richiesta');
+  //   mostraSchermataLogin();
+  //   return [];
+  // }
   
   const cacheKey = 'strutture_cache';
   const cacheTimestamp = 'strutture_cache_timestamp';

@@ -39,6 +39,13 @@ const firebaseConfig = window.firebaseConfig || {
   appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
 };
 
+// Avviso se il file di configurazione non è stato caricato correttamente
+if (!window.firebaseConfig) {
+  console.warn('⚠️ ATTENZIONE: firebase-config-sync.js non caricato!');
+  console.warn('⚠️ Uso configurazione fallback. Riavvia il server e ricarica la pagina.');
+  console.warn('⚠️ Vedi: SOLUZIONE_SERVER_LOCALE.md per istruzioni');
+}
+
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);

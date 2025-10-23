@@ -3939,6 +3939,91 @@ function cleanupSession() {
   }
 }
 
+// === SICUREZZA: Sanitizzazione Input ===
+class InputSanitizer {
+  static sanitizeHTML(input) {
+    if (!input) return '';
+    
+    // Creare elemento temporaneo per escape HTML
+    const div = document.createElement('div');
+    div.textContent = input;
+    const sanitized = div.innerHTML;
+    
+    // Rimuovere possibili script tag
+    return sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  }
+  
+  static sanitizeEmail(email) {
+    if (!email) return '';
+    
+    // Validazione email base
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Email non valida');
+    }
+    
+    return email.toLowerCase().trim();
+  }
+  
+  static sanitizePhone(phone) {
+    if (!phone) return '';
+    
+    // Rimuovere tutti i caratteri non numerici
+    return phone.replace(/\D/g, '');
+  }
+  
+  static sanitizeText(input, maxLength = 1000) {
+    if (!input) return '';
+    
+    // Trim e limit lunghezza
+    let sanitized = input.trim();
+    
+    if (sanitized.length > maxLength) {
+      sanitized = sanitized.substring(0, maxLength);
+    }
+    
+    // Escape HTML
+    return this.sanitizeHTML(sanitized);
+  }
+  
+  static sanitizeCoordinate(value) {
+    const num = parseFloat(value);
+    
+    if (isNaN(num)) {
+      throw new Error('Coordinate non valide');
+    }
+    
+    // Valori validi per latitudine e longitudine
+    if (Math.abs(num) > 180) {
+      throw new Error('Coordinate fuori range');
+    }
+    
+    return num;
+  }
+  
+  static sanitizeURL(url) {
+    if (!url) return '';
+    
+    try {
+      const parsed = new URL(url);
+      // Permetti solo http e https
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Protocollo non valido');
+      }
+      return parsed.href;
+    } catch {
+      return '';
+    }
+  }
+  
+  static sanitizeNome(nome) {
+    if (!nome) return '';
+    
+    // Rimuovi caratteri pericolosi, mantieni solo lettere, numeri, spazi e alcuni caratteri speciali
+    return nome.replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ\s'-]/g, '').trim().substring(0, 100);
+  }
+}
+
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
   onAuthStateChanged(auth, async (user) => {
@@ -4137,37 +4222,45 @@ function setupAuthEventListeners() {
   
   // Login con email/password
   document.getElementById('loginBtn').onclick = async () => {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    
-    if (!email || !password) {
-      showError('⚠️ Inserisci email e password');
-      return;
+    try {
+      const email = InputSanitizer.sanitizeEmail(document.getElementById('loginEmail').value);
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!email || !password) {
+        showError('⚠️ Inserisci email e password');
+        return;
+      }
+      
+      await loginWithEmail(email, password);
+    } catch (error) {
+      showError('⚠️ Email non valida');
     }
-    
-    await loginWithEmail(email, password);
   };
   
   // Registrazione
   document.getElementById('registerBtn').onclick = async () => {
-    const nome = document.getElementById('registerNome').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    
-    if (!nome || !email || !password) {
-      showError('⚠️ Compila tutti i campi');
-      return;
+    try {
+      const nome = InputSanitizer.sanitizeNome(document.getElementById('registerNome').value);
+      const email = InputSanitizer.sanitizeEmail(document.getElementById('registerEmail').value);
+      const password = document.getElementById('registerPassword').value;
+      
+      if (!nome || !email || !password) {
+        showError('⚠️ Compila tutti i campi');
+        return;
+      }
+      
+      // Validazione password robusta
+      const passwordCheck = validatePasswordStrength(password);
+      if (!passwordCheck.valid) {
+        const feedback = passwordCheck.feedback.join('\n');
+        showError(`⚠️ Password troppo debole:\n${feedback}`);
+        return;
+      }
+      
+      await registerWithEmail(nome, email, password);
+    } catch (error) {
+      showError('⚠️ Dati non validi. Controlla i campi inseriti.');
     }
-    
-    // Validazione password robusta
-    const passwordCheck = validatePasswordStrength(password);
-    if (!passwordCheck.valid) {
-      const feedback = passwordCheck.feedback.join('\n');
-      showError(`⚠️ Password troppo debole:\n${feedback}`);
-      return;
-    }
-    
-    await registerWithEmail(nome, email, password);
   };
   
   // Login con Google

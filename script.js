@@ -27,10 +27,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
-// 🔒 Caricata da file separato per sicurezza
-// Se window.firebaseConfig è disponibile, usa quello (caricato da firebase-config-sync.js)
-// Altrimenti usa un fallback (solo per sviluppo locale)
-const firebaseConfig = window.firebaseConfig || {
+// 🔒 NOTA SICUREZZA: In produzione, queste credenziali dovrebbero essere:
+// 1. Spostate in un file separato (firebase-config-sync.js) NON nel repository
+// 2. Caricate tramite variabili d'ambiente
+// 3. Protette da Firebase Security Rules
+// 
+// Per ora: configurazione embedded per compatibilità sviluppo locale
+const firebaseConfig = {
   apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
   authDomain: "quovadiscout.firebaseapp.com",
   projectId: "quovadiscout",
@@ -38,13 +41,6 @@ const firebaseConfig = window.firebaseConfig || {
   messagingSenderId: "745134651793",
   appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
 };
-
-// Avviso se il file di configurazione non è stato caricato correttamente
-if (!window.firebaseConfig) {
-  console.warn('⚠️ ATTENZIONE: firebase-config-sync.js non caricato!');
-  console.warn('⚠️ Uso configurazione fallback. Riavvia il server e ricarica la pagina.');
-  console.warn('⚠️ Vedi: SOLUZIONE_SERVER_LOCALE.md per istruzioni');
-}
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);

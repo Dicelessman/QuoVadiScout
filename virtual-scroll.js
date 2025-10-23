@@ -1,5 +1,12 @@
-// === QuoVadiScout v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
-console.log('🔄 VirtualScroll caricato con versione v1.2.1 - Cache bust applicato');
+// === QuoVadiScout v1.3.0 - Virtual Scrolling Optimized ===
+
+// Sistema di logging (usa il sistema globale se disponibile)
+const log = typeof window !== 'undefined' && window.log ? window.log : {
+  info: () => {},
+  error: (...args) => console.error(...args),
+  warn: () => {},
+  debug: () => {}
+};
 
 // VirtualScroller per ottimizzare il rendering di liste lunghe
 class VirtualScroller {
@@ -24,7 +31,7 @@ class VirtualScroller {
     // Container per placeholder
     this.placeholderContainer = null;
     
-    console.log('🔄 VirtualScroller inizializzato per', items.length, 'elementi');
+    log.debug('VirtualScroller inizializzato per', items.length, 'elementi');
   }
   
   // Inizializza la virtualizzazione
@@ -35,7 +42,7 @@ class VirtualScroller {
       return;
     }
     
-    console.log('📊 VirtualScroller: Attivando virtualizzazione per', this.items.length, 'elementi');
+    log.debug('VirtualScroller: Attivando virtualizzazione per', this.items.length, 'elementi');
     
     // Pulisci container
     this.container.innerHTML = '';
@@ -128,7 +135,7 @@ class VirtualScroller {
         renderedElement.style.right = '0';
         renderedElement.style.height = `${this.placeholderHeight}px`;
         
-        console.log('🔄 VirtualScroller: Renderizzato elemento', index);
+        log.debug('VirtualScroller: Renderizzato elemento', index);
       }
     } catch (error) {
       console.error('❌ VirtualScroller: Errore rendering elemento', index, error);
@@ -147,7 +154,7 @@ class VirtualScroller {
       }
     });
     
-    console.log('🔄 VirtualScroller: Renderizzati tutti gli elementi');
+    log.debug('VirtualScroller: Renderizzati tutti gli elementi');
   }
   
   // Aggiorna la lista di elementi
@@ -203,7 +210,7 @@ class VirtualScroller {
     this.visibleItems.clear();
     this.container.innerHTML = '';
     
-    console.log('🗑️ VirtualScroller: Distrutto');
+    log.debug('VirtualScroller: Distrutto');
   }
   
   // Scrolla a un elemento specifico
@@ -293,4 +300,4 @@ class SmartScrollManager {
 window.VirtualScroller = VirtualScroller;
 // window.VirtualScrollManager = VirtualScrollManager; // Classe non definita
 
-console.log('🔄 VirtualScroll inizializzato');
+log.debug('VirtualScroll inizializzato');

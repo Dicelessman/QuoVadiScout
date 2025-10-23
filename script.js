@@ -1,5 +1,14 @@
 // === QuoVadiScout v1.3.0 - Cache Bust: 2024-12-19-12-00 ===
-console.log('🔄 Script.js caricato con versione v1.3.0 - Cache bust applicato');
+
+// === Sistema di Logging Condizionale ===
+const DEBUG = false; // Impostare a true per debug in produzione
+const log = {
+  info: (...args) => DEBUG && console.log(...args),
+  error: (...args) => console.error(...args), // Sempre attivo per errori
+  warn: (...args) => DEBUG && console.warn(...args),
+  debug: (...args) => DEBUG && console.log('[DEBUG]', ...args)
+};
+
 // === Firebase SDK Imports ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {

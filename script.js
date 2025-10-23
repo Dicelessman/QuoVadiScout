@@ -8169,31 +8169,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (preferredProvince && preferredProvince !== '') {
     console.log(`🔍 Provincia preferita trovata: ${preferredProvince}`);
     
-    // Aspetta che il DOM sia completamente caricato
-    setTimeout(() => {
-      const provSelect = document.getElementById('filter-prov');
-      console.log('🔍 Dropdown provincia:', provSelect);
-      
-      if (provSelect) {
-        provSelect.value = preferredProvince;
-        console.log(`✅ Provincia impostata: ${provSelect.value}`);
-        
-        // Applica il filtro
-        const struttureFiltrate = filtra(strutture);
-        console.log(`📊 Strutture filtrate: ${struttureFiltrate.length} su ${strutture.length}`);
-        renderStrutture(struttureFiltrate);
-        aggiornaContatoreElenco();
-        
-        // Mostra indicatore filtro attivo
-        if (window.showToast) {
-          window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
-        }
-      } else {
-        console.error('❌ Dropdown provincia non trovato');
-        renderStrutture(strutture);
-        aggiornaContatoreElenco();
-      }
-    }, 100);
+    // Filtra direttamente le strutture senza aspettare il DOM
+    const struttureFiltrate = strutture.filter(s => s.Prov === preferredProvince);
+    console.log(`📊 Strutture filtrate: ${struttureFiltrate.length} su ${strutture.length}`);
+    
+    renderStrutture(struttureFiltrate);
+    aggiornaContatoreElenco();
+    
+    // Mostra indicatore filtro attivo
+    if (window.showToast) {
+      window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
+    }
   } else {
     // Nessuna provincia preferita, mostra tutte le strutture
     console.log('ℹ️ Nessuna provincia preferita impostata');

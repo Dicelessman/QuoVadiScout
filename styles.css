@@ -992,6 +992,18 @@ body {
   }
 }
 
+/* Fix overflow orizzontale */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.card-content, .card-field-value {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
 /* === ANIMATIONS === */
 @keyframes fadeIn {
   from {

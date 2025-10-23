@@ -4694,115 +4694,114 @@ function mostraModaleProfiloUtente() {
             <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Provincia di Ricerca Preferita</label>
             <select id="preferredProvince" style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-secondary, #f9fafb); color: var(--text-primary, #1f2937); font-size: 1rem;">
               <option value="">Nessuna</option>
-              ${profiloUtente.preferredProvince || provinciaPreferita ? `<option value="${profiloUtente.preferredProvince || provinciaPreferita}" selected>${profiloUtente.preferredProvince || provinciaPreferita}</option>` : ''}
-              <option value="AL">Alessandria</option>
-              <option value="AN">Ancona</option>
-              <option value="AO">Aosta</option>
-              <option value="AR">Arezzo</option>
-              <option value="AP">Ascoli Piceno</option>
-              <option value="AT">Asti</option>
-              <option value="AV">Avellino</option>
-              <option value="BA">Bari</option>
-              <option value="BT">Barletta-Andria-Trani</option>
-              <option value="BL">Belluno</option>
-              <option value="BN">Benevento</option>
-              <option value="BG">Bergamo</option>
-              <option value="BI">Biella</option>
-              <option value="BO">Bologna</option>
-              <option value="BZ">Bolzano</option>
-              <option value="BS">Brescia</option>
-              <option value="BR">Brindisi</option>
-              <option value="CA">Cagliari</option>
-              <option value="CL">Caltanissetta</option>
-              <option value="CB">Campobasso</option>
-              <option value="CE">Caserta</option>
-              <option value="CT">Catania</option>
-              <option value="CZ">Catanzaro</option>
-              <option value="CH">Chieti</option>
-              <option value="CO">Como</option>
-              <option value="CS">Cosenza</option>
-              <option value="CR">Cremona</option>
-              <option value="KR">Crotone</option>
-              <option value="CN">Cuneo</option>
-              <option value="EN">Enna</option>
-              <option value="FM">Fermo</option>
-              <option value="FE">Ferrara</option>
-              <option value="FI">Firenze</option>
-              <option value="FG">Foggia</option>
-              <option value="FC">Forlì-Cesena</option>
-              <option value="FR">Frosinone</option>
-              <option value="GE">Genova</option>
-              <option value="GO">Gorizia</option>
-              <option value="GR">Grosseto</option>
-              <option value="IM">Imperia</option>
-              <option value="IS">Isernia</option>
-              <option value="SP">La Spezia</option>
-              <option value="AQ">L'Aquila</option>
-              <option value="LT">Latina</option>
-              <option value="LE">Lecce</option>
-              <option value="LC">Lecco</option>
-              <option value="LI">Livorno</option>
-              <option value="LO">Lodi</option>
-              <option value="LU">Lucca</option>
-              <option value="MC">Macerata</option>
-              <option value="MN">Mantova</option>
-              <option value="MS">Massa-Carrara</option>
-              <option value="MT">Matera</option>
-              <option value="ME">Messina</option>
-              <option value="MI">Milano</option>
-              <option value="MO">Modena</option>
-              <option value="MB">Monza e Brianza</option>
-              <option value="NA">Napoli</option>
-              <option value="NO">Novara</option>
-              <option value="NU">Nuoro</option>
-              <option value="OG">Ogliastra</option>
-              <option value="OT">Olbia-Tempio</option>
-              <option value="OR">Oristano</option>
-              <option value="PD">Padova</option>
-              <option value="PA">Palermo</option>
-              <option value="PR">Parma</option>
-              <option value="PV">Pavia</option>
-              <option value="PG">Perugia</option>
-              <option value="PU">Pesaro e Urbino</option>
-              <option value="PE">Pescara</option>
-              <option value="PC">Piacenza</option>
-              <option value="PI">Pisa</option>
-              <option value="PT">Pistoia</option>
-              <option value="PN">Pordenone</option>
-              <option value="PZ">Potenza</option>
-              <option value="PO">Prato</option>
-              <option value="RG">Ragusa</option>
-              <option value="RA">Ravenna</option>
-              <option value="RC">Reggio Calabria</option>
-              <option value="RE">Reggio Emilia</option>
-              <option value="RI">Rieti</option>
-              <option value="RN">Rimini</option>
-              <option value="RM">Roma</option>
-              <option value="RO">Rovigo</option>
-              <option value="SA">Salerno</option>
-              <option value="SS">Sassari</option>
-              <option value="SV">Savona</option>
-              <option value="SI">Siena</option>
-              <option value="SR">Siracusa</option>
-              <option value="SO">Sondrio</option>
-              <option value="SU">Sud Sardegna</option>
-              <option value="TA">Taranto</option>
-              <option value="TE">Teramo</option>
-              <option value="TR">Terni</option>
-              <option value="TO">Torino</option>
-              <option value="TP">Trapani</option>
-              <option value="TN">Trento</option>
-              <option value="TV">Treviso</option>
-              <option value="TS">Trieste</option>
-              <option value="UD">Udine</option>
-              <option value="VA">Varese</option>
-              <option value="VE">Venezia</option>
-              <option value="VB">Verbano-Cusio-Ossola</option>
-              <option value="VC">Vercelli</option>
-              <option value="VR">Verona</option>
-              <option value="VV">Vibo Valentia</option>
-              <option value="VI">Vicenza</option>
-              <option value="VT">Viterbo</option>
+              <option value="AL" ${provinciaPreferita === 'AL' ? 'selected' : ''}>Alessandria</option>
+              <option value="AN" ${provinciaPreferita === 'AN' ? 'selected' : ''}>Ancona</option>
+              <option value="AO" ${provinciaPreferita === 'AO' ? 'selected' : ''}>Aosta</option>
+              <option value="AR" ${provinciaPreferita === 'AR' ? 'selected' : ''}>Arezzo</option>
+              <option value="AP" ${provinciaPreferita === 'AP' ? 'selected' : ''}>Ascoli Piceno</option>
+              <option value="AT" ${provinciaPreferita === 'AT' ? 'selected' : ''}>Asti</option>
+              <option value="AV" ${provinciaPreferita === 'AV' ? 'selected' : ''}>Avellino</option>
+              <option value="BA" ${provinciaPreferita === 'BA' ? 'selected' : ''}>Bari</option>
+              <option value="BT" ${provinciaPreferita === 'BT' ? 'selected' : ''}>Barletta-Andria-Trani</option>
+              <option value="BL" ${provinciaPreferita === 'BL' ? 'selected' : ''}>Belluno</option>
+              <option value="BN" ${provinciaPreferita === 'BN' ? 'selected' : ''}>Benevento</option>
+              <option value="BG" ${provinciaPreferita === 'BG' ? 'selected' : ''}>Bergamo</option>
+              <option value="BI" ${provinciaPreferita === 'BI' ? 'selected' : ''}>Biella</option>
+              <option value="BO" ${provinciaPreferita === 'BO' ? 'selected' : ''}>Bologna</option>
+              <option value="BZ" ${provinciaPreferita === 'BZ' ? 'selected' : ''}>Bolzano</option>
+              <option value="BS" ${provinciaPreferita === 'BS' ? 'selected' : ''}>Brescia</option>
+              <option value="BR" ${provinciaPreferita === 'BR' ? 'selected' : ''}>Brindisi</option>
+              <option value="CA" ${provinciaPreferita === 'CA' ? 'selected' : ''}>Cagliari</option>
+              <option value="CL" ${provinciaPreferita === 'CL' ? 'selected' : ''}>Caltanissetta</option>
+              <option value="CB" ${provinciaPreferita === 'CB' ? 'selected' : ''}>Campobasso</option>
+              <option value="CE" ${provinciaPreferita === 'CE' ? 'selected' : ''}>Caserta</option>
+              <option value="CT" ${provinciaPreferita === 'CT' ? 'selected' : ''}>Catania</option>
+              <option value="CZ" ${provinciaPreferita === 'CZ' ? 'selected' : ''}>Catanzaro</option>
+              <option value="CH" ${provinciaPreferita === 'CH' ? 'selected' : ''}>Chieti</option>
+              <option value="CO" ${provinciaPreferita === 'CO' ? 'selected' : ''}>Como</option>
+              <option value="CS" ${provinciaPreferita === 'CS' ? 'selected' : ''}>Cosenza</option>
+              <option value="CR" ${provinciaPreferita === 'CR' ? 'selected' : ''}>Cremona</option>
+              <option value="KR" ${provinciaPreferita === 'KR' ? 'selected' : ''}>Crotone</option>
+              <option value="CN" ${provinciaPreferita === 'CN' ? 'selected' : ''}>Cuneo</option>
+              <option value="EN" ${provinciaPreferita === 'EN' ? 'selected' : ''}>Enna</option>
+              <option value="FM" ${provinciaPreferita === 'FM' ? 'selected' : ''}>Fermo</option>
+              <option value="FE" ${provinciaPreferita === 'FE' ? 'selected' : ''}>Ferrara</option>
+              <option value="FI" ${provinciaPreferita === 'FI' ? 'selected' : ''}>Firenze</option>
+              <option value="FG" ${provinciaPreferita === 'FG' ? 'selected' : ''}>Foggia</option>
+              <option value="FC" ${provinciaPreferita === 'FC' ? 'selected' : ''}>Forlì-Cesena</option>
+              <option value="FR" ${provinciaPreferita === 'FR' ? 'selected' : ''}>Frosinone</option>
+              <option value="GE" ${provinciaPreferita === 'GE' ? 'selected' : ''}>Genova</option>
+              <option value="GO" ${provinciaPreferita === 'GO' ? 'selected' : ''}>Gorizia</option>
+              <option value="GR" ${provinciaPreferita === 'GR' ? 'selected' : ''}>Grosseto</option>
+              <option value="IM" ${provinciaPreferita === 'IM' ? 'selected' : ''}>Imperia</option>
+              <option value="IS" ${provinciaPreferita === 'IS' ? 'selected' : ''}>Isernia</option>
+              <option value="SP" ${provinciaPreferita === 'SP' ? 'selected' : ''}>La Spezia</option>
+              <option value="AQ" ${provinciaPreferita === 'AQ' ? 'selected' : ''}>L'Aquila</option>
+              <option value="LT" ${provinciaPreferita === 'LT' ? 'selected' : ''}>Latina</option>
+              <option value="LE" ${provinciaPreferita === 'LE' ? 'selected' : ''}>Lecce</option>
+              <option value="LC" ${provinciaPreferita === 'LC' ? 'selected' : ''}>Lecco</option>
+              <option value="LI" ${provinciaPreferita === 'LI' ? 'selected' : ''}>Livorno</option>
+              <option value="LO" ${provinciaPreferita === 'LO' ? 'selected' : ''}>Lodi</option>
+              <option value="LU" ${provinciaPreferita === 'LU' ? 'selected' : ''}>Lucca</option>
+              <option value="MC" ${provinciaPreferita === 'MC' ? 'selected' : ''}>Macerata</option>
+              <option value="MN" ${provinciaPreferita === 'MN' ? 'selected' : ''}>Mantova</option>
+              <option value="MS" ${provinciaPreferita === 'MS' ? 'selected' : ''}>Massa-Carrara</option>
+              <option value="MT" ${provinciaPreferita === 'MT' ? 'selected' : ''}>Matera</option>
+              <option value="ME" ${provinciaPreferita === 'ME' ? 'selected' : ''}>Messina</option>
+              <option value="MI" ${provinciaPreferita === 'MI' ? 'selected' : ''}>Milano</option>
+              <option value="MO" ${provinciaPreferita === 'MO' ? 'selected' : ''}>Modena</option>
+              <option value="MB" ${provinciaPreferita === 'MB' ? 'selected' : ''}>Monza e Brianza</option>
+              <option value="NA" ${provinciaPreferita === 'NA' ? 'selected' : ''}>Napoli</option>
+              <option value="NO" ${provinciaPreferita === 'NO' ? 'selected' : ''}>Novara</option>
+              <option value="NU" ${provinciaPreferita === 'NU' ? 'selected' : ''}>Nuoro</option>
+              <option value="OG" ${provinciaPreferita === 'OG' ? 'selected' : ''}>Ogliastra</option>
+              <option value="OT" ${provinciaPreferita === 'OT' ? 'selected' : ''}>Olbia-Tempio</option>
+              <option value="OR" ${provinciaPreferita === 'OR' ? 'selected' : ''}>Oristano</option>
+              <option value="PD" ${provinciaPreferita === 'PD' ? 'selected' : ''}>Padova</option>
+              <option value="PA" ${provinciaPreferita === 'PA' ? 'selected' : ''}>Palermo</option>
+              <option value="PR" ${provinciaPreferita === 'PR' ? 'selected' : ''}>Parma</option>
+              <option value="PV" ${provinciaPreferita === 'PV' ? 'selected' : ''}>Pavia</option>
+              <option value="PG" ${provinciaPreferita === 'PG' ? 'selected' : ''}>Perugia</option>
+              <option value="PU" ${provinciaPreferita === 'PU' ? 'selected' : ''}>Pesaro e Urbino</option>
+              <option value="PE" ${provinciaPreferita === 'PE' ? 'selected' : ''}>Pescara</option>
+              <option value="PC" ${provinciaPreferita === 'PC' ? 'selected' : ''}>Piacenza</option>
+              <option value="PI" ${provinciaPreferita === 'PI' ? 'selected' : ''}>Pisa</option>
+              <option value="PT" ${provinciaPreferita === 'PT' ? 'selected' : ''}>Pistoia</option>
+              <option value="PN" ${provinciaPreferita === 'PN' ? 'selected' : ''}>Pordenone</option>
+              <option value="PZ" ${provinciaPreferita === 'PZ' ? 'selected' : ''}>Potenza</option>
+              <option value="PO" ${provinciaPreferita === 'PO' ? 'selected' : ''}>Prato</option>
+              <option value="RG" ${provinciaPreferita === 'RG' ? 'selected' : ''}>Ragusa</option>
+              <option value="RA" ${provinciaPreferita === 'RA' ? 'selected' : ''}>Ravenna</option>
+              <option value="RC" ${provinciaPreferita === 'RC' ? 'selected' : ''}>Reggio Calabria</option>
+              <option value="RE" ${provinciaPreferita === 'RE' ? 'selected' : ''}>Reggio Emilia</option>
+              <option value="RI" ${provinciaPreferita === 'RI' ? 'selected' : ''}>Rieti</option>
+              <option value="RN" ${provinciaPreferita === 'RN' ? 'selected' : ''}>Rimini</option>
+              <option value="RM" ${provinciaPreferita === 'RM' ? 'selected' : ''}>Roma</option>
+              <option value="RO" ${provinciaPreferita === 'RO' ? 'selected' : ''}>Rovigo</option>
+              <option value="SA" ${provinciaPreferita === 'SA' ? 'selected' : ''}>Salerno</option>
+              <option value="SS" ${provinciaPreferita === 'SS' ? 'selected' : ''}>Sassari</option>
+              <option value="SV" ${provinciaPreferita === 'SV' ? 'selected' : ''}>Savona</option>
+              <option value="SI" ${provinciaPreferita === 'SI' ? 'selected' : ''}>Siena</option>
+              <option value="SR" ${provinciaPreferita === 'SR' ? 'selected' : ''}>Siracusa</option>
+              <option value="SO" ${provinciaPreferita === 'SO' ? 'selected' : ''}>Sondrio</option>
+              <option value="SU" ${provinciaPreferita === 'SU' ? 'selected' : ''}>Sud Sardegna</option>
+              <option value="TA" ${provinciaPreferita === 'TA' ? 'selected' : ''}>Taranto</option>
+              <option value="TE" ${provinciaPreferita === 'TE' ? 'selected' : ''}>Teramo</option>
+              <option value="TR" ${provinciaPreferita === 'TR' ? 'selected' : ''}>Terni</option>
+              <option value="TO" ${provinciaPreferita === 'TO' ? 'selected' : ''}>Torino</option>
+              <option value="TP" ${provinciaPreferita === 'TP' ? 'selected' : ''}>Trapani</option>
+              <option value="TN" ${provinciaPreferita === 'TN' ? 'selected' : ''}>Trento</option>
+              <option value="TV" ${provinciaPreferita === 'TV' ? 'selected' : ''}>Treviso</option>
+              <option value="TS" ${provinciaPreferita === 'TS' ? 'selected' : ''}>Trieste</option>
+              <option value="UD" ${provinciaPreferita === 'UD' ? 'selected' : ''}>Udine</option>
+              <option value="VA" ${provinciaPreferita === 'VA' ? 'selected' : ''}>Varese</option>
+              <option value="VE" ${provinciaPreferita === 'VE' ? 'selected' : ''}>Venezia</option>
+              <option value="VB" ${provinciaPreferita === 'VB' ? 'selected' : ''}>Verbano-Cusio-Ossola</option>
+              <option value="VC" ${provinciaPreferita === 'VC' ? 'selected' : ''}>Vercelli</option>
+              <option value="VR" ${provinciaPreferita === 'VR' ? 'selected' : ''}>Verona</option>
+              <option value="VV" ${provinciaPreferita === 'VV' ? 'selected' : ''}>Vibo Valentia</option>
+              <option value="VI" ${provinciaPreferita === 'VI' ? 'selected' : ''}>Vicenza</option>
+              <option value="VT" ${provinciaPreferita === 'VT' ? 'selected' : ''}>Viterbo</option>
             </select>
           </div>
         </div>

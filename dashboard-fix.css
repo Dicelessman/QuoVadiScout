@@ -1,0 +1,10 @@
+/* Dashboard Layout Fix */
+.dashboard {
+  min-height: calc(100vh - 120px); /* Considera header height */
+}
+
+/* Rimuovi topbar legacy */
+.topbar {
+  display: none !important;
+}
+

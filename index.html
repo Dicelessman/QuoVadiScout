@@ -27,6 +27,9 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
+  <!-- Skip Navigation Link per Accessibilità -->
+  <a href="#main-content" class="sr-only skip-link">Salta al contenuto principale</a>
+  
   <!-- Mobile-First Header -->
   <header class="app-header">
     <div class="header-main">
@@ -42,14 +45,14 @@
   </header>
 
   <!-- Search Bar -->
-  <div class="search-section">
+  <div class="search-section" role="search">
     <div class="search-container">
       <input id="search" class="search-input" placeholder="Cerca strutture..." />
     </div>
   </div>
 
   <!-- Main Navigation Menu -->
-  <nav id="mainMenu" class="main-menu hidden">
+  <nav id="mainMenu" class="main-menu hidden" role="navigation" aria-label="Menu principale">
     <div class="menu-sections">
       <!-- Search & Filters -->
       <section class="menu-section">
@@ -191,7 +194,7 @@
   </nav>
 
   <!-- Main Content -->
-  <main class="main-content">
+  <main id="main-content" class="main-content" role="main">
     <!-- Results Counter -->
     <div class="results-header">
       <div class="results-info">

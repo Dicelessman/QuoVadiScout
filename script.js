@@ -7937,6 +7937,11 @@ async function pulisciCacheOffline_DISABLED() {
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
   
+  // Attiva lazy loading immagini dopo caricamento DOM
+  if (typeof setupLazyLoading === 'function') {
+    setupLazyLoading();
+  }
+  
   // Gestisci parametri URL dalla dashboard
   const urlParams = new URLSearchParams(window.location.search);
   const filtro = urlParams.get('filtro');

@@ -51,6 +51,13 @@ const colRef = collection(db, "strutture");
 
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
+  // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
+  if (!auth.currentUser) {
+    console.log('🔒 Accesso negato: autenticazione richiesta');
+    mostraSchermataLogin();
+    return [];
+  }
+  
   const cacheKey = 'strutture_cache';
   const cacheTimestamp = 'strutture_cache_timestamp';
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minuti
@@ -1328,6 +1335,13 @@ async function salvaModifiche() {
   
   try {
     // Salva versione precedente prima di modificare
+    // 🔒 SICUREZZA: Verifica autenticazione
+    if (!auth.currentUser) {
+      showError('🔒 Autenticazione richiesta per modificare strutture');
+      mostraSchermataLogin();
+      return;
+    }
+    
     await salvaVersione(strutturaCorrente, utenteCorrente?.uid);
     
     // Aggiorna struttura
@@ -1382,6 +1396,13 @@ function chiudiModale() {
 
 // === Elimina struttura ===
 async function eliminaStruttura(id) {
+  // 🔒 SICUREZZA: Verifica autenticazione
+  if (!auth.currentUser) {
+    showError('🔒 Autenticazione richiesta per eliminare strutture');
+    mostraSchermataLogin();
+    return;
+  }
+  
   if (confirm("Vuoi davvero eliminare questa struttura?")) {
     await deleteDoc(doc(db, "strutture", id));
     aggiornaLista();

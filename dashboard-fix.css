@@ -66,3 +66,20 @@
   color: var(--text-primary);
 }
 
+/* Statistiche App Section */
+.app-stats-section {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.app-stats-section h2 {
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+#appStatsContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+

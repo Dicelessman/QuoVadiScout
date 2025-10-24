@@ -4232,6 +4232,8 @@ class InputSanitizer {
 
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
+  console.log('🔄 Inizializzando sistema di autenticazione...');
+  
   // 🔒 GATE DI SICUREZZA: Nascondi contenuto principale fino a autenticazione
   // Ma mantieni visibile la schermata di login
   const mainContent = document.querySelector('.main-content');
@@ -4242,6 +4244,38 @@ function inizializzaAuth() {
 
   // Mostra sempre la schermata di login inizialmente
   mostraSchermataLogin();
+  
+  // Assicurati che la schermata di login sia visibile
+  setTimeout(() => {
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen && loginScreen.style.display === 'none') {
+      loginScreen.style.display = 'flex';
+      console.log('✅ Schermata di login forzata visibile');
+    }
+  }, 100);
+  
+  // Debug: verifica che le funzioni siano accessibili
+  console.log('🔍 Funzioni disponibili:', {
+    accediUtente: typeof window.accediUtente,
+    registraUtente: typeof window.registraUtente,
+    showLoginTab: typeof window.showLoginTab,
+    accediConGoogle: typeof window.accediConGoogle
+  });
+  
+  // Debug: verifica che la schermata di login sia presente
+  const loginScreen = document.getElementById('loginScreen');
+  console.log('🔍 Schermata di login presente:', !!loginScreen);
+  if (loginScreen) {
+    console.log('🔍 Schermata di login display:', loginScreen.style.display);
+  }
+  
+  // Debug: verifica che i pulsanti siano presenti
+  const registerBtn = document.querySelector('button[onclick="registraUtente()"]');
+  const loginBtn = document.querySelector('button[onclick="accediUtente()"]');
+  console.log('🔍 Pulsanti presenti:', {
+    registerBtn: !!registerBtn,
+    loginBtn: !!loginBtn
+  });
 
   // Gestisci redirect result per Google OAuth
   getRedirectResult(auth).then((result) => {
@@ -4331,6 +4365,8 @@ async function caricaProfiloUtente(uid) {
 }
 
 function mostraSchermataLogin() {
+  console.log('🔄 Mostrando schermata di login...');
+  
   // Nascondi il contenuto principale
   const main = document.querySelector('main');
   const header = document.querySelector('header');
@@ -4341,6 +4377,9 @@ function mostraSchermataLogin() {
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) {
     loginScreen.style.display = 'flex';
+    console.log('✅ Schermata di login mostrata');
+  } else {
+    console.error('❌ Schermata di login non trovata');
   }
   
   // Rimuovi modal esistente se presente (per compatibilità)
@@ -5065,6 +5104,8 @@ function nascondiSchermataLogin() {
 
 // Funzioni per gestire i tab della schermata di login
 function showLoginTab(tab) {
+  console.log('🔄 Cambiando tab a:', tab);
+  
   // Rimuovi classe active da tutti i tab
   document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
@@ -5073,9 +5114,11 @@ function showLoginTab(tab) {
   if (tab === 'login') {
     document.querySelector('.login-tab:first-child').classList.add('active');
     document.getElementById('loginForm').classList.add('active');
+    console.log('✅ Tab login attivato');
   } else {
     document.querySelector('.login-tab:last-child').classList.add('active');
     document.getElementById('registerForm').classList.add('active');
+    console.log('✅ Tab registrazione attivato');
   }
 }
 
@@ -5084,6 +5127,7 @@ window.showLoginTab = showLoginTab;
 
 // Funzioni di autenticazione
 async function accediUtente() {
+  console.log('🔄 Tentativo di login...');
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   
@@ -5105,6 +5149,7 @@ async function accediUtente() {
 window.accediUtente = accediUtente;
 
 async function registraUtente() {
+  console.log('🔄 Tentativo di registrazione...');
   const email = document.getElementById('registerEmail').value;
   const password = document.getElementById('registerPassword').value;
   

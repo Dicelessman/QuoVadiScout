@@ -4276,6 +4276,12 @@ function inizializzaAuth() {
     registerBtn: !!registerBtn,
     loginBtn: !!loginBtn
   });
+  
+  // Debug: verifica che i pulsanti siano cliccabili
+  if (registerBtn) {
+    console.log('🔍 Pulsante registrazione cliccabile:', registerBtn.offsetParent !== null);
+    console.log('🔍 Pulsante registrazione onclick:', registerBtn.getAttribute('onclick'));
+  }
 
   // Gestisci redirect result per Google OAuth
   getRedirectResult(auth).then((result) => {
@@ -5200,6 +5206,9 @@ async function registraUtente() {
 
 // Esponi le funzioni globalmente per l'HTML
 window.registraUtente = registraUtente;
+
+// Debug: verifica che la funzione sia accessibile
+console.log('🔍 Funzione registraUtente esposta:', typeof window.registraUtente);
 
 async function accediConGoogle() {
   try {

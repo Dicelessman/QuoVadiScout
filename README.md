@@ -155,8 +155,18 @@ QuoVadiScout/
 
 3. **Deploy regole Firestore**:
    ```bash
+   # Install Firebase CLI
+   npm install -g firebase-tools
+   
+   # Login e configurazione
+   firebase login
+   firebase use quovadiscout
+   
+   # Deploy regole
    firebase deploy --only firestore:rules
    ```
+   
+   📖 **Guida completa**: Vedi [DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md) per istruzioni dettagliate
 
 ### Configurazione Sicurezza
 - **Email verificata obbligatoria**: Configura Firebase Auth per richiedere email verification

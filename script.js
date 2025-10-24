@@ -5150,10 +5150,32 @@ window.accediUtente = accediUtente;
 
 async function registraUtente() {
   console.log('🔄 Tentativo di registrazione...');
-  const email = document.getElementById('registerEmail').value;
-  const password = document.getElementById('registerPassword').value;
+  
+  // Debug: verifica che i campi esistano
+  const emailField = document.getElementById('registerEmail');
+  const passwordField = document.getElementById('registerPassword');
+  
+  console.log('🔍 Campi trovati:', {
+    emailField: !!emailField,
+    passwordField: !!passwordField
+  });
+  
+  if (!emailField || !passwordField) {
+    console.error('❌ Campi email o password non trovati');
+    alert('Errore: campi di registrazione non trovati');
+    return;
+  }
+  
+  const email = emailField.value;
+  const password = passwordField.value;
+  
+  console.log('🔍 Valori campi:', {
+    email: email,
+    password: password ? '***' : 'vuoto'
+  });
   
   if (!email || !password) {
+    console.log('❌ Email o password vuoti');
     alert('Inserisci email e password');
     return;
   }

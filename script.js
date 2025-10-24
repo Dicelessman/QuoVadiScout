@@ -39,22 +39,37 @@ import {
 // 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
 // Il file firebase-config.js deve essere escluso dal repository (.gitignore)
 
+// Configurazione fallback per sviluppo locale
+const fallbackConfig = {
+  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
+  authDomain: "quovadiscout.firebaseapp.com",
+  projectId: "quovadiscout",
+  storageBucket: "quovadiscout.firebasestorage.app",
+  messagingSenderId: "745134651793",
+  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
+};
+
 // Verifica che la configurazione Firebase sia disponibile
-if (typeof FirebaseConfig === 'undefined') {
-  console.error('❌ Configurazione Firebase non trovata!');
-  console.error('Assicurati che firebase-config.js sia presente e caricato correttamente.');
-  throw new Error('Configurazione Firebase mancante');
+let firebaseConfig;
+if (typeof FirebaseConfig !== 'undefined') {
+  // Usa configurazione da file esterno
+  try {
+    if (typeof validateFirebaseConfig === 'function') {
+      validateFirebaseConfig(FirebaseConfig);
+    }
+    firebaseConfig = FirebaseConfig;
+    console.log('✅ Configurazione Firebase caricata da file esterno');
+  } catch (error) {
+    console.error('❌ Errore validazione configurazione Firebase:', error);
+    console.log('🔄 Utilizzo configurazione fallback...');
+    firebaseConfig = fallbackConfig;
+  }
+} else {
+  // Usa configurazione fallback
+  console.warn('⚠️ File firebase-config.js non trovato, utilizzo configurazione fallback');
+  console.log('💡 Per produzione, crea firebase-config.js basato su firebase-config.template.js');
+  firebaseConfig = fallbackConfig;
 }
-
-// Valida configurazione Firebase
-try {
-  validateFirebaseConfig(FirebaseConfig);
-} catch (error) {
-  console.error('❌ Errore validazione configurazione Firebase:', error);
-  throw error;
-}
-
-const firebaseConfig = FirebaseConfig;
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);

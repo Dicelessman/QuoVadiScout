@@ -5067,6 +5067,9 @@ function showLoginTab(tab) {
   }
 }
 
+// Esponi le funzioni globalmente per l'HTML
+window.showLoginTab = showLoginTab;
+
 // Funzioni di autenticazione
 async function accediUtente() {
   const email = document.getElementById('loginEmail').value;
@@ -5085,6 +5088,9 @@ async function accediUtente() {
     alert('Errore durante il login: ' + error.message);
   }
 }
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediUtente = accediUtente;
 
 async function registraUtente() {
   const email = document.getElementById('registerEmail').value;
@@ -5113,6 +5119,9 @@ async function registraUtente() {
   }
 }
 
+// Esponi le funzioni globalmente per l'HTML
+window.registraUtente = registraUtente;
+
 async function accediConGoogle() {
   try {
     const provider = new GoogleAuthProvider();
@@ -5123,6 +5132,9 @@ async function accediConGoogle() {
     alert('Errore durante il login con Google: ' + error.message);
   }
 }
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediConGoogle = accediConGoogle;
 
 // Funzioni globali rimosse - ora gestite da Firebase Auth
 

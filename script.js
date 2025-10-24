@@ -4379,7 +4379,7 @@ function mostraSchermataLogin() {
   if (main) main.style.display = 'none';
   if (header) header.style.display = 'none';
   
-  // Mostra la schermata di login
+  // Mostra la schermata di login HTML
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) {
     loginScreen.style.display = 'flex';
@@ -4393,78 +4393,50 @@ function mostraSchermataLogin() {
   if (existingModal) {
     existingModal.remove();
   }
+}
+
+function nascondiSchermataLogin() {
+  // Nascondi la schermata di login
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'none';
+    console.log('✅ Schermata di login nascosta');
+  }
   
-  const modal = document.createElement('div');
-  modal.id = 'loginModal';
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #2f6b2f 0%, #28a745 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-  `;
+  // Mostra il contenuto principale
+  const main = document.querySelector('main');
+  const header = document.querySelector('header');
+  if (main) main.style.display = 'block';
+  if (header) header.style.display = 'block';
+}
+
+// Funzioni per gestire i tab della schermata di login
+function showLoginTab(tab) {
+  console.log('🔄 Cambiando tab a:', tab);
   
-  const modalContent = document.createElement('div');
-  modalContent.style.cssText = `
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    max-width: 95%;
-    width: 90%;
-    min-width: 320px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    text-align: center;
-  `;
+  // Rimuovi classe active da tutti i tab
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
   
-  modalContent.innerHTML = `
-    <div style="margin-bottom: 30px;">
-      <h1 style="color: #2f6b2f; margin: 0 0 10px 0; font-size: 2rem;">🏕️ QuoVadiScout</h1>
-      <p style="color: #666; margin: 0;">Strutture e Terreni per Scout</p>
-    </div>
-    
-    <div id="loginForm" style="margin-bottom: 20px;">
-      <input type="email" id="loginEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="loginPassword" placeholder="Password" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="loginBtn" 
-              style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🔑 Accedi
-      </button>
-      
-      <button id="googleLoginBtn" 
-              style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🌐 Accedi con Google
-      </button>
-      
-      <button id="showRegisterBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        📝 Crea Account
-      </button>
-    </div>
-    
-    <div id="registerForm" style="margin-bottom: 20px; display: none;">
-      <input type="text" id="registerNome" placeholder="Nome utente" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="email" id="registerEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="registerBtn" 
-              style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        ✨ Registrati
-      </button>
-      
+  // Aggiungi classe active al tab selezionato
+  if (tab === 'login') {
+    document.querySelector('.login-tab:first-child').classList.add('active');
+    document.getElementById('loginForm').classList.add('active');
+    console.log('✅ Tab login attivato');
+  } else {
+    document.querySelector('.login-tab:last-child').classList.add('active');
+    document.getElementById('registerForm').classList.add('active');
+    console.log('✅ Tab registrazione attivato');
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.showLoginTab = showLoginTab;
+
+// Funzioni di autenticazione
+async function accediUtente() {
+  console.log('🔄 Tentativo di login...');
+  const email = document.getElementById('loginEmail').value;
       <button id="showLoginBtn" 
               style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
         ← Torna al Login

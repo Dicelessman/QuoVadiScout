@@ -87,8 +87,7 @@ class ErrorHandler {
     
     // Log per analytics se disponibile
     if (window.analyticsManager) {
-      window.analyticsManager.trackError({
-        type: 'generic_error',
+      window.analyticsManager.trackError('generic_error', {
         message: error.message,
         context: context,
         stack: error.stack
@@ -109,8 +108,7 @@ class ErrorHandler {
     
     // Log per analytics
     if (window.analyticsManager) {
-      window.analyticsManager.trackError({
-        type: 'promise_rejection',
+      window.analyticsManager.trackError('promise_rejection', {
         reason: event.reason?.toString(),
         stack: event.reason?.stack
       });

@@ -631,6 +631,10 @@ body {
 .main-content {
   padding: var(--space-4);
   min-height: calc(100vh - 240px); /* Adjusted for search section */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .results-header {
@@ -660,6 +664,9 @@ body {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: 1fr;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* === CARDS === */
@@ -671,6 +678,10 @@ body {
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-normal);
   cursor: pointer;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .card:hover {
@@ -691,6 +702,10 @@ body {
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   line-height: var(--line-height-tight);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .card-badges {
@@ -698,6 +713,8 @@ body {
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-2);
+  width: 100%;
+  max-width: 100%;
 }
 
 .badge {
@@ -735,13 +752,19 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .card-field {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-2);
   font-size: var(--font-size-sm);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .card-field-icon {
@@ -759,6 +782,16 @@ body {
 .card-field-value {
   color: var(--text-primary);
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.card-field-value a {
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .card-actions {
@@ -952,6 +985,7 @@ body {
 @media (min-width: 640px) {
   .results-container {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
   }
   
   .quick-filters {
@@ -969,6 +1003,7 @@ body {
 @media (min-width: 1024px) {
   .results-container {
     grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
   }
   
   .main-content {
@@ -989,6 +1024,7 @@ body {
 @media (min-width: 1280px) {
   .results-container {
     grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
   }
 }
 
@@ -1002,6 +1038,37 @@ html, body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
+}
+
+/* Regole specifiche per dispositivi mobili */
+@media (max-width: 768px) {
+  .results-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: 0 var(--space-2);
+  }
+  
+  .card {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .card-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+  
+  .card-field-label {
+    min-width: auto;
+    font-weight: var(--font-weight-semibold);
+  }
+  
+  .card-field-value {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* === ANIMATIONS === */

@@ -242,6 +242,45 @@
     </div>
   </main>
 
+  <!-- Schermata di Login -->
+  <div id="loginScreen" class="login-screen" style="display: none;">
+    <div class="login-container">
+      <div class="login-header">
+        <h1>🏕️ QuoVadiScout</h1>
+        <p>Accedi per continuare</p>
+      </div>
+      
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="showLoginTab('login')">Accedi</button>
+        <button class="login-tab" onclick="showLoginTab('register')">Registrati</button>
+      </div>
+      
+      <!-- Form Login -->
+      <div id="loginForm" class="login-form active">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button onclick="accediUtente()" class="login-btn">Accedi</button>
+        <button onclick="accediConGoogle()" class="google-btn">
+          <span>🔍</span> Accedi con Google
+        </button>
+      </div>
+      
+      <!-- Form Registrazione -->
+      <div id="registerForm" class="login-form">
+        <input type="email" id="registerEmail" placeholder="Email" required>
+        <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" required>
+        <button onclick="registraUtente()" class="login-btn">Registrati</button>
+        <button onclick="accediConGoogle()" class="google-btn">
+          <span>🔍</span> Registrati con Google
+        </button>
+      </div>
+      
+      <div class="login-footer">
+        <p>Per accedere è necessario un account verificato</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Modale di modifica -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">

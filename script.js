@@ -32,7 +32,8 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
@@ -4229,45 +4230,64 @@ class InputSanitizer {
 
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
-  // 🔒 GATE DI SICUREZZA: Nascondi tutto fino a autenticazione
-  document.body.style.display = 'none';
+  // 🔒 GATE DI SICUREZZA: Nascondi contenuto principale fino a autenticazione
+  // Ma mantieni visibile la schermata di login
+  const mainContent = document.querySelector('.main-content');
+  const header = document.querySelector('header');
   
+  if (mainContent) mainContent.style.display = 'none';
+  if (header) header.style.display = 'none';
+
+  // Mostra sempre la schermata di login inizialmente
+  mostraSchermataLogin();
+
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Utente autenticato
-      utenteCorrente = user;
-      console.log('✅ Utente autenticato:', user.email);
+    try {
+      if (user) {
+        // Utente autenticato
+        utenteCorrente = user;
+        console.log('✅ Utente autenticato:', user.email);
+
+        // Mostra contenuto principale
+        if (mainContent) mainContent.style.display = 'block';
+        if (header) header.style.display = 'block';
+
+        // Nascondi schermata di login
+        nascondiSchermataLogin();
+
+        // Carica profilo utente da Firestore
+        await caricaProfiloUtente(user.uid);
+
+        // Aggiorna UI
+        aggiornaUIUtente();
+        caricaElencoPersonaleUtente();
+
+        // Aggiorna contatore elenco
+        aggiornaContatoreElenco();
+
+        // 🔒 Inizializza session timeout
+        initSessionTimeout();
+      } else {
+        // Utente non autenticato
+        utenteCorrente = null;
+        userProfile = null;
+        elencoPersonale = [];
+        console.log('🔒 Accesso negato: utente non autenticato');
+
+        // 🔒 Cleanup session timeout
+        cleanupSession();
+
+        // Nascondi contenuto principale e mostra login
+        if (mainContent) mainContent.style.display = 'none';
+        if (header) header.style.display = 'none';
+        mostraSchermataLogin();
+      }
+    } catch (error) {
+      console.error('❌ Errore durante autenticazione:', error);
       
-      // Mostra contenuto principale
-      document.body.style.display = 'block';
-      
-      // Nascondi schermata di login
-      nascondiSchermataLogin();
-      
-      // Carica profilo utente da Firestore
-      await caricaProfiloUtente(user.uid);
-      
-      // Aggiorna UI
-      aggiornaUIUtente();
-      caricaElencoPersonaleUtente();
-      
-      // Aggiorna contatore elenco
-      aggiornaContatoreElenco();
-      
-      // 🔒 Inizializza session timeout
-      initSessionTimeout();
-    } else {
-      // Utente non autenticato
-      utenteCorrente = null;
-      userProfile = null;
-      elencoPersonale = [];
-      console.log('🔒 Accesso negato: utente non autenticato');
-      
-      // 🔒 Cleanup session timeout
-      cleanupSession();
-      
-      // Mostra schermata di login e nascondi contenuto
-      document.body.style.display = 'none';
+      // In caso di errore, mostra comunque la schermata di login
+      if (mainContent) mainContent.style.display = 'none';
+      if (header) header.style.display = 'none';
       mostraSchermataLogin();
     }
   });
@@ -4305,7 +4325,13 @@ function mostraSchermataLogin() {
   if (main) main.style.display = 'none';
   if (header) header.style.display = 'none';
   
-  // Rimuovi modal esistente se presente
+  // Mostra la schermata di login
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'flex';
+  }
+  
+  // Rimuovi modal esistente se presente (per compatibilità)
   const existingModal = document.getElementById('loginModal');
   if (existingModal) {
     existingModal.remove();
@@ -5012,10 +5038,89 @@ function nascondiSchermataLogin() {
   if (main) main.style.display = 'block';
   if (header) header.style.display = 'flex';
   
-  // Rimuovi modal di login
+  // Nascondi la schermata di login
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'none';
+  }
+  
+  // Rimuovi modal di login (per compatibilità)
   const loginModal = document.getElementById('loginModal');
   if (loginModal) {
     loginModal.remove();
+  }
+}
+
+// Funzioni per gestire i tab della schermata di login
+function showLoginTab(tab) {
+  // Rimuovi classe active da tutti i tab
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+  
+  // Aggiungi classe active al tab selezionato
+  if (tab === 'login') {
+    document.querySelector('.login-tab:first-child').classList.add('active');
+    document.getElementById('loginForm').classList.add('active');
+  } else {
+    document.querySelector('.login-tab:last-child').classList.add('active');
+    document.getElementById('registerForm').classList.add('active');
+  }
+}
+
+// Funzioni di autenticazione
+async function accediUtente() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) {
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login effettuato con successo');
+  } catch (error) {
+    console.error('❌ Errore login:', error);
+    alert('Errore durante il login: ' + error.message);
+  }
+}
+
+async function registraUtente() {
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
+  
+  if (!email || !password) {
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('La password deve essere di almeno 6 caratteri');
+    return;
+  }
+  
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    console.log('✅ Registrazione effettuata con successo');
+    
+    // Invia email di verifica
+    await sendEmailVerification(auth.currentUser);
+    alert('Registrazione completata! Controlla la tua email per verificare l\'account.');
+  } catch (error) {
+    console.error('❌ Errore registrazione:', error);
+    alert('Errore durante la registrazione: ' + error.message);
+  }
+}
+
+async function accediConGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    console.log('✅ Login con Google effettuato con successo');
+  } catch (error) {
+    console.error('❌ Errore login Google:', error);
+    alert('Errore durante il login con Google: ' + error.message);
   }
 }
 

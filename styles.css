@@ -119,9 +119,9 @@
   --bg-tertiary: var(--gray-700);
   --bg-overlay: rgba(0, 0, 0, 0.8);
   
-  --text-primary: var(--gray-100);
-  --text-secondary: var(--gray-300);
-  --text-tertiary: var(--gray-400);
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-200);
+  --text-tertiary: var(--gray-300);
   --text-inverse: var(--gray-900);
   
   --border-light: var(--gray-700);
@@ -1390,13 +1390,13 @@ html {
 [data-theme="dark"] .pagination-items-per-page select {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .pagination-controls button {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .pagination-controls button:hover:not(:disabled) {
@@ -1634,7 +1634,7 @@ html {
 [data-theme="dark"] .filter-select {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .btn-menu,
@@ -1642,6 +1642,7 @@ html {
 [data-theme="dark"] .btn-user {
   background: var(--gray-700);
   border-color: var(--gray-600);
+  color: var(--text-primary);
 }
 
 /* Mobile responsive adjustments */
@@ -1827,18 +1828,35 @@ html {
 [data-theme="dark"] .menu-item {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .menu-item:hover {
   background: var(--gray-600);
   border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .menu-label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .menu-section-title {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .menu-icon {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .menu-badge {
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .menu-select {
   background: var(--gray-600);
   border-color: var(--gray-500);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 /* Mobile responsive adjustments */
@@ -1968,7 +1986,7 @@ html {
 [data-theme="dark"] .export-options button {
   background: var(--gray-700);
   border-color: var(--gray-600);
-  color: var(--text-inverse);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .export-options button:hover {

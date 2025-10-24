@@ -4437,71 +4437,79 @@ window.showLoginTab = showLoginTab;
 async function accediUtente() {
   console.log('🔄 Tentativo di login...');
   const email = document.getElementById('loginEmail').value;
-      <button id="showLoginBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        ← Torna al Login
-      </button>
-    </div>
-    
-    <div id="loadingMessage" style="display: none; color: #28a745; font-weight: bold;">
-      <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #28a745; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
-      Caricamento...
-    </div>
-    
-    <div id="errorMessage" style="display: none; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin-top: 20px;"></div>
-  `;
+  const password = document.getElementById('loginPassword').value;
   
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-  
-  // Aggiungi CSS per animazione
-  if (!document.getElementById('authStyles')) {
-    const style = document.createElement('style');
-    style.id = 'authStyles';
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
+  if (!email || !password) {
+    alert('Inserisci email e password');
+    return;
   }
   
-  // Event listeners
-  setupAuthEventListeners();
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login effettuato con successo');
+  } catch (error) {
+    console.error('❌ Errore login:', error);
+    alert('Errore durante il login: ' + error.message);
+  }
 }
 
-function setupAuthEventListeners() {
-  // Toggle tra login e registrazione
-  document.getElementById('showRegisterBtn').onclick = () => {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-    hideError();
-  };
+// Esponi le funzioni globalmente per l'HTML
+window.accediUtente = accediUtente;
+
+async function registraUtente() {
+  console.log('🔄 Tentativo di registrazione...');
   
-  document.getElementById('showLoginBtn').onclick = () => {
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-    hideError();
-  };
+  // Debug: verifica che i campi esistano
+  const emailField = document.getElementById('registerEmail');
+  const passwordField = document.getElementById('registerPassword');
   
-  // Login con email/password
-  document.getElementById('loginBtn').onclick = async () => {
-    try {
-      const email = InputSanitizer.sanitizeEmail(document.getElementById('loginEmail').value);
-      const password = document.getElementById('loginPassword').value;
-      
-      if (!email || !password) {
-        showError('⚠️ Inserisci email e password');
-        return;
-      }
-      
-      await loginWithEmail(email, password);
-    } catch (error) {
-      showError('⚠️ Email non valida');
-    }
-  };
+  console.log('🔍 Campi trovati:', {
+    emailField: !!emailField,
+    passwordField: !!passwordField
+  });
   
+  if (!emailField || !passwordField) {
+    console.error('❌ Campi email o password non trovati');
+    alert('Errore: campi di registrazione non trovati');
+    return;
+  }
+  
+  const email = emailField.value;
+  const password = passwordField.value;
+  
+  console.log('🔍 Valori campi:', {
+    email: email,
+    password: password ? '***' : 'vuoto'
+  });
+  
+  if (!email || !password) {
+    console.log('❌ Email o password vuoti');
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('La password deve essere di almeno 6 caratteri');
+    return;
+  }
+  
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    console.log('✅ Registrazione effettuata con successo');
+    
+    // Invia email di verifica
+    await sendEmailVerification(auth.currentUser);
+    alert('Registrazione completata! Controlla la tua email per verificare l\'account.');
+  } catch (error) {
+    console.error('❌ Errore registrazione:', error);
+    alert('Errore durante la registrazione: ' + error.message);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.registraUtente = registraUtente;
+
+async function accediConGoogle() {
   // Registrazione
   document.getElementById('registerBtn').onclick = async () => {
     try {

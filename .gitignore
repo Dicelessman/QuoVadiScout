@@ -5,6 +5,11 @@
 firebase-config.js
 firebase-config-sync.js
 
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
 # Environment files
 .env
 .env.local

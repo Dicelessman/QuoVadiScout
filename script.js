@@ -7106,16 +7106,27 @@ function mostraSchedaCompleta(strutturaId) {
   // Funzione per salvare modifiche
   async function salvaModificheScheda(strutturaId) {
     try {
-      // 🔒 SICUREZZA: Valida e sanitizza input prima del salvataggio
-      const validation = inputValidator.validateStructure(struttura);
-      if (!validation.isValid) {
-        console.error('❌ Validazione fallita:', validation.errors);
-        showError('Dati non validi: ' + validation.errors.join(', '));
-        return;
-      }
-      
-      // Aggiorna struttura con dati validati
-      struttura = validation.structure;
+        // 🔒 SICUREZZA: Valida e sanitizza input prima del salvataggio
+        const validation = inputValidator.validateStructure(struttura);
+        if (!validation.isValid) {
+          console.error('❌ Validazione fallita:', validation.errors);
+          showError('Dati non validi: ' + validation.errors.join(', '));
+          return;
+        }
+
+        // Aggiorna struttura con dati validati
+        struttura = validation.structure;
+
+        // 🔒 SICUREZZA: Validazione avanzata con Data Validator
+        if (typeof dataValidator !== 'undefined') {
+          const advancedValidation = dataValidator.validate(struttura, 'struttura');
+          if (!advancedValidation.isValid) {
+            console.error('❌ Validazione avanzata fallita:', advancedValidation.errors);
+            showError('Validazione avanzata fallita: ' + advancedValidation.errors.join(', '));
+            return;
+          }
+          struttura = advancedValidation.data;
+        }
       
       if (isNewStructure) {
         // Aggiorna metadati per nuova struttura

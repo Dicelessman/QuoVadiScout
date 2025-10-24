@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "quovadiscout",
+    "development": "quovadiscout-dev",
+    "production": "quovadiscout"
+  }
+}

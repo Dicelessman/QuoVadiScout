@@ -151,6 +151,58 @@ class SecurityTester {
     }
   }
 
+  // Test 8: Verifica Security Monitor
+  testSecurityMonitor() {
+    try {
+      if (typeof window.securityMonitor !== 'undefined') {
+        this.log('Security Monitor', true, 'Security Monitor disponibile');
+      } else {
+        this.log('Security Monitor', false, 'Security Monitor non trovato');
+      }
+    } catch (error) {
+      this.log('Security Monitor', false, `Errore: ${error.message}`);
+    }
+  }
+
+  // Test 9: Verifica Rate Limiter
+  testRateLimiter() {
+    try {
+      if (typeof window.rateLimiter !== 'undefined') {
+        this.log('Rate Limiter', true, 'Rate Limiter disponibile');
+      } else {
+        this.log('Rate Limiter', false, 'Rate Limiter non trovato');
+      }
+    } catch (error) {
+      this.log('Rate Limiter', false, `Errore: ${error.message}`);
+    }
+  }
+
+  // Test 10: Verifica Data Validator
+  testDataValidator() {
+    try {
+      if (typeof window.dataValidator !== 'undefined') {
+        // Test validazione struttura
+        const testData = {
+          Struttura: 'Test Structure',
+          Luogo: 'Test Location',
+          Provincia: 'RM',
+          Email: 'test@example.com'
+        };
+        
+        const validation = window.dataValidator.validate(testData, 'struttura');
+        if (validation.isValid) {
+          this.log('Data Validator', true, 'Validazione dati funzionante');
+        } else {
+          this.log('Data Validator', false, 'Validazione dati non funzionante');
+        }
+      } else {
+        this.log('Data Validator', false, 'Data Validator non trovato');
+      }
+    } catch (error) {
+      this.log('Data Validator', false, `Errore: ${error.message}`);
+    }
+  }
+
   // Esegue tutti i test
   async runAllTests() {
     console.log('🔒 Avvio test di sicurezza QuoVadiScout...\n');
@@ -162,6 +214,9 @@ class SecurityTester {
     this.testFirestoreRules();
     this.testErrorHandling();
     await this.testServiceWorker();
+    this.testSecurityMonitor();
+    this.testRateLimiter();
+    this.testDataValidator();
     
     // Risultati finali
     console.log('\n📊 RISULTATI TEST SICUREZZA:');

@@ -20,11 +20,15 @@ QuoVadiScout è una Progressive Web App (PWA) completa per la gestione di strutt
 - Sistema di segnalazioni
 
 ### 🔐 Sicurezza
+- **Accesso Completamente Privato**: Nessun accesso pubblico ai dati
+- **Autenticazione Obbligatoria**: Email verificata richiesta per tutte le operazioni
 - **Rate Limiting**: Protezione contro brute force attacks
 - **Password Robuste**: Requisiti minimi 12 caratteri complessi
 - **Session Timeout**: Disconnessione automatica dopo inattività
-- **Input Sanitization**: Protezione contro XSS
+- **Input Sanitization**: Protezione contro XSS e injection
+- **Content Security Policy**: Restrizione esecuzione codice non autorizzato
 - **Firebase Security Rules**: Protezione server-side dei dati
+- **Validazione Email**: Controllo email verificata per tutte le operazioni
 
 ### 📊 Dati & Analytics
 - Dashboard con statistiche complete
@@ -127,6 +131,49 @@ QuoVadiScout/
 ├── manifest.json           # Manifest PWA
 ├── data.json              # Dati locali fallback
 └── README.md              # Questa documentazione
+```
+
+---
+
+## ⚙️ Setup e Configurazione
+
+### Prerequisiti
+- Account Firebase con progetto configurato
+- Autenticazione Firebase abilitata
+- Firestore database configurato
+
+### Configurazione Firebase
+1. **Copia template configurazione**:
+   ```bash
+   cp firebase-config.template.js firebase-config.js
+   ```
+
+2. **Configura credenziali Firebase**:
+   - Apri `firebase-config.js`
+   - Sostituisci i placeholder con le tue credenziali Firebase
+   - Configura domini autorizzati
+
+3. **Deploy regole Firestore**:
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+### Configurazione Sicurezza
+- **Email verificata obbligatoria**: Configura Firebase Auth per richiedere email verification
+- **Domini autorizzati**: Aggiorna domini autorizzati in Firebase Console
+- **Rate limiting**: Configura Firebase Security Rules per limitare richieste
+
+### File Sensibili
+⚠️ **IMPORTANTE**: I seguenti file contengono informazioni sensibili e NON devono essere committati:
+- `firebase-config.js` (escluso automaticamente da .gitignore)
+
+### Variabili d'Ambiente (Produzione)
+Per deployment in produzione, considera l'uso di variabili d'ambiente:
+```bash
+FIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_domain
+FIREBASE_PROJECT_ID=your_project_id
+# ... altre credenziali
 ```
 
 ---

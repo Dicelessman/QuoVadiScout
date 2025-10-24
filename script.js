@@ -36,20 +36,25 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
-// 🔒 NOTA SICUREZZA: In produzione, queste credenziali dovrebbero essere:
-// 1. Spostate in un file separato (firebase-config-sync.js) NON nel repository
-// 2. Caricate tramite variabili d'ambiente
-// 3. Protette da Firebase Security Rules
-// 
-// Per ora: configurazione embedded per compatibilità sviluppo locale
-const firebaseConfig = {
-  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
-  authDomain: "quovadiscout.firebaseapp.com",
-  projectId: "quovadiscout",
-  storageBucket: "quovadiscout.firebasestorage.app",
-  messagingSenderId: "745134651793",
-  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
-};
+// 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
+// Il file firebase-config.js deve essere escluso dal repository (.gitignore)
+
+// Verifica che la configurazione Firebase sia disponibile
+if (typeof FirebaseConfig === 'undefined') {
+  console.error('❌ Configurazione Firebase non trovata!');
+  console.error('Assicurati che firebase-config.js sia presente e caricato correttamente.');
+  throw new Error('Configurazione Firebase mancante');
+}
+
+// Valida configurazione Firebase
+try {
+  validateFirebaseConfig(FirebaseConfig);
+} catch (error) {
+  console.error('❌ Errore validazione configurazione Firebase:', error);
+  throw error;
+}
+
+const firebaseConfig = FirebaseConfig;
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);
@@ -61,13 +66,12 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
-  // Temporaneamente disabilitato per permettere accesso pubblico ai dati strutture
-  // Le Firebase Security Rules proteggono le operazioni di scrittura
-  // if (!auth || !auth.currentUser) {
-  //   console.log('🔒 Accesso negato: autenticazione richiesta');
-  //   mostraSchermataLogin();
-  //   return [];
-  // }
+  // Accesso completamente privato - richiesta autenticazione per qualsiasi operazione
+  if (!auth || !auth.currentUser) {
+    console.log('🔒 Accesso negato: autenticazione richiesta');
+    mostraSchermataLogin();
+    return [];
+  }
   
   const cacheKey = 'strutture_cache';
   const cacheTimestamp = 'strutture_cache_timestamp';
@@ -3822,6 +3826,150 @@ class LoginSecurity {
 // Instanza globale di LoginSecurity
 const loginSecurity = new LoginSecurity();
 
+// === SICUREZZA: Validazione e Sanitizzazione Input ===
+class InputValidator {
+  constructor() {
+    this.maxLengths = {
+      struttura: 100,
+      luogo: 100,
+      info: 1000,
+      referente: 100,
+      email: 254,
+      sito: 200,
+      contatto: 50
+    };
+    
+    this.allowedTags = ['b', 'i', 'em', 'strong', 'br'];
+  }
+  
+  // Sanitizza input HTML
+  sanitizeHtml(input) {
+    if (typeof input !== 'string') return '';
+    
+    // Rimuovi tag HTML non autorizzati
+    let sanitized = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    sanitized = sanitized.replace(/<[^>]*>/g, (match) => {
+      const tagName = match.match(/<\/?([a-zA-Z][a-zA-Z0-9]*)/);
+      if (tagName && this.allowedTags.includes(tagName[1])) {
+        return match;
+      }
+      return '';
+    });
+    
+    // Escape caratteri speciali
+    return sanitized
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+  
+  // Valida email
+  validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && email.length <= this.maxLengths.email;
+  }
+  
+  // Valida URL
+  validateUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return ['http:', 'https:'].includes(urlObj.protocol) && url.length <= this.maxLengths.sito;
+    } catch {
+      return false;
+    }
+  }
+  
+  // Valida telefono
+  validatePhone(phone) {
+    const phoneRegex = /^[\+]?[0-9\s\-\(\)]{7,20}$/;
+    return phoneRegex.test(phone) && phone.length <= this.maxLengths.contatto;
+  }
+  
+  // Valida e sanitizza struttura
+  validateStructure(structure) {
+    const errors = [];
+    
+    // Nome struttura
+    if (structure.Struttura) {
+      structure.Struttura = this.sanitizeHtml(structure.Struttura.substring(0, this.maxLengths.struttura));
+    }
+    
+    // Luogo
+    if (structure.Luogo) {
+      structure.Luogo = this.sanitizeHtml(structure.Luogo.substring(0, this.maxLengths.luogo));
+    }
+    
+    // Info
+    if (structure.Info) {
+      structure.Info = this.sanitizeHtml(structure.Info.substring(0, this.maxLengths.info));
+    }
+    
+    // Referente
+    if (structure.Referente) {
+      structure.Referente = this.sanitizeHtml(structure.Referente.substring(0, this.maxLengths.referente));
+    }
+    
+    // Email
+    if (structure.Email && !this.validateEmail(structure.Email)) {
+      errors.push('Email non valida');
+      delete structure.Email;
+    }
+    
+    // Sito
+    if (structure.Sito && !this.validateUrl(structure.Sito)) {
+      errors.push('URL sito non valido');
+      delete structure.Sito;
+    }
+    
+    // Contatto
+    if (structure.Contatto && !this.validatePhone(structure.Contatto)) {
+      errors.push('Numero di telefono non valido');
+      delete structure.Contatto;
+    }
+    
+    // Validazione numeri
+    if (structure.Letti && (isNaN(structure.Letti) || structure.Letti < 0 || structure.Letti > 1000)) {
+      errors.push('Numero letti non valido');
+      delete structure.Letti;
+    }
+    
+    if (structure.Branco && (isNaN(structure.Branco) || structure.Branco < 0 || structure.Branco > 1000)) {
+      errors.push('Numero branco non valido');
+      delete structure.Branco;
+    }
+    
+    if (structure.Reparto && (isNaN(structure.Reparto) || structure.Reparto < 0 || structure.Reparto > 1000)) {
+      errors.push('Numero reparto non valido');
+      delete structure.Reparto;
+    }
+    
+    if (structure.Compagnia && (isNaN(structure.Compagnia) || structure.Compagnia < 0 || structure.Compagnia > 1000)) {
+      errors.push('Numero compagnia non valido');
+      delete structure.Compagnia;
+    }
+    
+    return {
+      structure,
+      errors,
+      isValid: errors.length === 0
+    };
+  }
+  
+  // Valida input di ricerca
+  validateSearchInput(input) {
+    if (typeof input !== 'string') return '';
+    
+    // Rimuovi caratteri potenzialmente pericolosi
+    return this.sanitizeHtml(input.substring(0, 100));
+  }
+}
+
+// Istanza globale del validatore
+const inputValidator = new InputValidator();
+
 // === SICUREZZA: Validazione Password Robusta ===
 function validatePasswordStrength(password) {
   const checks = {
@@ -4066,11 +4214,17 @@ class InputSanitizer {
 
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
+  // 🔒 GATE DI SICUREZZA: Nascondi tutto fino a autenticazione
+  document.body.style.display = 'none';
+  
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       // Utente autenticato
       utenteCorrente = user;
       console.log('✅ Utente autenticato:', user.email);
+      
+      // Mostra contenuto principale
+      document.body.style.display = 'block';
       
       // Nascondi schermata di login
       nascondiSchermataLogin();
@@ -4092,12 +4246,13 @@ function inizializzaAuth() {
       utenteCorrente = null;
       userProfile = null;
       elencoPersonale = [];
-      console.log('❌ Nessun utente autenticato');
+      console.log('🔒 Accesso negato: utente non autenticato');
       
       // 🔒 Cleanup session timeout
       cleanupSession();
       
-      // Mostra schermata di login
+      // Mostra schermata di login e nascondi contenuto
+      document.body.style.display = 'none';
       mostraSchermataLogin();
     }
   });
@@ -6936,6 +7091,17 @@ function mostraSchedaCompleta(strutturaId) {
   // Funzione per salvare modifiche
   async function salvaModificheScheda(strutturaId) {
     try {
+      // 🔒 SICUREZZA: Valida e sanitizza input prima del salvataggio
+      const validation = inputValidator.validateStructure(struttura);
+      if (!validation.isValid) {
+        console.error('❌ Validazione fallita:', validation.errors);
+        showError('Dati non validi: ' + validation.errors.join(', '));
+        return;
+      }
+      
+      // Aggiorna struttura con dati validati
+      struttura = validation.structure;
+      
       if (isNewStructure) {
         // Aggiorna metadati per nuova struttura
         struttura.lastModified = new Date();

@@ -4,18 +4,22 @@ service cloud.firestore {
 
     // ============================================
     // COLLEZIONE: strutture
-    // Lettura pubblica, scrittura solo autenticati
+    // Accesso completamente privato - solo utenti autenticati
     // ============================================
     match /strutture/{structureId} {
-      // Lettura: Accesso pubblico per visualizzazione
-      allow read: if true;
+      // Lettura: Solo utenti autenticati con email verificata
+      allow read: if request.auth != null && 
+                     request.auth.token.email_verified == true;
 
-      // Scrittura: Solo utenti autenticati
-      allow write: if request.auth != null;
+      // Scrittura: Solo utenti autenticati con email verificata
+      allow write: if request.auth != null && 
+                      request.auth.token.email_verified == true;
       
       // Documento specifico
-      allow get: if true;
-      allow list: if true;
+      allow get: if request.auth != null && 
+                    request.auth.token.email_verified == true;
+      allow list: if request.auth != null && 
+                     request.auth.token.email_verified == true;
     }
 
     // ============================================
@@ -23,11 +27,15 @@ service cloud.firestore {
     // Solo il proprio profilo
     // ============================================
     match /users/{userId} {
-      // Lettura: Solo il proprio profilo
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // Lettura: Solo il proprio profilo con email verificata
+      allow read: if request.auth != null && 
+                     request.auth.uid == userId &&
+                     request.auth.token.email_verified == true;
 
-      // Scrittura: Solo il proprio profilo
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Scrittura: Solo il proprio profilo con email verificata
+      allow write: if request.auth != null && 
+                      request.auth.uid == userId &&
+                      request.auth.token.email_verified == true;
     }
 
     // ============================================
@@ -35,12 +43,14 @@ service cloud.firestore {
     // Solo il proprietario
     // ============================================
     match /userLists/{listId} {
-      // Lettura: Solo il proprietario
+      // Lettura: Solo il proprietario con email verificata
       allow read: if request.auth != null &&
+                    request.auth.token.email_verified == true &&
                     resource.data.userId == request.auth.uid;
 
-      // Scrittura: Solo il proprietario
+      // Scrittura: Solo il proprietario con email verificata
       allow write: if request.auth != null &&
+                     request.auth.token.email_verified == true &&
                      request.resource.data.userId == request.auth.uid;
     }
 
@@ -49,12 +59,14 @@ service cloud.firestore {
     // Solo utenti autenticati possono leggere i propri log
     // ============================================
     match /activityLog/{logId} {
-      // Solo utenti autenticati possono leggere i propri log
+      // Solo utenti autenticati con email verificata possono leggere i propri log
       allow read: if request.auth != null &&
+                    request.auth.token.email_verified == true &&
                     resource.data.userId == request.auth.uid;
 
-      // Solo utenti autenticati possono creare log
+      // Solo utenti autenticati con email verificata possono creare log
       allow create: if request.auth != null &&
+                      request.auth.token.email_verified == true &&
                       request.resource.data.userId == request.auth.uid;
 
       // Nessuno può modificare o eliminare i log
@@ -62,11 +74,13 @@ service cloud.firestore {
     }
 
     match /activity_log/{logId} {
-      // Lettura: Accesso pubblico per visualizzazione feed
-      allow read: if true;
+      // Lettura: Solo utenti autenticati con email verificata
+      allow read: if request.auth != null && 
+                     request.auth.token.email_verified == true;
 
-      // Solo utenti autenticati possono creare log
-      allow create: if request.auth != null;
+      // Solo utenti autenticati con email verificata possono creare log
+      allow create: if request.auth != null && 
+                      request.auth.token.email_verified == true;
 
       // Nessuno può modificare o eliminare i log
       allow update, delete: if false;
@@ -77,11 +91,13 @@ service cloud.firestore {
     // Solo utenti autenticati possono leggere
     // ============================================
     match /structureVersions/{versionId} {
-      // Solo utenti autenticati possono leggere
-      allow read: if request.auth != null;
+      // Solo utenti autenticati con email verificata possono leggere
+      allow read: if request.auth != null &&
+                    request.auth.token.email_verified == true;
 
-      // Solo utenti autenticati possono creare versioni
-      allow create: if request.auth != null;
+      // Solo utenti autenticati con email verificata possono creare versioni
+      allow create: if request.auth != null &&
+                      request.auth.token.email_verified == true;
 
       // Nessuno può modificare o eliminare versioni
       allow update, delete: if false;
@@ -92,14 +108,17 @@ service cloud.firestore {
     // Solo utenti autenticati possono creare
     // ============================================
     match /structure_reports/{reportId} {
-      // Solo utenti autenticati possono leggere
-      allow read: if request.auth != null;
+      // Solo utenti autenticati con email verificata possono leggere
+      allow read: if request.auth != null &&
+                    request.auth.token.email_verified == true;
 
-      // Solo utenti autenticati possono creare segnalazioni
-      allow create: if request.auth != null;
+      // Solo utenti autenticati con email verificata possono creare segnalazioni
+      allow create: if request.auth != null &&
+                      request.auth.token.email_verified == true;
 
       // Solo il creatore può aggiornare la propria segnalazione
       allow update: if request.auth != null &&
+                      request.auth.token.email_verified == true &&
                       resource.data.userId == request.auth.uid;
 
       // Nessuno può eliminare segnalazioni
@@ -111,8 +130,9 @@ service cloud.firestore {
     // Solo il proprietario
     // ============================================
     match /user_notification_prefs/{userId} {
-      // Solo il proprietario può leggere/scrivere
+      // Solo il proprietario con email verificata può leggere/scrivere
       allow read, write: if request.auth != null &&
+                           request.auth.token.email_verified == true &&
                            request.auth.uid == userId;
     }
 
@@ -121,12 +141,14 @@ service cloud.firestore {
     // Solo il proprietario
     // ============================================
     match /user_filters/{filterId} {
-      // Solo il proprietario può leggere/scrivere
+      // Solo il proprietario con email verificata può leggere/scrivere
       allow read, write: if request.auth != null &&
+                           request.auth.token.email_verified == true &&
                            resource.data.userId == request.auth.uid;
       
       // Per i nuovi documenti, controlla che userId sia corretto
       allow create: if request.auth != null &&
+                      request.auth.token.email_verified == true &&
                       request.resource.data.userId == request.auth.uid;
     }
 

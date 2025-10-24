@@ -8,8 +8,8 @@ const AppConfig = {
   
   // === API KEYS ===
   apiKeys: {
-    // VAPID Key per push notifications (da sostituire con la tua)
-    vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa40HIeFfD7l1KQlYw',
+    // VAPID Key per push notifications (caricata da firebase-config.js)
+    vapidPublicKey: '', // Sarà caricata dinamicamente da FirebaseConfig
     
     // API Keys per servizi esterni (da configurare)
     googleMaps: '', // Google Maps API Key
@@ -344,6 +344,11 @@ const AppConfig = {
 };
 
 // === INIZIALIZZAZIONE CONFIGURAZIONE ===
+// Carica VAPID key da FirebaseConfig se disponibile
+if (typeof FirebaseConfig !== 'undefined' && FirebaseConfig.vapidKey) {
+  AppConfig.apiKeys.vapidPublicKey = FirebaseConfig.vapidKey;
+}
+
 window.AppConfig = AppConfig;
 
 // Carica configurazioni da localStorage se disponibili

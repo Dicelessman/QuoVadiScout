@@ -15,6 +15,20 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="QuoVadiScout" />
+<!-- Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com;
+  style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com;
+  img-src 'self' data: https: blob:;
+  font-src 'self' https://cdnjs.cloudflare.com;
+  connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseapp.com https://firebasestorage.app;
+  frame-src 'none';
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  upgrade-insecure-requests;
+" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏕️</text></svg>">
 <link rel="stylesheet" href="styles.css">
@@ -265,6 +279,8 @@
   <script src="icons-config.js"></script>
   <!-- Gestione errori -->
   <script src="error-handler.js"></script>
+  <!-- Configurazione Firebase (DEVE essere caricato prima di script.js) -->
+  <script src="firebase-config.js"></script>
   <script type="module" src="script.js"></script>
 
 <script>

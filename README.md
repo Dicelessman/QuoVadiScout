@@ -168,6 +168,18 @@ QuoVadiScout/
    
    📖 **Guida completa**: Vedi [DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md) per istruzioni dettagliate
 
+### Setup Produzione
+Per utilizzare l'applicazione in produzione, configura il file `firebase-config.js`:
+📖 **Guida setup produzione**: Vedi [SETUP_PRODUCTION.md](SETUP_PRODUCTION.md) per istruzioni complete
+
+### GitHub Pages
+L'applicazione è configurata per funzionare su GitHub Pages:
+- ✅ **Funziona immediatamente** senza configurazione aggiuntiva
+- ✅ **Sistema di fallback integrato** per credenziali Firebase
+- ✅ **Sicurezza completa** con accesso privato ai dati
+
+📖 **Guida GitHub Pages**: Vedi [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) per istruzioni complete
+
 ### Configurazione Sicurezza
 - **Email verificata obbligatoria**: Configura Firebase Auth per richiedere email verification
 - **Domini autorizzati**: Aggiorna domini autorizzati in Firebase Console

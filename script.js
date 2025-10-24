@@ -4510,74 +4510,79 @@ async function registraUtente() {
 window.registraUtente = registraUtente;
 
 async function accediConGoogle() {
-  // Registrazione
-  document.getElementById('registerBtn').onclick = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    
+    // Configura provider per popup
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    // Prova prima con popup
     try {
-      const nome = InputSanitizer.sanitizeNome(document.getElementById('registerNome').value);
-      const email = InputSanitizer.sanitizeEmail(document.getElementById('registerEmail').value);
-      const password = document.getElementById('registerPassword').value;
-      
-      if (!nome || !email || !password) {
-        showError('⚠️ Compila tutti i campi');
-        return;
+      await signInWithPopup(auth, provider);
+      console.log('✅ Login con Google effettuato con successo');
+    } catch (popupError) {
+      // Se il popup fallisce, prova con redirect
+      if (popupError.code === 'auth/popup-closed-by-user' || 
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/cancelled-popup-request') {
+        
+        console.log('🔄 Popup bloccato o chiuso, provo con redirect...');
+        
+        // Usa signInWithRedirect invece di popup
+        await signInWithRedirect(auth, provider);
+        return; // Il redirect gestirà il resto
+      } else {
+        throw popupError;
       }
-      
-      // Validazione password robusta
-      const passwordCheck = validatePasswordStrength(password);
-      if (!passwordCheck.valid) {
-        const feedback = passwordCheck.feedback.join('\n');
-        showError(`⚠️ Password troppo debole:\n${feedback}`);
-        return;
-      }
-      
-      await registerWithEmail(nome, email, password);
-    } catch (error) {
-      showError('⚠️ Dati non validi. Controlla i campi inseriti.');
     }
-  };
-  
-  // Login con Google
-  document.getElementById('googleLoginBtn').onclick = async () => {
-    await loginWithGoogle();
-  };
-  
-  // Enter per login
-  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      document.getElementById('loginBtn').click();
+  } catch (error) {
+    console.error('❌ Errore login Google:', error);
+    
+    // Messaggi di errore più user-friendly
+    let errorMessage = 'Errore durante il login con Google';
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Login annullato dall\'utente';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup bloccato dal browser. Abilita i popup per questo sito.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Errore di connessione. Verifica la tua connessione internet.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Troppi tentativi di login. Riprova più tardi.';
+    } else {
+      errorMessage = 'Errore durante il login con Google: ' + error.message;
     }
-  });
+    
+    alert(errorMessage);
+  }
 }
 
-async function loginWithEmail(email, password) {
-  try {
-    // 1. Verifica se account è bloccato (Rate Limiting)
-    const blocked = loginSecurity.isBlocked(email);
-    if (blocked.blocked) {
-      showError(blocked.reason);
-      return;
-    }
-    
-    showLoading(true);
-    hideError();
-    
-    // 2. Tentativo login Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('✅ Login riuscito:', userCredential.user.email);
-    
-    // 3. Successo - reset tentativi falliti
-    loginSecurity.recordSuccess(email);
-    
-    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
-    
-  } catch (error) {
-    console.error('❌ Errore login:', error);
-    
-    // 4. Record tentativo fallito
-    const result = loginSecurity.recordFailedAttempt(email);
-    
-    let errorMessage = '❌ Credenziali non valide';
-    
+// Esponi le funzioni globalmente per l'HTML
+window.accediConGoogle = accediConGoogle;
+
+// Funzioni globali rimosse - ora gestite da Firebase Auth
+
+// === Elenco personale ===
+let elencoPersonale = [];
+
+function aggiungiAllElenco(id) {
+  if (!elencoPersonale.includes(id)) {
+    elencoPersonale.push(id);
+    salvaElencoPersonaleUtente();
+  }
+}
+
+function rimuoviDallElenco(id) {
+  elencoPersonale = elencoPersonale.filter(item => item !== id);
+  salvaElencoPersonaleUtente();
+  aggiornaContatoreElenco();
+}
+
+function aggiornaContatoreElenco() {
+  // Aggiorna contatore principale
+  safeUpdateElement('contatore-elenco', (element) => {
     // Messaggi generici per evitare enumerazione utenti
     switch (error.code) {
       case 'auth/user-not-found':

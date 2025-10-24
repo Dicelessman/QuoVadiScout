@@ -180,6 +180,10 @@ L'applicazione è configurata per funzionare su GitHub Pages:
 
 📖 **Guida GitHub Pages**: Vedi [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) per istruzioni complete
 
+### Troubleshooting
+Per problemi comuni e soluzioni:
+📖 **Guida troubleshooting**: Vedi [TROUBLESHOOTING.md](TROUBLESHOOTING.md) per risoluzione problemi
+
 ### Configurazione Sicurezza
 - **Email verificata obbligatoria**: Configura Firebase Auth per richiedere email verification
 - **Domini autorizzati**: Aggiorna domini autorizzati in Firebase Console

@@ -33,6 +33,8 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
@@ -4241,6 +4243,16 @@ function inizializzaAuth() {
   // Mostra sempre la schermata di login inizialmente
   mostraSchermataLogin();
 
+  // Gestisci redirect result per Google OAuth
+  getRedirectResult(auth).then((result) => {
+    if (result) {
+      // Utente ha fatto login con redirect
+      console.log('✅ Login con Google completato via redirect');
+    }
+  }).catch((error) => {
+    console.error('❌ Errore redirect result:', error);
+  });
+
   onAuthStateChanged(auth, async (user) => {
     try {
       if (user) {
@@ -5125,11 +5137,50 @@ window.registraUtente = registraUtente;
 async function accediConGoogle() {
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    console.log('✅ Login con Google effettuato con successo');
+    
+    // Configura provider per popup
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    // Prova prima con popup
+    try {
+      await signInWithPopup(auth, provider);
+      console.log('✅ Login con Google effettuato con successo');
+    } catch (popupError) {
+      // Se il popup fallisce, prova con redirect
+      if (popupError.code === 'auth/popup-closed-by-user' || 
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/cancelled-popup-request') {
+        
+        console.log('🔄 Popup bloccato o chiuso, provo con redirect...');
+        
+        // Usa signInWithRedirect invece di popup
+        await signInWithRedirect(auth, provider);
+        return; // Il redirect gestirà il resto
+      } else {
+        throw popupError;
+      }
+    }
   } catch (error) {
     console.error('❌ Errore login Google:', error);
-    alert('Errore durante il login con Google: ' + error.message);
+    
+    // Messaggi di errore più user-friendly
+    let errorMessage = 'Errore durante il login con Google';
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Login annullato dall\'utente';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup bloccato dal browser. Abilita i popup per questo sito.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Errore di connessione. Verifica la tua connessione internet.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Troppi tentativi di login. Riprova più tardi.';
+    } else {
+      errorMessage = 'Errore durante il login con Google: ' + error.message;
+    }
+    
+    alert(errorMessage);
   }
 }
 

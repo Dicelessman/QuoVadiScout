@@ -129,6 +129,11 @@ service cloud.firestore {
       allow create: if request.auth != null &&
                       request.resource.data.userId == request.auth.uid;
     }
+    
+    // Permetti query sulla collezione user_filters per utenti autenticati
+    match /user_filters/{document=**} {
+      allow read: if request.auth != null;
+    }
 
     // ============================================
     // BLOCCO DEFAULT: Tutto il resto negato

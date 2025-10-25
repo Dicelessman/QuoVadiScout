@@ -5213,10 +5213,15 @@ function salvaProfiloUtente() {
   const preferredProvince = document.getElementById('preferredProvince').value;
   localStorage.setItem('preferredProvince', preferredProvince);
   
+  // Raccogli preferenze notifiche (con controlli di sicurezza)
+  const newStructuresEl = document.getElementById('newStructures');
+  const structureUpdatesEl = document.getElementById('structureUpdates');
+  const nearbyStructuresEl = document.getElementById('nearbyStructures');
+  
   const preferenzeNotifiche = {
-    newStructures: document.getElementById('newStructures').checked,
-    structureUpdates: document.getElementById('structureUpdates').checked,
-    nearbyStructures: document.getElementById('nearbyStructures').checked
+    newStructures: newStructuresEl ? newStructuresEl.checked : true,
+    structureUpdates: structureUpdatesEl ? structureUpdatesEl.checked : true,
+    nearbyStructures: nearbyStructuresEl ? nearbyStructuresEl.checked : false
   };
   
   localStorage.setItem('notificationPreferences', JSON.stringify(preferenzeNotifiche));
@@ -9169,10 +9174,16 @@ function mostraOpzioniEsportazioneGenerale() {
 function eseguiEsportazione() {
   const exportType = document.querySelector('input[name="exportType"]:checked').value;
   const layout = document.getElementById('exportLayout').value;
-  const includeImages = document.getElementById('includeImages').checked;
-  const includeNotes = document.getElementById('includeNotes').checked;
-  const includePersonalNotes = document.getElementById('includePersonalNotes').checked;
-  const onlyPersonalList = document.getElementById('onlyPersonalList').checked;
+  // Raccogli opzioni esportazione (con controlli di sicurezza)
+  const includeImagesEl = document.getElementById('includeImages');
+  const includeNotesEl = document.getElementById('includeNotes');
+  const includePersonalNotesEl = document.getElementById('includePersonalNotes');
+  const onlyPersonalListEl = document.getElementById('onlyPersonalList');
+  
+  const includeImages = includeImagesEl ? includeImagesEl.checked : false;
+  const includeNotes = includeNotesEl ? includeNotesEl.checked : false;
+  const includePersonalNotes = includePersonalNotesEl ? includePersonalNotesEl.checked : false;
+  const onlyPersonalList = onlyPersonalListEl ? onlyPersonalListEl.checked : false;
   
   const options = {
     layout,

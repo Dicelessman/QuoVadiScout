@@ -4447,13 +4447,21 @@ async function salvaProfiloUtente() {
     userProfile.telefono = telefono;
     userProfile.gruppo = gruppo;
     userProfile.ruolo = ruolo;
+    // Raccogli preferenze notifiche (con controlli di sicurezza)
+    const notifNewStructures = document.getElementById('notifNewStructures');
+    const notifStructureUpdates = document.getElementById('notifStructureUpdates');
+    const notifPersonalList = document.getElementById('notifPersonalList');
+    const notifNearby = document.getElementById('notifNearby');
+    const notifReports = document.getElementById('notifReports');
+    const notifDistance = document.getElementById('notifDistance');
+    
     userProfile.preferenzeNotifiche = {
-      newStructures: document.getElementById('notifNewStructures').checked,
-      structureUpdates: document.getElementById('notifStructureUpdates').checked,
-      personalListUpdates: document.getElementById('notifPersonalList').checked,
-      nearbyStructures: document.getElementById('notifNearby').checked,
-      reports: document.getElementById('notifReports').checked,
-      distance: parseInt(document.getElementById('notifDistance').value) || 10
+      newStructures: notifNewStructures ? notifNewStructures.checked : true,
+      structureUpdates: notifStructureUpdates ? notifStructureUpdates.checked : true,
+      personalListUpdates: notifPersonalList ? notifPersonalList.checked : true,
+      nearbyStructures: notifNearby ? notifNearby.checked : false,
+      reports: notifReports ? notifReports.checked : true,
+      distance: notifDistance ? parseInt(notifDistance.value) || 10 : 10
     };
     
     // Salva in Firestore
@@ -8136,12 +8144,18 @@ function caricaPreferenzeNotifiche() {
   
   const prefs = window.pushManager.preferences.preferences;
   
-  // Carica toggle switches
-  document.getElementById('newStructures').checked = prefs.newStructures;
-  document.getElementById('structureUpdates').checked = prefs.structureUpdates;
-  document.getElementById('personalListUpdates').checked = prefs.personalListUpdates;
-  document.getElementById('nearbyStructures').checked = prefs.nearbyStructures;
-  document.getElementById('reports').checked = prefs.reports;
+  // Carica toggle switches (solo se esistono)
+  const newStructuresEl = document.getElementById('newStructures');
+  const structureUpdatesEl = document.getElementById('structureUpdates');
+  const personalListUpdatesEl = document.getElementById('personalListUpdates');
+  const nearbyStructuresEl = document.getElementById('nearbyStructures');
+  const reportsEl = document.getElementById('reports');
+  
+  if (newStructuresEl) newStructuresEl.checked = prefs.newStructures;
+  if (structureUpdatesEl) structureUpdatesEl.checked = prefs.structureUpdates;
+  if (personalListUpdatesEl) personalListUpdatesEl.checked = prefs.personalListUpdates;
+  if (nearbyStructuresEl) nearbyStructuresEl.checked = prefs.nearbyStructures;
+  if (reportsEl) reportsEl.checked = prefs.reports;
   
   // Carica slider distanza
   document.getElementById('distanceSlider').value = prefs.distance;
@@ -8154,14 +8168,21 @@ async function salvaPreferenzeNotifiche() {
     return;
   }
   
-  // Aggiorna preferenze
+  // Aggiorna preferenze (solo se gli elementi esistono)
   const prefs = window.pushManager.preferences.preferences;
-  prefs.newStructures = document.getElementById('newStructures').checked;
-  prefs.structureUpdates = document.getElementById('structureUpdates').checked;
-  prefs.personalListUpdates = document.getElementById('personalListUpdates').checked;
-  prefs.nearbyStructures = document.getElementById('nearbyStructures').checked;
-  prefs.reports = document.getElementById('reports').checked;
-  prefs.distance = parseInt(document.getElementById('distanceSlider').value);
+  const newStructuresEl = document.getElementById('newStructures');
+  const structureUpdatesEl = document.getElementById('structureUpdates');
+  const personalListUpdatesEl = document.getElementById('personalListUpdates');
+  const nearbyStructuresEl = document.getElementById('nearbyStructures');
+  const reportsEl = document.getElementById('reports');
+  const distanceSliderEl = document.getElementById('distanceSlider');
+  
+  if (newStructuresEl) prefs.newStructures = newStructuresEl.checked;
+  if (structureUpdatesEl) prefs.structureUpdates = structureUpdatesEl.checked;
+  if (personalListUpdatesEl) prefs.personalListUpdates = personalListUpdatesEl.checked;
+  if (nearbyStructuresEl) prefs.nearbyStructures = nearbyStructuresEl.checked;
+  if (reportsEl) prefs.reports = reportsEl.checked;
+  if (distanceSliderEl) prefs.distance = parseInt(distanceSliderEl.value);
   
   // Salva su Firestore
   await window.pushManager.preferences.save(window.utenteCorrente.uid);

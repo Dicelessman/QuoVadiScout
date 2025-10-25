@@ -84,8 +84,21 @@
           <option value="all">Tutte le Province</option>
         </select>
       </div>
-      <div class="province-grid" id="provinceStats">
-        <!-- Popolato dinamicamente -->
+      <div class="table-container" style="overflow-x: auto; border-radius: 8px; border: 1px solid var(--border-light);">
+        <table id="provinceTable" style="width: 100%; border-collapse: collapse; background: var(--bg-primary);">
+          <thead style="background: var(--bg-tertiary);">
+            <tr>
+              <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-light); font-weight: 600; color: var(--text-primary);">Provincia</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); font-weight: 600; color: var(--text-primary);">POI Totali</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); font-weight: 600; color: var(--text-primary);">Case</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); font-weight: 600; color: var(--text-primary);">Terreni</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border-light); font-weight: 600; color: var(--text-primary);">NS</th>
+            </tr>
+          </thead>
+          <tbody id="provinceTableBody">
+            <!-- Popolato dinamicamente -->
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -122,6 +135,22 @@
           <div class="metric-content">
             <h3 id="avgRating">-</h3>
             <p>Rating Medio</p>
+          </div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">✅</div>
+          <div class="metric-content">
+            <h3 id="structuresVerified">-</h3>
+            <p>Strutture Verificate</p>
+          </div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="metric-icon">🗺️</div>
+          <div class="metric-content">
+            <h3 id="provincesCovered">-</h3>
+            <p>Province Coperte</p>
           </div>
         </div>
       </div>

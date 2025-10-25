@@ -4116,13 +4116,41 @@ async function caricaProfiloUtente(uid) {
     if (userDoc.exists()) {
       userProfile = userDoc.data();
       console.log('📋 Profilo utente caricato:', userProfile);
+      
+      // Assicurati che i campi nuovi esistano (retrocompatibilità)
+      if (!userProfile.cognome) userProfile.cognome = '';
+      if (!userProfile.telefono) userProfile.telefono = '';
+      if (!userProfile.gruppo) userProfile.gruppo = '';
+      if (!userProfile.ruolo) userProfile.ruolo = '';
+      if (!userProfile.preferenzeNotifiche) {
+        userProfile.preferenzeNotifiche = {
+          newStructures: true,
+          structureUpdates: true,
+          personalListUpdates: true,
+          nearbyStructures: false,
+          reports: true,
+          distance: 10
+        };
+      }
     } else {
-      // Crea profilo utente se non esiste
+      // Crea profilo utente se non esiste (per utenti esistenti)
       userProfile = {
         nome: utenteCorrente.displayName || utenteCorrente.email.split('@')[0],
+        cognome: '',
         email: utenteCorrente.email,
+        telefono: '',
+        gruppo: '',
+        ruolo: '',
         dataCreazione: new Date().toISOString(),
-        elencoPersonale: []
+        elencoPersonale: [],
+        preferenzeNotifiche: {
+          newStructures: true,
+          structureUpdates: true,
+          personalListUpdates: true,
+          nearbyStructures: false,
+          reports: true,
+          distance: 10
+        }
       };
       
       await setDoc(userDocRef, userProfile);
@@ -4130,6 +4158,289 @@ async function caricaProfiloUtente(uid) {
     }
   } catch (error) {
     console.error('❌ Errore caricamento profilo:', error);
+  }
+}
+
+// === Scheda Utente ===
+function mostraSchedaUtente() {
+  // Chiudi il menu automaticamente
+  closeMenu();
+  
+  // Nascondi il modale "Le Mie Liste" se è aperto
+  const elencoModal = document.getElementById('elencoPersonaleModal');
+  if (elencoModal) {
+    elencoModal.remove();
+  }
+  
+  // Rimuovi modal esistente se presente
+  const existingModal = document.getElementById('userProfileModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  const modal = document.createElement('div');
+  modal.id = 'userProfileModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 95%;
+    max-height: 95%;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    min-width: 400px;
+    width: 100%;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2f6b2f;
+  `;
+  
+  const title = document.createElement('h2');
+  title.textContent = '👤 Scheda Utente';
+  title.style.cssText = `
+    margin: 0;
+    color: #2f6b2f;
+    font-size: 1.5rem;
+  `;
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  
+  // Form
+  const form = document.createElement('form');
+  form.style.cssText = `
+    display: grid;
+    gap: 15px;
+    grid-template-columns: 1fr 1fr;
+  `;
+  
+  form.innerHTML = `
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nome *</label>
+      <input type="text" id="userNome" value="${userProfile?.nome || ''}" 
+             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Cognome *</label>
+      <input type="text" id="userCognome" value="${userProfile?.cognome || ''}" 
+             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Email *</label>
+      <input type="email" id="userEmail" value="${userProfile?.email || ''}" readonly
+             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: #f5f5f5;">
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Telefono *</label>
+      <input type="tel" id="userTelefono" value="${userProfile?.telefono || ''}" 
+             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Gruppo *</label>
+      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: white;" required>
+        <option value="">Seleziona Gruppo</option>
+        <option value="TO1" ${userProfile?.gruppo === 'TO1' ? 'selected' : ''}>TO1</option>
+        <option value="TO2" ${userProfile?.gruppo === 'TO2' ? 'selected' : ''}>TO2</option>
+        <option value="TO3" ${userProfile?.gruppo === 'TO3' ? 'selected' : ''}>TO3</option>
+        <option value="TO4" ${userProfile?.gruppo === 'TO4' ? 'selected' : ''}>TO4</option>
+        <option value="Gassino" ${userProfile?.gruppo === 'Gassino' ? 'selected' : ''}>Gassino</option>
+        <option value="Chivasso" ${userProfile?.gruppo === 'Chivasso' ? 'selected' : ''}>Chivasso</option>
+        <option value="San Mauro" ${userProfile?.gruppo === 'San Mauro' ? 'selected' : ''}>San Mauro</option>
+      </select>
+    </div>
+    
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruolo *</label>
+      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: white;" required>
+        <option value="">Seleziona Ruolo</option>
+        <option value="Senior" ${userProfile?.ruolo === 'Senior' ? 'selected' : ''}>Senior</option>
+        <option value="SiSB" ${userProfile?.ruolo === 'SiSB' ? 'selected' : ''}>SiSB</option>
+        <option value="SiSR" ${userProfile?.ruolo === 'SiSR' ? 'selected' : ''}>SiSR</option>
+        <option value="VCB" ${userProfile?.ruolo === 'VCB' ? 'selected' : ''}>VCB</option>
+        <option value="VCR" ${userProfile?.ruolo === 'VCR' ? 'selected' : ''}>VCR</option>
+        <option value="CB" ${userProfile?.ruolo === 'CB' ? 'selected' : ''}>CB</option>
+        <option value="CR" ${userProfile?.ruolo === 'CR' ? 'selected' : ''}>CR</option>
+        <option value="CC" ${userProfile?.ruolo === 'CC' ? 'selected' : ''}>CC</option>
+        <option value="CG" ${userProfile?.ruolo === 'CG' ? 'selected' : ''}>CG</option>
+        <option value="COS" ${userProfile?.ruolo === 'COS' ? 'selected' : ''}>COS</option>
+      </select>
+    </div>
+    
+    <div style="grid-column: 1 / -1;">
+      <h3 style="margin: 20px 0 10px 0; color: #2f6b2f;">🔔 Preferenze Notifiche</h3>
+      <div style="display: grid; gap: 10px; grid-template-columns: 1fr 1fr;">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="notifNewStructures" ${userProfile?.preferenzeNotifiche?.newStructures ? 'checked' : ''}>
+          Nuove strutture
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="notifStructureUpdates" ${userProfile?.preferenzeNotifiche?.structureUpdates ? 'checked' : ''}>
+          Aggiornamenti strutture
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="notifPersonalList" ${userProfile?.preferenzeNotifiche?.personalListUpdates ? 'checked' : ''}>
+          Aggiornamenti elenco personale
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="notifNearby" ${userProfile?.preferenzeNotifiche?.nearbyStructures ? 'checked' : ''}>
+          Strutture nelle vicinanze
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="notifReports" ${userProfile?.preferenzeNotifiche?.reports ? 'checked' : ''}>
+          Report e statistiche
+        </label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label for="notifDistance">Distanza notifiche (km):</label>
+          <input type="number" id="notifDistance" value="${userProfile?.preferenzeNotifiche?.distance || 10}" min="1" max="100" style="width: 80px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Footer con pulsanti
+  const footer = document.createElement('div');
+  footer.style.cssText = `
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    justify-content: flex-end;
+  `;
+  
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = '💾 Salva Profilo';
+  saveBtn.style.cssText = `
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  saveBtn.onclick = async () => {
+    await salvaProfiloUtente();
+    modal.remove();
+  };
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = '❌ Annulla';
+  cancelBtn.style.cssText = `
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  cancelBtn.onclick = () => modal.remove();
+  
+  footer.appendChild(saveBtn);
+  footer.appendChild(cancelBtn);
+  
+  // Assembla il modal
+  modalContent.appendChild(header);
+  modalContent.appendChild(form);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  // Chiudi cliccando fuori
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+async function salvaProfiloUtente() {
+  try {
+    if (!utenteCorrente || !userProfile) {
+      alert('❌ Errore: utente non autenticato');
+      return;
+    }
+    
+    const nome = document.getElementById('userNome').value.trim();
+    const cognome = document.getElementById('userCognome').value.trim();
+    const telefono = document.getElementById('userTelefono').value.trim();
+    const gruppo = document.getElementById('userGruppo').value;
+    const ruolo = document.getElementById('userRuolo').value;
+    
+    if (!nome || !cognome || !telefono || !gruppo || !ruolo) {
+      alert('⚠️ Compila tutti i campi obbligatori');
+      return;
+    }
+    
+    // Aggiorna profilo
+    userProfile.nome = nome;
+    userProfile.cognome = cognome;
+    userProfile.telefono = telefono;
+    userProfile.gruppo = gruppo;
+    userProfile.ruolo = ruolo;
+    userProfile.preferenzeNotifiche = {
+      newStructures: document.getElementById('notifNewStructures').checked,
+      structureUpdates: document.getElementById('notifStructureUpdates').checked,
+      personalListUpdates: document.getElementById('notifPersonalList').checked,
+      nearbyStructures: document.getElementById('notifNearby').checked,
+      reports: document.getElementById('notifReports').checked,
+      distance: parseInt(document.getElementById('notifDistance').value) || 10
+    };
+    
+    // Salva in Firestore
+    await setDoc(doc(db, 'users', utenteCorrente.uid), userProfile);
+    
+    console.log('✅ Profilo utente aggiornato');
+    alert('✅ Profilo salvato con successo!');
+    
+  } catch (error) {
+    console.error('❌ Errore salvataggio profilo:', error);
+    alert('❌ Errore nel salvataggio del profilo');
   }
 }
 
@@ -4203,14 +4514,47 @@ function mostraSchermataLogin() {
     </div>
     
     <div id="registerForm" style="margin-bottom: 20px; display: none;">
-      <input type="text" id="registerNome" placeholder="Nome utente" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
+      <input type="text" id="registerNome" placeholder="Nome *" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
       
-      <input type="email" id="registerEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
+      <input type="text" id="registerCognome" placeholder="Cognome *" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
       
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
+      <input type="email" id="registerEmail" placeholder="Email *" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
+      
+      <input type="tel" id="registerTelefono" placeholder="Telefono *" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
+      
+      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri) *" 
+             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
+      
+      <select id="registerGruppo" 
+              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: white;" required>
+        <option value="">Seleziona Gruppo *</option>
+        <option value="TO1">TO1</option>
+        <option value="TO2">TO2</option>
+        <option value="TO3">TO3</option>
+        <option value="TO4">TO4</option>
+        <option value="Gassino">Gassino</option>
+        <option value="Chivasso">Chivasso</option>
+        <option value="San Mauro">San Mauro</option>
+      </select>
+      
+      <select id="registerRuolo" 
+              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; background: white;" required>
+        <option value="">Seleziona Ruolo *</option>
+        <option value="Senior">Senior</option>
+        <option value="SiSB">SiSB</option>
+        <option value="SiSR">SiSR</option>
+        <option value="VCB">VCB</option>
+        <option value="VCR">VCR</option>
+        <option value="CB">CB</option>
+        <option value="CR">CR</option>
+        <option value="CC">CC</option>
+        <option value="CG">CG</option>
+        <option value="COS">COS</option>
+      </select>
       
       <button id="registerBtn" 
               style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
@@ -4286,11 +4630,15 @@ function setupAuthEventListeners() {
   document.getElementById('registerBtn').onclick = async () => {
     try {
       const nome = InputSanitizer.sanitizeNome(document.getElementById('registerNome').value);
+      const cognome = InputSanitizer.sanitizeNome(document.getElementById('registerCognome').value);
       const email = InputSanitizer.sanitizeEmail(document.getElementById('registerEmail').value);
+      const telefono = document.getElementById('registerTelefono').value;
+      const gruppo = document.getElementById('registerGruppo').value;
+      const ruolo = document.getElementById('registerRuolo').value;
       const password = document.getElementById('registerPassword').value;
       
-      if (!nome || !email || !password) {
-        showError('⚠️ Compila tutti i campi');
+      if (!nome || !cognome || !email || !telefono || !gruppo || !ruolo || !password) {
+        showError('⚠️ Compila tutti i campi obbligatori');
         return;
       }
       
@@ -4302,7 +4650,7 @@ function setupAuthEventListeners() {
         return;
       }
       
-      await registerWithEmail(nome, email, password);
+      await registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, password);
     } catch (error) {
       showError('⚠️ Dati non validi. Controlla i campi inseriti.');
     }
@@ -4380,7 +4728,7 @@ async function loginWithEmail(email, password) {
   }
 }
 
-async function registerWithEmail(nome, email, password) {
+async function registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, password) {
   try {
     showLoading(true);
     hideError();
@@ -4392,9 +4740,31 @@ async function registerWithEmail(nome, email, password) {
       displayName: nome
     });
     
-    console.log('✅ Registrazione riuscita:', userCredential.user.email);
+    // Crea profilo utente completo
+    const userProfile = {
+      nome: nome,
+      cognome: cognome,
+      email: email,
+      telefono: telefono,
+      gruppo: gruppo,
+      ruolo: ruolo,
+      dataCreazione: new Date().toISOString(),
+      elencoPersonale: [],
+      preferenzeNotifiche: {
+        newStructures: true,
+        structureUpdates: true,
+        personalListUpdates: true,
+        nearbyStructures: false,
+        reports: true,
+        distance: 10
+      }
+    };
     
-    // Il profilo verrà creato automaticamente in caricaProfiloUtente
+    // Salva profilo in Firestore
+    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
+    
+    console.log('✅ Registrazione riuscita:', userCredential.user.email);
+    console.log('✅ Profilo utente creato con tutti i campi');
     
   } catch (error) {
     console.error('❌ Errore registrazione:', error);
@@ -4576,8 +4946,8 @@ async function salvaElencoPersonaleUtente() {
 
 function cambiaUtente() {
   if (utenteCorrente) {
-    // Mostra modale profilo utente espanso
-    mostraModaleProfiloUtente();
+    // Mostra scheda utente completa
+    mostraSchedaUtente();
   } else {
     // Se non c'è utente, mostra direttamente la schermata di login
     mostraSchermataLogin();
@@ -4905,6 +5275,12 @@ function mostraGestioneElencoPersonale() {
   console.log('📋 Apertura gestione elenco personale...');
   const struttureElenco = strutture.filter(s => elencoPersonale.includes(s.id));
   console.log('📊 Strutture trovate:', struttureElenco.length);
+  
+  // Nascondi la scheda utente se è aperta
+  const userModal = document.getElementById('userProfileModal');
+  if (userModal) {
+    userModal.remove();
+  }
   
   // Rimuovi modal esistente se presente
   const existingModal = document.getElementById('gestioneElencoModal');

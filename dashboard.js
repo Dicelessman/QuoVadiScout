@@ -176,11 +176,19 @@ function aggiornaMetricheAvanzate() {
     ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
     : 'N/A';
   document.getElementById('avgRating').textContent = avgRating;
+  
+  // Strutture verificate (assumendo campo 'verificata' o simile)
+  const verified = strutture.filter(s => s.verificata === true || s.verified === true).length;
+  document.getElementById('structuresVerified').textContent = `${verified} (${Math.round(verified/strutture.length*100)}%)`;
+  
+  // Province coperte
+  const uniqueProvinces = new Set(strutture.map(s => s.Prov).filter(p => p && p.trim() !== ''));
+  document.getElementById('provincesCovered').textContent = uniqueProvinces.size;
 }
 
 function aggiornaStatisticheProvince() {
   const provinceStats = calcolaStatisticheProvince();
-  const container = document.getElementById('provinceStats');
+  const tableBody = document.getElementById('provinceTableBody');
   const filterSelect = document.getElementById('provinceFilter');
   
   // Popola il dropdown se non è già popolato
@@ -197,7 +205,10 @@ function aggiornaStatisticheProvince() {
   // Ottieni filtro selezionato
   const selectedProvince = filterSelect ? filterSelect.value : 'all';
   
-  container.innerHTML = '';
+  // Pulisci la tabella
+  if (tableBody) {
+    tableBody.innerHTML = '';
+  }
   
   // Ordina per numero totale di strutture
   const sortedProvinces = Object.entries(provinceStats)
@@ -209,34 +220,49 @@ function aggiornaStatisticheProvince() {
     : sortedProvinces.filter(([prov]) => prov === selectedProvince);
   
   provincesToShow.forEach(([provincia, stats]) => {
-    const card = document.createElement('div');
-    card.className = 'province-card';
-    card.innerHTML = `
-      <h4>${provincia}</h4>
-      <div class="province-stats">
-        <div class="province-stat">
-          <span>Totali:</span>
-          <strong>${stats.totali}</strong>
-        </div>
-        <div class="province-stat">
-          <span>🏠 <a href="index.html?filtro=casa&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca case in ${provincia}">Case:</a></span>
-          <span>${stats.case}</span>
-        </div>
-        <div class="province-stat">
-          <span>🌱 <a href="index.html?filtro=terreno&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca terreni in ${provincia}">Terreni:</a></span>
-          <span>${stats.terreni}</span>
-        </div>
-        <div class="province-stat">
-          <span>🏢🌱 <a href="index.html?filtro=entrambe&provincia=${encodeURIComponent(provincia)}" class="province-link" title="Cerca strutture con case e terreni in ${provincia}">Entrambe:</a></span>
-          <span>${stats.entrambe}</span>
-        </div>
-        <div class="province-stat">
-          <span>❓ Senza:</span>
-          <span>${stats.senza}</span>
-        </div>
-      </div>
+    const row = document.createElement('tr');
+    row.style.cssText = `
+      border-bottom: 1px solid var(--border-light);
+      transition: background-color 0.2s ease;
     `;
-    container.appendChild(card);
+    
+    // Hover effect
+    row.addEventListener('mouseenter', () => {
+      row.style.backgroundColor = 'var(--bg-tertiary)';
+    });
+    row.addEventListener('mouseleave', () => {
+      row.style.backgroundColor = 'transparent';
+    });
+    
+    row.innerHTML = `
+      <td style="padding: 12px; font-weight: 500; color: var(--text-primary);">
+        <strong>${provincia}</strong>
+      </td>
+      <td style="padding: 12px; text-align: center; color: var(--text-primary);">
+        <strong>${stats.totali}</strong>
+      </td>
+      <td style="padding: 12px; text-align: center;">
+        <a href="index.html?filtro=casa&provincia=${encodeURIComponent(provincia)}" 
+           style="color: #1976d2; text-decoration: none; font-weight: 500;" 
+           title="Cerca case in ${provincia}">
+          🏠 ${stats.case}
+        </a>
+      </td>
+      <td style="padding: 12px; text-align: center;">
+        <a href="index.html?filtro=terreno&provincia=${encodeURIComponent(provincia)}" 
+           style="color: #4caf50; text-decoration: none; font-weight: 500;" 
+           title="Cerca terreni in ${provincia}">
+          🌱 ${stats.terreni}
+        </a>
+      </td>
+      <td style="padding: 12px; text-align: center; color: var(--text-secondary);">
+        ❓ ${stats.senza}
+      </td>
+    `;
+    
+    if (tableBody) {
+      tableBody.appendChild(row);
+    }
   });
 }
 

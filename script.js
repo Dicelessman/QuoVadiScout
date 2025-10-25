@@ -1001,7 +1001,12 @@ async function salvaFiltriAvanzati() {
 
 async function caricaFiltriSalvati() {
   try {
-    if (!utenteCorrente) return [];
+    if (!utenteCorrente || !utenteCorrente.uid) {
+      console.log('⚠️ Utente non autenticato, non posso caricare filtri salvati');
+      return [];
+    }
+    
+    console.log('🔍 Caricamento filtri salvati per utente:', utenteCorrente.uid);
     
     const filtersRef = collection(db, "user_filters");
     const q = query(
@@ -1014,6 +1019,8 @@ async function caricaFiltriSalvati() {
       ...doc.data()
     }));
     
+    console.log('✅ Filtri salvati caricati:', filtri.length);
+    
     // Ordina localmente per evitare problemi di indice
     return filtri.sort((a, b) => {
       const dateA = a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0);
@@ -1021,7 +1028,8 @@ async function caricaFiltriSalvati() {
       return dateB - dateA;
     });
   } catch (error) {
-    console.error('Errore nel caricamento filtri salvati:', error);
+    console.error('❌ Errore nel caricamento filtri salvati:', error);
+    console.error('Dettagli errore:', error.code, error.message);
     return [];
   }
 }
@@ -4137,6 +4145,9 @@ function inizializzaAuth() {
       
       // Aggiorna contatore elenco
       aggiornaContatoreElenco();
+      
+      // Carica filtri salvati
+      await caricaFiltriSalvatiDropdown();
       
       // 🔒 Inizializza session timeout
       initSessionTimeout();
@@ -8830,8 +8841,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (e.target.id === "modal") chiudiModale();
   });
   
-  // Carica filtri salvati
-  await caricaFiltriSalvatiDropdown();
+  // Carica filtri salvati (solo se utente autenticato)
+  // await caricaFiltriSalvatiDropdown(); // Spostato in onAuthStateChanged
   
   // Inizializza ottimizzazioni performance
   setupLazyLoading();

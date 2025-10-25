@@ -4181,6 +4181,29 @@ function inizializzaAuth() {
       // Aggiorna contatore elenco
       aggiornaContatoreElenco();
       
+      // Carica strutture dopo l'autenticazione
+      try {
+        console.log('📊 Caricamento strutture dopo autenticazione...');
+        strutture = await caricaStrutture();
+        window.strutture = strutture;
+        
+        // Applica filtro provincia preferita se impostata
+        const preferredProvince = localStorage.getItem('preferredProvince');
+        if (preferredProvince && preferredProvince !== '') {
+          console.log(`🔍 Provincia preferita trovata: ${preferredProvince}`);
+          const struttureFiltrate = strutture.filter(s => s.Prov === preferredProvince);
+          console.log(`📊 Strutture filtrate: ${struttureFiltrate.length} su ${strutture.length}`);
+          renderStrutture(struttureFiltrate);
+        } else {
+          console.log('ℹ️ Nessuna provincia preferita impostata');
+          renderStrutture(strutture);
+        }
+        aggiornaContatoreElenco();
+        console.log('✅ Strutture caricate e visualizzate');
+      } catch (error) {
+        console.error('❌ Errore nel caricamento strutture:', error);
+      }
+      
       // Carica filtri salvati (con delay per assicurarsi che l'utente sia completamente autenticato)
       setTimeout(async () => {
         try {
@@ -8657,36 +8680,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   
   // Inizializza UI event listeners
+  initializeNewUI();
   initializeUIEventListeners();
   
   // Inizializza sistema autenticazione Firebase
   inizializzaAuth();
   
-  try {
-  strutture = await caricaStrutture();
-  
-  // Applica filtro provincia preferita se impostata
-  const preferredProvince = localStorage.getItem('preferredProvince');
-  if (preferredProvince && preferredProvince !== '') {
-    console.log(`🔍 Provincia preferita trovata: ${preferredProvince}`);
-    
-    // Filtra direttamente le strutture senza aspettare il DOM
-    const struttureFiltrate = strutture.filter(s => s.Prov === preferredProvince);
-    console.log(`📊 Strutture filtrate: ${struttureFiltrate.length} su ${strutture.length}`);
-    
-    renderStrutture(struttureFiltrate);
-    aggiornaContatoreElenco();
-    
-    // Mostra indicatore filtro attivo
-    if (window.showToast) {
-      window.showToast(`🔍 Filtro provincia preferita attivo: ${preferredProvince}`, 'info');
-    }
-  } else {
-    // Nessuna provincia preferita, mostra tutte le strutture
-    console.log('ℹ️ Nessuna provincia preferita impostata');
-    renderStrutture(strutture);
-    aggiornaContatoreElenco();
-  }
+  // Il caricamento delle strutture è ora gestito in onAuthStateChanged
+  // try {
+  //   strutture = await caricaStrutture();
+  //   // ... resto del codice
+  // }
     
     // Applica filtro dalla dashboard se presente
     if (window.dashboardFilter) {

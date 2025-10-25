@@ -5239,53 +5239,7 @@ function mostraModaleProfiloUtente() {
   document.head.appendChild(style);
 }
 
-function salvaProfiloUtente() {
-  const profilo = {
-    nome: document.getElementById('userNome').value,
-    cognome: document.getElementById('userCognome').value,
-    cell: document.getElementById('userCell').value,
-    gruppo: document.getElementById('userGruppo').value,
-    ruolo: document.getElementById('userRuolo').value
-  };
-  
-  localStorage.setItem('userProfile', JSON.stringify(profilo));
-  
-  const preferredProvince = document.getElementById('preferredProvince').value;
-  localStorage.setItem('preferredProvince', preferredProvince);
-  
-  // Raccogli preferenze notifiche (con controlli di sicurezza)
-  const newStructuresEl = document.getElementById('newStructures');
-  const structureUpdatesEl = document.getElementById('structureUpdates');
-  const nearbyStructuresEl = document.getElementById('nearbyStructures');
-  
-  const preferenzeNotifiche = {
-    newStructures: newStructuresEl ? newStructuresEl.checked : true,
-    structureUpdates: structureUpdatesEl ? structureUpdatesEl.checked : true,
-    nearbyStructures: nearbyStructuresEl ? nearbyStructuresEl.checked : false
-  };
-  
-  localStorage.setItem('notificationPreferences', JSON.stringify(preferenzeNotifiche));
-  
-  // Salva anche su Firestore se possibile
-  if (window.auth && window.db && utenteCorrente) {
-    const docRef = doc(db, 'users', utenteCorrente.uid);
-    updateDoc(docRef, {
-      profile: profilo,
-      preferredProvince: preferredProvince,
-      notificationPreferences: preferenzeNotifiche,
-      lastUpdate: new Date().toISOString()
-    }).catch(err => console.error('Errore salvataggio profilo:', err));
-  }
-  
-  if (window.showToast) {
-    window.showToast('✅ Profilo salvato con successo!', 'success');
-  } else {
-    alert('✅ Profilo salvato con successo!');
-  }
-  
-  // Aggiorna UI
-  aggiornaUIUtente();
-}
+// Funzione salvaProfiloUtente rimossa - duplicata, mantenuta solo la versione async alla riga 4426
 
 function nascondiSchermataLogin() {
   // Mostra il contenuto principale

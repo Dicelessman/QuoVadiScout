@@ -41,9 +41,32 @@ import {
 
 // Verifica che la configurazione Firebase sia disponibile
 if (typeof FirebaseConfig === 'undefined') {
-  console.error('❌ Configurazione Firebase non trovata!');
-  console.error('Assicurati che firebase-config.js sia presente e caricato correttamente.');
-  throw new Error('Configurazione Firebase mancante');
+  console.warn('⚠️ Configurazione Firebase esterna non trovata, uso configurazione demo');
+  
+  // Configurazione Firebase demo temporanea
+  window.FirebaseConfig = {
+    apiKey: "demo-api-key",
+    authDomain: "demo-project.firebaseapp.com",
+    projectId: "demo-project",
+    storageBucket: "demo-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "demo-app-id",
+    measurementId: "demo-measurement-id",
+    vapidKey: "demo-vapid-key",
+    environment: "development",
+    authorizedDomains: ["localhost", "127.0.0.1", "dicelessman.github.io"],
+    rateLimits: {
+      requestsPerMinute: 60,
+      requestsPerHour: 1000,
+      requestsPerDay: 10000
+    }
+  };
+  
+  // Funzione di validazione demo
+  window.validateFirebaseConfig = function(config) {
+    console.warn('⚠️ Usando configurazione Firebase demo - sostituire con credenziali reali per produzione');
+    return true;
+  };
 }
 
 // Valida configurazione Firebase

@@ -208,6 +208,9 @@ function aggiornaStatisticheProvince() {
   // Pulisci la tabella
   if (tableBody) {
     tableBody.innerHTML = '';
+  } else {
+    console.error('❌ Elemento provinceTableBody non trovato');
+    return;
   }
   
   // Ordina per numero totale di strutture

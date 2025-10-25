@@ -804,9 +804,14 @@ function mostraRicercaAvanzata() {
     form.reset();
     // Pulisci anche i filtri attivi
     document.getElementById('search').value = '';
-    document.getElementById('filter-prov').value = '';
-    document.getElementById('filter-casa').checked = false;
-    document.getElementById('filter-terreno').checked = false;
+    const provEl = document.getElementById('filter-prov');
+    if (provEl) provEl.value = '';
+    
+    // Reset filtri avanzati
+    window.filtriAvanzatiAttivi = null;
+    const indicator = document.getElementById('indicatore-ricerca-avanzata');
+    if (indicator) indicator.remove();
+    
     renderStrutture(filtra(strutture));
   };
   
@@ -7544,9 +7549,8 @@ function toggleViewMode() {
 // === Reset filtri ===
 function resetFiltri() {
   document.getElementById('search').value = '';
-  document.getElementById('filter-prov').value = '';
-  document.getElementById('filter-casa').checked = false;
-  document.getElementById('filter-terreno').checked = false;
+  const provEl = document.getElementById('filter-prov');
+  if (provEl) provEl.value = '';
   
   // Reset filtri avanzati
   window.filtriAvanzatiAttivi = null;
@@ -8716,19 +8720,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
   
-  const filterCasa = document.getElementById("filter-casa");
-  if (filterCasa) {
-    filterCasa.addEventListener("change", () => {
-      renderStrutture(filtra(strutture));
-    });
-  }
-  
-  const filterTerreno = document.getElementById("filter-terreno");
-  if (filterTerreno) {
-    filterTerreno.addEventListener("change", () => {
-      renderStrutture(filtra(strutture));
-    });
-  }
+  // Filtri casa e terreno gestiti tramite ricerca avanzata
+  // const filterCasa = document.getElementById("filter-casa");
+  // const filterTerreno = document.getElementById("filter-terreno");
   
   const sortBy = document.getElementById("sort-by");
   if (sortBy) {
@@ -9993,8 +9987,9 @@ function initializeUIEventListeners() {
   // Filter functionality (now in menu)
   const filterProv = document.getElementById('filter-prov');
   const filterStato = document.getElementById('filter-stato');
-  const filterCasa = document.getElementById('filter-casa');
-  const filterTerreno = document.getElementById('filter-terreno');
+  // Filtri casa e terreno gestiti tramite ricerca avanzata
+  // const filterCasa = document.getElementById('filter-casa');
+  // const filterTerreno = document.getElementById('filter-terreno');
   
   if (filterProv) {
     filterProv.addEventListener('change', () => {
@@ -10010,19 +10005,20 @@ function initializeUIEventListeners() {
     });
   }
   
-  if (filterCasa) {
-    filterCasa.addEventListener('change', () => {
-      paginaCorrente = 1;
-      renderStrutture(filtra(strutture));
-    });
-  }
-  
-  if (filterTerreno) {
-    filterTerreno.addEventListener('change', () => {
-      paginaCorrente = 1;
-      renderStrutture(filtra(strutture));
-    });
-  }
+  // Filtri casa e terreno gestiti tramite ricerca avanzata
+  // if (filterCasa) {
+  //   filterCasa.addEventListener('change', () => {
+  //     paginaCorrente = 1;
+  //     renderStrutture(filtra(strutture));
+  //   });
+  // }
+  // 
+  // if (filterTerreno) {
+  //   filterTerreno.addEventListener('change', () => {
+  //     paginaCorrente = 1;
+  //     renderStrutture(filtra(strutture));
+  //   });
+  // }
   
   // Action buttons
   const addBtn = document.getElementById('add-btn');

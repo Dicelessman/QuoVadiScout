@@ -4527,8 +4527,14 @@ function mostraSchermataLogin() {
       <input type="email" id="loginEmail" placeholder="Email" 
              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
       
-      <input type="password" id="loginPassword" placeholder="Password" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
+      <div style="position: relative; margin-bottom: 20px;">
+        <input type="password" id="loginPassword" placeholder="Password" 
+               style="width: 100%; padding: 15px 50px 15px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+        <button type="button" id="toggleLoginPassword" 
+                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+          👁️
+        </button>
+      </div>
       
       <button id="loginBtn" 
               style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
@@ -4559,8 +4565,14 @@ function mostraSchermataLogin() {
       <input type="tel" id="registerTelefono" placeholder="Telefono *" 
              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
       
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri) *" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;" required>
+      <div style="position: relative; margin-bottom: 15px;">
+        <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri) *" 
+               style="width: 100%; padding: 15px 50px 15px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;" required>
+        <button type="button" id="toggleRegisterPassword" 
+                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: #666;">
+          👁️
+        </button>
+      </div>
       
       <select id="registerGruppo" 
               style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: white;" required>
@@ -4698,6 +4710,34 @@ function setupAuthEventListeners() {
   document.getElementById('loginPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       document.getElementById('loginBtn').click();
+    }
+  });
+  
+  // Toggle visualizzazione password login
+  document.getElementById('toggleLoginPassword').addEventListener('click', () => {
+    const passwordInput = document.getElementById('loginPassword');
+    const toggleBtn = document.getElementById('toggleLoginPassword');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      toggleBtn.textContent = '🙈';
+    } else {
+      passwordInput.type = 'password';
+      toggleBtn.textContent = '👁️';
+    }
+  });
+  
+  // Toggle visualizzazione password registrazione
+  document.getElementById('toggleRegisterPassword').addEventListener('click', () => {
+    const passwordInput = document.getElementById('registerPassword');
+    const toggleBtn = document.getElementById('toggleRegisterPassword');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      toggleBtn.textContent = '🙈';
+    } else {
+      passwordInput.type = 'password';
+      toggleBtn.textContent = '👁️';
     }
   });
 }

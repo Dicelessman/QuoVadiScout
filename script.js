@@ -32,29 +32,47 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
 // 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
 // Il file firebase-config.js deve essere escluso dal repository (.gitignore)
 
+// Configurazione fallback per sviluppo locale
+const fallbackConfig = {
+  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
+  authDomain: "quovadiscout.firebaseapp.com",
+  projectId: "quovadiscout",
+  storageBucket: "quovadiscout.firebasestorage.app",
+  messagingSenderId: "745134651793",
+  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
+};
+
 // Verifica che la configurazione Firebase sia disponibile
-if (typeof FirebaseConfig === 'undefined') {
-  console.error('❌ Configurazione Firebase non trovata!');
-  console.error('Assicurati che firebase-config.js sia presente e caricato correttamente.');
-  throw new Error('Configurazione Firebase mancante');
+let firebaseConfig;
+if (typeof FirebaseConfig !== 'undefined') {
+  // Usa configurazione da file esterno
+  try {
+    if (typeof validateFirebaseConfig === 'function') {
+      validateFirebaseConfig(FirebaseConfig);
+    }
+    firebaseConfig = FirebaseConfig;
+    console.log('✅ Configurazione Firebase caricata da file esterno');
+  } catch (error) {
+    console.error('❌ Errore validazione configurazione Firebase:', error);
+    console.log('🔄 Utilizzo configurazione fallback...');
+    firebaseConfig = fallbackConfig;
+  }
+} else {
+  // Usa configurazione fallback
+  console.warn('⚠️ File firebase-config.js non trovato, utilizzo configurazione fallback');
+  console.log('💡 Per produzione, crea firebase-config.js basato su firebase-config.template.js');
+  firebaseConfig = fallbackConfig;
 }
-
-// Valida configurazione Firebase
-try {
-  validateFirebaseConfig(FirebaseConfig);
-} catch (error) {
-  console.error('❌ Errore validazione configurazione Firebase:', error);
-  throw error;
-}
-
-const firebaseConfig = FirebaseConfig;
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);
@@ -66,13 +84,12 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
-  // Temporaneamente disabilitato per permettere accesso pubblico ai dati strutture
-  // Le Firebase Security Rules proteggono le operazioni di scrittura
-  // if (!auth || !auth.currentUser) {
-  //   console.log('🔒 Accesso negato: autenticazione richiesta');
-  //   mostraSchermataLogin();
-  //   return [];
-  // }
+  // Accesso completamente privato - richiesta autenticazione per qualsiasi operazione
+  if (!auth || !auth.currentUser) {
+    console.log('🔒 Accesso negato: autenticazione richiesta');
+    mostraSchermataLogin();
+    return [];
+  }
   
   const cacheKey = 'strutture_cache';
   const cacheTimestamp = 'strutture_cache_timestamp';
@@ -3827,6 +3844,150 @@ class LoginSecurity {
 // Instanza globale di LoginSecurity
 const loginSecurity = new LoginSecurity();
 
+// === SICUREZZA: Validazione e Sanitizzazione Input ===
+class InputValidator {
+  constructor() {
+    this.maxLengths = {
+      struttura: 100,
+      luogo: 100,
+      info: 1000,
+      referente: 100,
+      email: 254,
+      sito: 200,
+      contatto: 50
+    };
+    
+    this.allowedTags = ['b', 'i', 'em', 'strong', 'br'];
+  }
+  
+  // Sanitizza input HTML
+  sanitizeHtml(input) {
+    if (typeof input !== 'string') return '';
+    
+    // Rimuovi tag HTML non autorizzati
+    let sanitized = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    sanitized = sanitized.replace(/<[^>]*>/g, (match) => {
+      const tagName = match.match(/<\/?([a-zA-Z][a-zA-Z0-9]*)/);
+      if (tagName && this.allowedTags.includes(tagName[1])) {
+        return match;
+      }
+      return '';
+    });
+    
+    // Escape caratteri speciali
+    return sanitized
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+  
+  // Valida email
+  validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && email.length <= this.maxLengths.email;
+  }
+  
+  // Valida URL
+  validateUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      return ['http:', 'https:'].includes(urlObj.protocol) && url.length <= this.maxLengths.sito;
+    } catch {
+      return false;
+    }
+  }
+  
+  // Valida telefono
+  validatePhone(phone) {
+    const phoneRegex = /^[\+]?[0-9\s\-\(\)]{7,20}$/;
+    return phoneRegex.test(phone) && phone.length <= this.maxLengths.contatto;
+  }
+  
+  // Valida e sanitizza struttura
+  validateStructure(structure) {
+    const errors = [];
+    
+    // Nome struttura
+    if (structure.Struttura) {
+      structure.Struttura = this.sanitizeHtml(structure.Struttura.substring(0, this.maxLengths.struttura));
+    }
+    
+    // Luogo
+    if (structure.Luogo) {
+      structure.Luogo = this.sanitizeHtml(structure.Luogo.substring(0, this.maxLengths.luogo));
+    }
+    
+    // Info
+    if (structure.Info) {
+      structure.Info = this.sanitizeHtml(structure.Info.substring(0, this.maxLengths.info));
+    }
+    
+    // Referente
+    if (structure.Referente) {
+      structure.Referente = this.sanitizeHtml(structure.Referente.substring(0, this.maxLengths.referente));
+    }
+    
+    // Email
+    if (structure.Email && !this.validateEmail(structure.Email)) {
+      errors.push('Email non valida');
+      delete structure.Email;
+    }
+    
+    // Sito
+    if (structure.Sito && !this.validateUrl(structure.Sito)) {
+      errors.push('URL sito non valido');
+      delete structure.Sito;
+    }
+    
+    // Contatto
+    if (structure.Contatto && !this.validatePhone(structure.Contatto)) {
+      errors.push('Numero di telefono non valido');
+      delete structure.Contatto;
+    }
+    
+    // Validazione numeri
+    if (structure.Letti && (isNaN(structure.Letti) || structure.Letti < 0 || structure.Letti > 1000)) {
+      errors.push('Numero letti non valido');
+      delete structure.Letti;
+    }
+    
+    if (structure.Branco && (isNaN(structure.Branco) || structure.Branco < 0 || structure.Branco > 1000)) {
+      errors.push('Numero branco non valido');
+      delete structure.Branco;
+    }
+    
+    if (structure.Reparto && (isNaN(structure.Reparto) || structure.Reparto < 0 || structure.Reparto > 1000)) {
+      errors.push('Numero reparto non valido');
+      delete structure.Reparto;
+    }
+    
+    if (structure.Compagnia && (isNaN(structure.Compagnia) || structure.Compagnia < 0 || structure.Compagnia > 1000)) {
+      errors.push('Numero compagnia non valido');
+      delete structure.Compagnia;
+    }
+    
+    return {
+      structure,
+      errors,
+      isValid: errors.length === 0
+    };
+  }
+  
+  // Valida input di ricerca
+  validateSearchInput(input) {
+    if (typeof input !== 'string') return '';
+    
+    // Rimuovi caratteri potenzialmente pericolosi
+    return this.sanitizeHtml(input.substring(0, 100));
+  }
+}
+
+// Istanza globale del validatore
+const inputValidator = new InputValidator();
+
 // === SICUREZZA: Validazione Password Robusta ===
 function validatePasswordStrength(password) {
   const checks = {
@@ -4071,38 +4232,114 @@ class InputSanitizer {
 
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
+  console.log('🔄 Inizializzando sistema di autenticazione...');
+  
+  // 🔒 GATE DI SICUREZZA: Nascondi contenuto principale fino a autenticazione
+  // Ma mantieni visibile la schermata di login
+  const mainContent = document.querySelector('.main-content');
+  const header = document.querySelector('header');
+  
+  if (mainContent) mainContent.style.display = 'none';
+  if (header) header.style.display = 'none';
+
+  // Mostra sempre la schermata di login inizialmente
+  mostraSchermataLogin();
+  
+  // Assicurati che la schermata di login sia visibile
+  setTimeout(() => {
+    const loginScreen = document.getElementById('loginScreen');
+    if (loginScreen && loginScreen.style.display === 'none') {
+      loginScreen.style.display = 'flex';
+      console.log('✅ Schermata di login forzata visibile');
+    }
+  }, 100);
+  
+  // Debug: verifica che le funzioni siano accessibili
+  console.log('🔍 Funzioni disponibili:', {
+    accediUtente: typeof window.accediUtente,
+    registraUtente: typeof window.registraUtente,
+    showLoginTab: typeof window.showLoginTab,
+    accediConGoogle: typeof window.accediConGoogle
+  });
+  
+  // Debug: verifica che la schermata di login sia presente
+  const loginScreen = document.getElementById('loginScreen');
+  console.log('🔍 Schermata di login presente:', !!loginScreen);
+  if (loginScreen) {
+    console.log('🔍 Schermata di login display:', loginScreen.style.display);
+  }
+  
+  // Debug: verifica che i pulsanti siano presenti
+  const registerBtn = document.querySelector('button[onclick="registraUtente()"]');
+  const loginBtn = document.querySelector('button[onclick="accediUtente()"]');
+  console.log('🔍 Pulsanti presenti:', {
+    registerBtn: !!registerBtn,
+    loginBtn: !!loginBtn
+  });
+  
+  // Debug: verifica che i pulsanti siano cliccabili
+  if (registerBtn) {
+    console.log('🔍 Pulsante registrazione cliccabile:', registerBtn.offsetParent !== null);
+    console.log('🔍 Pulsante registrazione onclick:', registerBtn.getAttribute('onclick'));
+  }
+
+  // Gestisci redirect result per Google OAuth
+  getRedirectResult(auth).then((result) => {
+    if (result) {
+      // Utente ha fatto login con redirect
+      console.log('✅ Login con Google completato via redirect');
+    }
+  }).catch((error) => {
+    console.error('❌ Errore redirect result:', error);
+  });
+
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // Utente autenticato
-      utenteCorrente = user;
-      console.log('✅ Utente autenticato:', user.email);
+    try {
+      if (user) {
+        // Utente autenticato
+        utenteCorrente = user;
+        console.log('✅ Utente autenticato:', user.email);
+
+        // Mostra contenuto principale
+        if (mainContent) mainContent.style.display = 'block';
+        if (header) header.style.display = 'block';
+
+        // Nascondi schermata di login
+        nascondiSchermataLogin();
+
+        // Carica profilo utente da Firestore
+        await caricaProfiloUtente(user.uid);
+
+        // Aggiorna UI
+        aggiornaUIUtente();
+        caricaElencoPersonaleUtente();
+
+        // Aggiorna contatore elenco
+        aggiornaContatoreElenco();
+
+        // 🔒 Inizializza session timeout
+        initSessionTimeout();
+      } else {
+        // Utente non autenticato
+        utenteCorrente = null;
+        userProfile = null;
+        elencoPersonale = [];
+        console.log('🔒 Accesso negato: utente non autenticato');
+
+        // 🔒 Cleanup session timeout
+        cleanupSession();
+
+        // Nascondi contenuto principale e mostra login
+        if (mainContent) mainContent.style.display = 'none';
+        if (header) header.style.display = 'none';
+        mostraSchermataLogin();
+      }
+    } catch (error) {
+      console.error('❌ Errore durante autenticazione:', error);
       
-      // Nascondi schermata di login
-      nascondiSchermataLogin();
-      
-      // Carica profilo utente da Firestore
-      await caricaProfiloUtente(user.uid);
-      
-      // Aggiorna UI
-      aggiornaUIUtente();
-      caricaElencoPersonaleUtente();
-      
-      // Aggiorna contatore elenco
-      aggiornaContatoreElenco();
-      
-      // 🔒 Inizializza session timeout
-      initSessionTimeout();
-    } else {
-      // Utente non autenticato
-      utenteCorrente = null;
-      userProfile = null;
-      elencoPersonale = [];
-      console.log('❌ Nessun utente autenticato');
-      
-      // 🔒 Cleanup session timeout
-      cleanupSession();
-      
-      // Mostra schermata di login
+      // In caso di errore, mostra comunque la schermata di login
+      if (mainContent) mainContent.style.display = 'none';
+      if (header) header.style.display = 'none';
       mostraSchermataLogin();
     }
   });
@@ -4134,222 +4371,218 @@ async function caricaProfiloUtente(uid) {
 }
 
 function mostraSchermataLogin() {
+  console.log('🔄 Mostrando schermata di login...');
+  
   // Nascondi il contenuto principale
   const main = document.querySelector('main');
   const header = document.querySelector('header');
   if (main) main.style.display = 'none';
   if (header) header.style.display = 'none';
   
-  // Rimuovi modal esistente se presente
+  // Mostra la schermata di login HTML
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'flex';
+    console.log('✅ Schermata di login mostrata');
+  } else {
+    console.error('❌ Schermata di login non trovata');
+  }
+  
+  // Rimuovi modal esistente se presente (per compatibilità)
   const existingModal = document.getElementById('loginModal');
   if (existingModal) {
     existingModal.remove();
   }
-  
-  const modal = document.createElement('div');
-  modal.id = 'loginModal';
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #2f6b2f 0%, #28a745 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-  `;
-  
-  const modalContent = document.createElement('div');
-  modalContent.style.cssText = `
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    max-width: 95%;
-    width: 90%;
-    min-width: 320px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    text-align: center;
-  `;
-  
-  modalContent.innerHTML = `
-    <div style="margin-bottom: 30px;">
-      <h1 style="color: #2f6b2f; margin: 0 0 10px 0; font-size: 2rem;">🏕️ QuoVadiScout</h1>
-      <p style="color: #666; margin: 0;">Strutture e Terreni per Scout</p>
-    </div>
-    
-    <div id="loginForm" style="margin-bottom: 20px;">
-      <input type="email" id="loginEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="loginPassword" placeholder="Password" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="loginBtn" 
-              style="background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🔑 Accedi
-      </button>
-      
-      <button id="googleLoginBtn" 
-              style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        🌐 Accedi con Google
-      </button>
-      
-      <button id="showRegisterBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        📝 Crea Account
-      </button>
-    </div>
-    
-    <div id="registerForm" style="margin-bottom: 20px; display: none;">
-      <input type="text" id="registerNome" placeholder="Nome utente" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="email" id="registerEmail" placeholder="Email" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box;">
-      
-      <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" 
-             style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box;">
-      
-      <button id="registerBtn" 
-              style="background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
-        ✨ Registrati
-      </button>
-      
-      <button id="showLoginBtn" 
-              style="background: transparent; color: #666; border: 1px solid #ddd; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">
-        ← Torna al Login
-      </button>
-    </div>
-    
-    <div id="loadingMessage" style="display: none; color: #28a745; font-weight: bold;">
-      <div style="display: inline-block; width: 20px; height: 20px; border: 2px solid #28a745; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
-      Caricamento...
-    </div>
-    
-    <div id="errorMessage" style="display: none; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin-top: 20px;"></div>
-  `;
-  
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-  
-  // Aggiungi CSS per animazione
-  if (!document.getElementById('authStyles')) {
-    const style = document.createElement('style');
-    style.id = 'authStyles';
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
+}
+
+function nascondiSchermataLogin() {
+  // Nascondi la schermata di login
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'none';
+    console.log('✅ Schermata di login nascosta');
   }
   
-  // Event listeners
-  setupAuthEventListeners();
+  // Mostra il contenuto principale
+  const main = document.querySelector('main');
+  const header = document.querySelector('header');
+  if (main) main.style.display = 'block';
+  if (header) header.style.display = 'block';
 }
 
-function setupAuthEventListeners() {
-  // Toggle tra login e registrazione
-  document.getElementById('showRegisterBtn').onclick = () => {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-    hideError();
-  };
+// Funzioni per gestire i tab della schermata di login
+function showLoginTab(tab) {
+  console.log('🔄 Cambiando tab a:', tab);
   
-  document.getElementById('showLoginBtn').onclick = () => {
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-    hideError();
-  };
+  // Rimuovi classe active da tutti i tab
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
   
-  // Login con email/password
-  document.getElementById('loginBtn').onclick = async () => {
-    try {
-      const email = InputSanitizer.sanitizeEmail(document.getElementById('loginEmail').value);
-      const password = document.getElementById('loginPassword').value;
-      
-      if (!email || !password) {
-        showError('⚠️ Inserisci email e password');
-        return;
-      }
-      
-      await loginWithEmail(email, password);
-    } catch (error) {
-      showError('⚠️ Email non valida');
-    }
-  };
-  
-  // Registrazione
-  document.getElementById('registerBtn').onclick = async () => {
-    try {
-      const nome = InputSanitizer.sanitizeNome(document.getElementById('registerNome').value);
-      const email = InputSanitizer.sanitizeEmail(document.getElementById('registerEmail').value);
-      const password = document.getElementById('registerPassword').value;
-      
-      if (!nome || !email || !password) {
-        showError('⚠️ Compila tutti i campi');
-        return;
-      }
-      
-      // Validazione password robusta
-      const passwordCheck = validatePasswordStrength(password);
-      if (!passwordCheck.valid) {
-        const feedback = passwordCheck.feedback.join('\n');
-        showError(`⚠️ Password troppo debole:\n${feedback}`);
-        return;
-      }
-      
-      await registerWithEmail(nome, email, password);
-    } catch (error) {
-      showError('⚠️ Dati non validi. Controlla i campi inseriti.');
-    }
-  };
-  
-  // Login con Google
-  document.getElementById('googleLoginBtn').onclick = async () => {
-    await loginWithGoogle();
-  };
-  
-  // Enter per login
-  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      document.getElementById('loginBtn').click();
-    }
-  });
+  // Aggiungi classe active al tab selezionato
+  if (tab === 'login') {
+    document.querySelector('.login-tab:first-child').classList.add('active');
+    document.getElementById('loginForm').classList.add('active');
+    console.log('✅ Tab login attivato');
+  } else {
+    document.querySelector('.login-tab:last-child').classList.add('active');
+    document.getElementById('registerForm').classList.add('active');
+    console.log('✅ Tab registrazione attivato');
+  }
 }
 
-async function loginWithEmail(email, password) {
+// Esponi le funzioni globalmente per l'HTML
+window.showLoginTab = showLoginTab;
+
+// Funzioni di autenticazione
+async function accediUtente() {
+  console.log('🔄 Tentativo di login...');
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) {
+    alert('Inserisci email e password');
+    return;
+  }
+  
   try {
-    // 1. Verifica se account è bloccato (Rate Limiting)
-    const blocked = loginSecurity.isBlocked(email);
-    if (blocked.blocked) {
-      showError(blocked.reason);
-      return;
-    }
-    
-    showLoading(true);
-    hideError();
-    
-    // 2. Tentativo login Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('✅ Login riuscito:', userCredential.user.email);
-    
-    // 3. Successo - reset tentativi falliti
-    loginSecurity.recordSuccess(email);
-    
-    // La UI si aggiornerà automaticamente tramite onAuthStateChanged
-    
+    await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login effettuato con successo');
   } catch (error) {
     console.error('❌ Errore login:', error);
+    alert('Errore durante il login: ' + error.message);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediUtente = accediUtente;
+
+async function registraUtente() {
+  console.log('🔄 Tentativo di registrazione...');
+  
+  // Debug: verifica che i campi esistano
+  const emailField = document.getElementById('registerEmail');
+  const passwordField = document.getElementById('registerPassword');
+  
+  console.log('🔍 Campi trovati:', {
+    emailField: !!emailField,
+    passwordField: !!passwordField
+  });
+  
+  if (!emailField || !passwordField) {
+    console.error('❌ Campi email o password non trovati');
+    alert('Errore: campi di registrazione non trovati');
+    return;
+  }
+  
+  const email = emailField.value;
+  const password = passwordField.value;
+  
+  console.log('🔍 Valori campi:', {
+    email: email,
+    password: password ? '***' : 'vuoto'
+  });
+  
+  if (!email || !password) {
+    console.log('❌ Email o password vuoti');
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('La password deve essere di almeno 6 caratteri');
+    return;
+  }
+  
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    console.log('✅ Registrazione effettuata con successo');
     
-    // 4. Record tentativo fallito
-    const result = loginSecurity.recordFailedAttempt(email);
+    // Invia email di verifica
+    await sendEmailVerification(auth.currentUser);
+    alert('Registrazione completata! Controlla la tua email per verificare l\'account.');
+  } catch (error) {
+    console.error('❌ Errore registrazione:', error);
+    alert('Errore durante la registrazione: ' + error.message);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.registraUtente = registraUtente;
+
+async function accediConGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
     
-    let errorMessage = '❌ Credenziali non valide';
+    // Configura provider per popup
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     
+    // Prova prima con popup
+    try {
+      await signInWithPopup(auth, provider);
+      console.log('✅ Login con Google effettuato con successo');
+    } catch (popupError) {
+      // Se il popup fallisce, prova con redirect
+      if (popupError.code === 'auth/popup-closed-by-user' || 
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/cancelled-popup-request') {
+        
+        console.log('🔄 Popup bloccato o chiuso, provo con redirect...');
+        
+        // Usa signInWithRedirect invece di popup
+        await signInWithRedirect(auth, provider);
+        return; // Il redirect gestirà il resto
+      } else {
+        throw popupError;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Errore login Google:', error);
+    
+    // Messaggi di errore più user-friendly
+    let errorMessage = 'Errore durante il login con Google';
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Login annullato dall\'utente';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup bloccato dal browser. Abilita i popup per questo sito.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Errore di connessione. Verifica la tua connessione internet.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Troppi tentativi di login. Riprova più tardi.';
+    } else {
+      errorMessage = 'Errore durante il login con Google: ' + error.message;
+    }
+    
+    alert(errorMessage);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediConGoogle = accediConGoogle;
+
+// Funzioni globali rimosse - ora gestite da Firebase Auth
+
+// === Elenco personale ===
+let elencoPersonale = [];
+
+function aggiungiAllElenco(id) {
+  if (!elencoPersonale.includes(id)) {
+    elencoPersonale.push(id);
+    salvaElencoPersonaleUtente();
+  }
+}
+
+function rimuoviDallElenco(id) {
+  elencoPersonale = elencoPersonale.filter(item => item !== id);
+  salvaElencoPersonaleUtente();
+  aggiornaContatoreElenco();
+}
+
+function aggiornaContatoreElenco() {
+  // Aggiorna contatore principale
+  safeUpdateElement('contatore-elenco', (element) => {
     // Messaggi generici per evitare enumerazione utenti
     switch (error.code) {
       case 'auth/user-not-found':
@@ -4847,12 +5080,173 @@ function nascondiSchermataLogin() {
   if (main) main.style.display = 'block';
   if (header) header.style.display = 'flex';
   
-  // Rimuovi modal di login
+  // Nascondi la schermata di login
+  const loginScreen = document.getElementById('loginScreen');
+  if (loginScreen) {
+    loginScreen.style.display = 'none';
+  }
+  
+  // Rimuovi modal di login (per compatibilità)
   const loginModal = document.getElementById('loginModal');
   if (loginModal) {
     loginModal.remove();
   }
 }
+
+// Funzioni per gestire i tab della schermata di login
+function showLoginTab(tab) {
+  console.log('🔄 Cambiando tab a:', tab);
+  
+  // Rimuovi classe active da tutti i tab
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
+  
+  // Aggiungi classe active al tab selezionato
+  if (tab === 'login') {
+    document.querySelector('.login-tab:first-child').classList.add('active');
+    document.getElementById('loginForm').classList.add('active');
+    console.log('✅ Tab login attivato');
+  } else {
+    document.querySelector('.login-tab:last-child').classList.add('active');
+    document.getElementById('registerForm').classList.add('active');
+    console.log('✅ Tab registrazione attivato');
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.showLoginTab = showLoginTab;
+
+// Funzioni di autenticazione
+async function accediUtente() {
+  console.log('🔄 Tentativo di login...');
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) {
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login effettuato con successo');
+  } catch (error) {
+    console.error('❌ Errore login:', error);
+    alert('Errore durante il login: ' + error.message);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediUtente = accediUtente;
+
+async function registraUtente() {
+  console.log('🔄 Tentativo di registrazione...');
+  
+  // Debug: verifica che i campi esistano
+  const emailField = document.getElementById('registerEmail');
+  const passwordField = document.getElementById('registerPassword');
+  
+  console.log('🔍 Campi trovati:', {
+    emailField: !!emailField,
+    passwordField: !!passwordField
+  });
+  
+  if (!emailField || !passwordField) {
+    console.error('❌ Campi email o password non trovati');
+    alert('Errore: campi di registrazione non trovati');
+    return;
+  }
+  
+  const email = emailField.value;
+  const password = passwordField.value;
+  
+  console.log('🔍 Valori campi:', {
+    email: email,
+    password: password ? '***' : 'vuoto'
+  });
+  
+  if (!email || !password) {
+    console.log('❌ Email o password vuoti');
+    alert('Inserisci email e password');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('La password deve essere di almeno 6 caratteri');
+    return;
+  }
+  
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    console.log('✅ Registrazione effettuata con successo');
+    
+    // Invia email di verifica
+    await sendEmailVerification(auth.currentUser);
+    alert('Registrazione completata! Controlla la tua email per verificare l\'account.');
+  } catch (error) {
+    console.error('❌ Errore registrazione:', error);
+    alert('Errore durante la registrazione: ' + error.message);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.registraUtente = registraUtente;
+
+// Debug: verifica che la funzione sia accessibile
+console.log('🔍 Funzione registraUtente esposta:', typeof window.registraUtente);
+
+async function accediConGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    
+    // Configura provider per popup
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
+    // Prova prima con popup
+    try {
+      await signInWithPopup(auth, provider);
+      console.log('✅ Login con Google effettuato con successo');
+    } catch (popupError) {
+      // Se il popup fallisce, prova con redirect
+      if (popupError.code === 'auth/popup-closed-by-user' || 
+          popupError.code === 'auth/popup-blocked' ||
+          popupError.code === 'auth/cancelled-popup-request') {
+        
+        console.log('🔄 Popup bloccato o chiuso, provo con redirect...');
+        
+        // Usa signInWithRedirect invece di popup
+        await signInWithRedirect(auth, provider);
+        return; // Il redirect gestirà il resto
+      } else {
+        throw popupError;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Errore login Google:', error);
+    
+    // Messaggi di errore più user-friendly
+    let errorMessage = 'Errore durante il login con Google';
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Login annullato dall\'utente';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup bloccato dal browser. Abilita i popup per questo sito.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Errore di connessione. Verifica la tua connessione internet.';
+    } else if (error.code === 'auth/too-many-requests') {
+      errorMessage = 'Troppi tentativi di login. Riprova più tardi.';
+    } else {
+      errorMessage = 'Errore durante il login con Google: ' + error.message;
+    }
+    
+    alert(errorMessage);
+  }
+}
+
+// Esponi le funzioni globalmente per l'HTML
+window.accediConGoogle = accediConGoogle;
 
 // Funzioni globali rimosse - ora gestite da Firebase Auth
 
@@ -6941,6 +7335,28 @@ function mostraSchedaCompleta(strutturaId) {
   // Funzione per salvare modifiche
   async function salvaModificheScheda(strutturaId) {
     try {
+        // 🔒 SICUREZZA: Valida e sanitizza input prima del salvataggio
+        const validation = inputValidator.validateStructure(struttura);
+        if (!validation.isValid) {
+          console.error('❌ Validazione fallita:', validation.errors);
+          showError('Dati non validi: ' + validation.errors.join(', '));
+          return;
+        }
+
+        // Aggiorna struttura con dati validati
+        struttura = validation.structure;
+
+        // 🔒 SICUREZZA: Validazione avanzata con Data Validator
+        if (typeof dataValidator !== 'undefined') {
+          const advancedValidation = dataValidator.validate(struttura, 'struttura');
+          if (!advancedValidation.isValid) {
+            console.error('❌ Validazione avanzata fallita:', advancedValidation.errors);
+            showError('Validazione avanzata fallita: ' + advancedValidation.errors.join(', '));
+            return;
+          }
+          struttura = advancedValidation.data;
+        }
+      
       if (isNewStructure) {
         // Aggiorna metadati per nuova struttura
         struttura.lastModified = new Date();

@@ -15,6 +15,24 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="QuoVadiScout" />
+<!-- Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://apis.google.com;
+  style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com;
+  img-src 'self' data: https: blob:;
+  font-src 'self' https://cdnjs.cloudflare.com;
+  connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseapp.com https://firebasestorage.app https://cdnjs.cloudflare.com https://unpkg.com https://www.gstatic.com https://apis.google.com;
+  frame-src 'self' https://accounts.google.com https://quovadiscout.firebaseapp.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  upgrade-insecure-requests;
+" />
+
+<!-- Cross-Origin-Opener-Policy per popup Google OAuth -->
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups" />
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏕️</text></svg>">
 <link rel="stylesheet" href="styles.css">
@@ -228,6 +246,45 @@
     </div>
   </main>
 
+  <!-- Schermata di Login -->
+  <div id="loginScreen" class="login-screen" style="display: none;">
+    <div class="login-container">
+      <div class="login-header">
+        <h1>🏕️ QuoVadiScout</h1>
+        <p>Accedi per continuare</p>
+      </div>
+      
+      <div class="login-tabs">
+        <button class="login-tab active" onclick="showLoginTab('login')">Accedi</button>
+        <button class="login-tab" onclick="showLoginTab('register')">Registrati</button>
+      </div>
+      
+      <!-- Form Login -->
+      <div id="loginForm" class="login-form active">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button onclick="accediUtente()" class="login-btn">Accedi</button>
+        <button onclick="accediConGoogle()" class="google-btn">
+          <span>🔍</span> Accedi con Google
+        </button>
+      </div>
+      
+      <!-- Form Registrazione -->
+      <div id="registerForm" class="login-form">
+        <input type="email" id="registerEmail" placeholder="Email" required>
+        <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" required>
+        <button onclick="registraUtente()" class="login-btn">Registrati</button>
+        <button onclick="accediConGoogle()" class="google-btn">
+          <span>🔍</span> Registrati con Google
+        </button>
+      </div>
+      
+      <div class="login-footer">
+        <p>Per accedere è necessario un account verificato</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Modale di modifica -->
   <div id="modal" class="modal hidden">
     <div class="modal-content">
@@ -265,7 +322,19 @@
   <script src="icons-config.js"></script>
   <!-- Gestione errori -->
   <script src="error-handler.js"></script>
+  <!-- Configurazione Firebase (opzionale - fallback integrato in script.js) -->
+  <!-- <script src="firebase-config.js"></script> -->
   <script type="module" src="script.js"></script>
+  <!-- Test di sicurezza -->
+  <script src="test-security.js"></script>
+  <!-- Monitor sicurezza -->
+  <script src="security-monitor.js"></script>
+  <!-- Rate Limiter -->
+  <script src="rate-limiter.js"></script>
+  <!-- Data Validator -->
+  <script src="data-validator.js"></script>
+  <!-- Production Config -->
+  <script src="production-config.js"></script>
 
 <script>
 // Registrazione Service Worker per PWA

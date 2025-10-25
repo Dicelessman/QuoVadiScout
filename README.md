@@ -20,11 +20,15 @@ QuoVadiScout è una Progressive Web App (PWA) completa per la gestione di strutt
 - Sistema di segnalazioni
 
 ### 🔐 Sicurezza
+- **Accesso Completamente Privato**: Nessun accesso pubblico ai dati
+- **Autenticazione Obbligatoria**: Email verificata richiesta per tutte le operazioni
 - **Rate Limiting**: Protezione contro brute force attacks
 - **Password Robuste**: Requisiti minimi 12 caratteri complessi
 - **Session Timeout**: Disconnessione automatica dopo inattività
-- **Input Sanitization**: Protezione contro XSS
+- **Input Sanitization**: Protezione contro XSS e injection
+- **Content Security Policy**: Restrizione esecuzione codice non autorizzato
 - **Firebase Security Rules**: Protezione server-side dei dati
+- **Validazione Email**: Controllo email verificata per tutte le operazioni
 
 ### 📊 Dati & Analytics
 - Dashboard con statistiche complete
@@ -127,6 +131,75 @@ QuoVadiScout/
 ├── manifest.json           # Manifest PWA
 ├── data.json              # Dati locali fallback
 └── README.md              # Questa documentazione
+```
+
+---
+
+## ⚙️ Setup e Configurazione
+
+### Prerequisiti
+- Account Firebase con progetto configurato
+- Autenticazione Firebase abilitata
+- Firestore database configurato
+
+### Configurazione Firebase
+1. **Copia template configurazione**:
+   ```bash
+   cp firebase-config.template.js firebase-config.js
+   ```
+
+2. **Configura credenziali Firebase**:
+   - Apri `firebase-config.js`
+   - Sostituisci i placeholder con le tue credenziali Firebase
+   - Configura domini autorizzati
+
+3. **Deploy regole Firestore**:
+   ```bash
+   # Install Firebase CLI
+   npm install -g firebase-tools
+   
+   # Login e configurazione
+   firebase login
+   firebase use quovadiscout
+   
+   # Deploy regole
+   firebase deploy --only firestore:rules
+   ```
+   
+   📖 **Guida completa**: Vedi [DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md) per istruzioni dettagliate
+
+### Setup Produzione
+Per utilizzare l'applicazione in produzione, configura il file `firebase-config.js`:
+📖 **Guida setup produzione**: Vedi [SETUP_PRODUCTION.md](SETUP_PRODUCTION.md) per istruzioni complete
+
+### GitHub Pages
+L'applicazione è configurata per funzionare su GitHub Pages:
+- ✅ **Funziona immediatamente** senza configurazione aggiuntiva
+- ✅ **Sistema di fallback integrato** per credenziali Firebase
+- ✅ **Sicurezza completa** con accesso privato ai dati
+
+📖 **Guida GitHub Pages**: Vedi [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) per istruzioni complete
+
+### Troubleshooting
+Per problemi comuni e soluzioni:
+📖 **Guida troubleshooting**: Vedi [TROUBLESHOOTING.md](TROUBLESHOOTING.md) per risoluzione problemi
+
+### Configurazione Sicurezza
+- **Email verificata obbligatoria**: Configura Firebase Auth per richiedere email verification
+- **Domini autorizzati**: Aggiorna domini autorizzati in Firebase Console
+- **Rate limiting**: Configura Firebase Security Rules per limitare richieste
+
+### File Sensibili
+⚠️ **IMPORTANTE**: I seguenti file contengono informazioni sensibili e NON devono essere committati:
+- `firebase-config.js` (escluso automaticamente da .gitignore)
+
+### Variabili d'Ambiente (Produzione)
+Per deployment in produzione, considera l'uso di variabili d'ambiente:
+```bash
+FIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_domain
+FIREBASE_PROJECT_ID=your_project_id
+# ... altre credenziali
 ```
 
 ---

@@ -2309,6 +2309,7 @@ window.mostraRicercaAvanzata = mostraRicercaAvanzata;
 window.rimuoviRicercaAvanzata = rimuoviRicercaAvanzata;
 window.esportaElencoPersonale = esportaElencoPersonale;
 window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
+window.mostraSchedaUtente = mostraSchedaUtente;
 window.mostraNotePersonali = mostraNotePersonali;
 window.salvaNotaPersonale = salvaNotaPersonale;
 
@@ -10130,6 +10131,7 @@ window.cambiaPagina = cambiaPagina;
 window.cambiaElementiPerPagina = cambiaElementiPerPagina;
 window.mostraRicercaAvanzata = mostraRicercaAvanzata;
 window.mostraGestioneElencoPersonale = mostraGestioneElencoPersonale;
+window.mostraSchedaUtente = mostraSchedaUtente;
 window.mostraMappa = mostraMappa;
 window.trovaVicinoAMe = trovaVicinoAMe;
 window.geocodificaTutteStrutture = geocodificaTutteStrutture;

@@ -1152,7 +1152,26 @@ function filtra(lista) {
     // Filtri avanzati
     let matchAvanzati = true;
     if (window.filtriAvanzatiAttivi) {
+      // Gestisci filtri dalla dashboard
+      if (window.filtriAvanzatiAttivi.tipo) {
+        const tipo = window.filtriAvanzatiAttivi.tipo;
+        if (tipo === 'casa') {
+          matchAvanzati = matchAvanzati && s.Casa && !s.Terreno;
+        } else if (tipo === 'terreno') {
+          matchAvanzati = matchAvanzati && s.Terreno && !s.Casa;
+        } else if (tipo === 'entrambe') {
+          matchAvanzati = matchAvanzati && s.Casa && s.Terreno;
+        }
+      }
+      
+      if (window.filtriAvanzatiAttivi.provincia) {
+        matchAvanzati = matchAvanzati && s.Prov === window.filtriAvanzatiAttivi.provincia;
+      }
+      
+      // Gestisci altri filtri avanzati
       for (const [campo, valore] of Object.entries(window.filtriAvanzatiAttivi)) {
+        // Salta tipo e provincia che sono già gestiti sopra
+        if (campo === 'tipo' || campo === 'provincia') continue;
         if (valore === true) {
           // Per checkbox, verifica che il valore sia true
           matchAvanzati = matchAvanzati && s[campo] === true;
@@ -8573,25 +8592,18 @@ window.addEventListener("DOMContentLoaded", async () => {
       const { filtro, provincia } = window.dashboardFilter;
       console.log(`🔍 Applicando filtro dashboard: ${filtro} in ${provincia}`);
       
-      // Imposta i filtri nell'UI
-      if (filtro === 'casa') {
-        document.getElementById('filter-casa').checked = true;
-      } else if (filtro === 'terreno') {
-        document.getElementById('filter-terreno').checked = true;
-      } else if (filtro === 'entrambe') {
-        document.getElementById('filter-casa').checked = true;
-        document.getElementById('filter-terreno').checked = true;
-      }
-      
-      // Imposta la provincia
-      const provSelect = document.getElementById('filter-prov');
-      if (provSelect) {
-        provSelect.value = provincia;
-      }
+      // Applica i filtri direttamente senza cercare elementi UI
+      window.filtriAvanzatiAttivi = {
+        tipo: filtro,
+        provincia: provincia
+      };
       
       // Applica il filtro
       const struttureFiltrate = filtra(strutture);
       renderStrutture(struttureFiltrate);
+      
+      // Mostra indicatore di ricerca avanzata
+      mostraIndicatoreRicercaAvanzata(2);
       
       // Mostra messaggio informativo
       const container = document.getElementById("results");

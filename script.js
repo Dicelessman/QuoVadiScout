@@ -75,8 +75,14 @@ try {
   console.log('✅ Configurazione Firebase validata:', {
     projectId: FirebaseConfig.projectId,
     authDomain: FirebaseConfig.authDomain,
-    apiKey: FirebaseConfig.apiKey.substring(0, 10) + '...'
+    apiKey: FirebaseConfig.apiKey.substring(0, 10) + '...',
+    appId: FirebaseConfig.appId
   });
+  
+  // Verifica che le credenziali non siano demo
+  if (FirebaseConfig.apiKey === "demo-api-key") {
+    console.warn('⚠️ ATTENZIONE: Stai usando credenziali demo!');
+  }
 } catch (error) {
   console.error('❌ Errore validazione configurazione Firebase:', error);
   throw error;
@@ -1013,25 +1019,34 @@ async function caricaFiltriSalvati() {
     
     console.log('🔍 Caricamento filtri salvati per utente:', utenteCorrente.uid);
     
-    const filtersRef = collection(db, "user_filters");
-    const q = query(
-      filtersRef, 
-      where("userId", "==", utenteCorrente.uid)
-    );
-    const snapshot = await getDocs(q);
-    const filtri = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    
-    console.log('✅ Filtri salvati caricati:', filtri.length);
-    
-    // Ordina localmente per evitare problemi di indice
-    return filtri.sort((a, b) => {
-      const dateA = a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0);
-      const dateB = b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || 0);
-      return dateB - dateA;
-    });
+    // Verifica se l'utente ha permessi di lettura
+    try {
+      const filtersRef = collection(db, "user_filters");
+      const q = query(
+        filtersRef, 
+        where("userId", "==", utenteCorrente.uid)
+      );
+      const snapshot = await getDocs(q);
+      const filtri = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      console.log('✅ Filtri salvati caricati:', filtri.length);
+      
+      // Ordina localmente per evitare problemi di indice
+      return filtri.sort((a, b) => {
+        const dateA = a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0);
+        const dateB = b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || 0);
+        return dateB - dateA;
+      });
+    } catch (permissionError) {
+      if (permissionError.code === 'permission-denied') {
+        console.log('⚠️ Permessi negati per filtri salvati - utente potrebbe non avere ancora filtri salvati');
+        return [];
+      }
+      throw permissionError;
+    }
   } catch (error) {
     console.error('❌ Errore nel caricamento filtri salvati:', error);
     console.error('Dettagli errore:', error.code, error.message);
@@ -4823,7 +4838,7 @@ async function loginWithEmail(email, password) {
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         // Messaggio generico per non rivelare quale campo è errato
-        errorMessage = '❌ Credenziali non valide. Verifica email e password';
+        errorMessage = '❌ Credenziali non valide. Verifica email e password. Se il problema persiste, controlla la configurazione Firebase.';
         break;
       case 'auth/invalid-email':
         errorMessage = '❌ Email non valida';

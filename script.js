@@ -8692,6 +8692,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   //   // ... resto del codice
   // }
     
+  try {
     // Applica filtro dalla dashboard se presente
     if (window.dashboardFilter) {
       const { filtro, provincia } = window.dashboardFilter;

@@ -89,6 +89,12 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
+  // Se Firebase non è configurato correttamente, usa modalità demo
+  if (window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key") {
+    console.log('🔧 Modalità demo: caricamento dati locali senza autenticazione');
+    return await caricaStruttureLocali();
+  }
+  
   if (!auth || !auth.currentUser) {
     console.log('🔒 Accesso negato: autenticazione richiesta');
     mostraSchermataLogin();
@@ -4563,6 +4569,16 @@ function mostraSchermataLogin() {
         🔑 Accedi
       </button>
       
+      ${window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key" ? `
+      <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center;">
+        <h4 style="margin: 0 0 10px 0; color: #1976d2;">🔧 Modalità Demo</h4>
+        <p style="margin: 0; color: #1976d2; font-size: 14px;">
+          <strong>Email:</strong> demo@example.com<br>
+          <strong>Password:</strong> demo123
+        </p>
+      </div>
+      ` : ''}
+      
       <button id="googleLoginBtn" 
               style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
         🌐 Accedi con Google
@@ -4766,6 +4782,37 @@ function setupAuthEventListeners() {
 
 async function loginWithEmail(email, password) {
   try {
+    // Modalità demo: bypassa autenticazione Firebase
+    if (window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key") {
+      console.log('🔧 Modalità demo: login simulato');
+      
+      // Simula login con credenziali demo
+      if (email === "demo@example.com" && password === "demo123") {
+        console.log('✅ Login demo riuscito');
+        
+        // Crea utente demo
+        const demoUser = {
+          uid: 'demo-user-123',
+          email: 'demo@example.com',
+          displayName: 'Utente Demo'
+        };
+        
+        // Simula onAuthStateChanged
+        utenteCorrente = demoUser;
+        nascondiSchermataLogin();
+        
+        // Carica dati locali
+        const strutture = await caricaStruttureLocali();
+        window.strutture = strutture;
+        renderStrutture(filtra(strutture));
+        
+        return;
+      } else {
+        showError('❌ Credenziali demo: demo@example.com / demo123');
+        return;
+      }
+    }
+    
     // 1. Verifica se account è bloccato (Rate Limiting)
     const blocked = loginSecurity.isBlocked(email);
     if (blocked.blocked) {

@@ -43,17 +43,17 @@ import {
 if (typeof FirebaseConfig === 'undefined') {
   console.warn('⚠️ Configurazione Firebase esterna non trovata, uso configurazione demo');
   
-  // Configurazione Firebase demo temporanea
+  // Configurazione Firebase reale
   window.FirebaseConfig = {
-    apiKey: "demo-api-key",
-    authDomain: "demo-project.firebaseapp.com",
-    projectId: "demo-project",
-    storageBucket: "demo-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "demo-app-id",
-    measurementId: "demo-measurement-id",
-    vapidKey: "demo-vapid-key",
-    environment: "development",
+    apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
+    authDomain: "quovadiscout.firebaseapp.com",
+    projectId: "quovadiscout",
+    storageBucket: "quovadiscout.firebasestorage.app",
+    messagingSenderId: "745134651793",
+    appId: "1:745134651793:web:dabd5ae6b7b579172dc230",
+    measurementId: "G-XXXXXXXXXX", // Aggiungi se hai Google Analytics
+    vapidKey: "YOUR_VAPID_KEY_HERE", // Aggiungi se hai push notifications
+    environment: "production",
     authorizedDomains: ["localhost", "127.0.0.1", "dicelessman.github.io"],
     rateLimits: {
       requestsPerMinute: 60,
@@ -62,9 +62,9 @@ if (typeof FirebaseConfig === 'undefined') {
     }
   };
   
-  // Funzione di validazione demo
+  // Funzione di validazione
   window.validateFirebaseConfig = function(config) {
-    console.warn('⚠️ Usando configurazione Firebase demo - sostituire con credenziali reali per produzione');
+    console.log('✅ Configurazione Firebase reale caricata');
     return true;
   };
 }
@@ -89,11 +89,6 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
-  // Se Firebase non è configurato correttamente, usa modalità demo
-  if (window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key") {
-    console.log('🔧 Modalità demo: caricamento dati locali senza autenticazione');
-    return await caricaStruttureLocali();
-  }
   
   if (!auth || !auth.currentUser) {
     console.log('🔒 Accesso negato: autenticazione richiesta');
@@ -4569,16 +4564,6 @@ function mostraSchermataLogin() {
         🔑 Accedi
       </button>
       
-      ${window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key" ? `
-      <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: center;">
-        <h4 style="margin: 0 0 10px 0; color: #1976d2;">🔧 Modalità Demo</h4>
-        <p style="margin: 0; color: #1976d2; font-size: 14px;">
-          <strong>Email:</strong> demo@example.com<br>
-          <strong>Password:</strong> demo123
-        </p>
-      </div>
-      ` : ''}
-      
       <button id="googleLoginBtn" 
               style="background: #4285f4; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; margin-bottom: 15px;">
         🌐 Accedi con Google
@@ -4782,36 +4767,6 @@ function setupAuthEventListeners() {
 
 async function loginWithEmail(email, password) {
   try {
-    // Modalità demo: bypassa autenticazione Firebase
-    if (window.FirebaseConfig && window.FirebaseConfig.apiKey === "demo-api-key") {
-      console.log('🔧 Modalità demo: login simulato');
-      
-      // Simula login con credenziali demo
-      if (email === "demo@example.com" && password === "demo123") {
-        console.log('✅ Login demo riuscito');
-        
-        // Crea utente demo
-        const demoUser = {
-          uid: 'demo-user-123',
-          email: 'demo@example.com',
-          displayName: 'Utente Demo'
-        };
-        
-        // Simula onAuthStateChanged
-        utenteCorrente = demoUser;
-        nascondiSchermataLogin();
-        
-        // Carica dati locali
-        const strutture = await caricaStruttureLocali();
-        window.strutture = strutture;
-        renderStrutture(filtra(strutture));
-        
-        return;
-      } else {
-        showError('❌ Credenziali demo: demo@example.com / demo123');
-        return;
-      }
-    }
     
     // 1. Verifica se account è bloccato (Rate Limiting)
     const blocked = loginSecurity.isBlocked(email);

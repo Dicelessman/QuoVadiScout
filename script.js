@@ -82,6 +82,21 @@ try {
   // Verifica che le credenziali non siano demo
   if (FirebaseConfig.apiKey === "demo-api-key") {
     console.warn('⚠️ ATTENZIONE: Stai usando credenziali demo!');
+  } else {
+    console.log('✅ Credenziali Firebase reali caricate');
+  }
+  
+  // Verifica che tutte le credenziali siano presenti
+  const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  const missingFields = requiredFields.filter(field => !FirebaseConfig[field] || FirebaseConfig[field].includes('YOUR_'));
+  
+  if (missingFields.length > 0) {
+    console.error('❌ Credenziali Firebase incomplete:', missingFields);
+  }
+  
+  // Verifica se il Service Worker potrebbe interferire
+  if ('serviceWorker' in navigator) {
+    console.log('⚠️ Service Worker attivo - potrebbe interferire con Firebase');
   }
 } catch (error) {
   console.error('❌ Errore validazione configurazione Firebase:', error);
@@ -4838,7 +4853,7 @@ async function loginWithEmail(email, password) {
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         // Messaggio generico per non rivelare quale campo è errato
-        errorMessage = '❌ Credenziali non valide. Verifica email e password. Se il problema persiste, controlla la configurazione Firebase.';
+        errorMessage = '❌ Credenziali non valide. Verifica email e password. Se il problema persiste, controlla che: 1) L\'autenticazione sia abilitata nel progetto Firebase, 2) Le credenziali Firebase siano corrette, 3) Il dominio sia autorizzato.';
         break;
       case 'auth/invalid-email':
         errorMessage = '❌ Email non valida';

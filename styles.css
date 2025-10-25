@@ -1994,6 +1994,138 @@ html {
   border-color: var(--primary);
 }
 
+/* === MODAL DARK THEME === */
+[data-theme="dark"] .modal {
+  background-color: var(--bg-overlay);
+}
+
+[data-theme="dark"] .modal-content {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-light);
+}
+
+[data-theme="dark"] .modal-header {
+  border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .modal-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-close {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-footer {
+  border-top-color: var(--border-light);
+}
+
+/* === MODAL GENERICI DARK THEME === */
+[data-theme="dark"] .modal-backdrop {
+  background-color: var(--bg-overlay);
+}
+
+[data-theme="dark"] .modal-dialog {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xl);
+}
+
+[data-theme="dark"] .modal-dialog h2,
+[data-theme="dark"] .modal-dialog h3,
+[data-theme="dark"] .modal-dialog h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-dialog p,
+[data-theme="dark"] .modal-dialog label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .modal-dialog input,
+[data-theme="dark"] .modal-dialog select,
+[data-theme="dark"] .modal-dialog textarea {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-dialog input:focus,
+[data-theme="dark"] .modal-dialog select:focus,
+[data-theme="dark"] .modal-dialog textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+[data-theme="dark"] .modal-dialog button {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-dialog button:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--primary);
+}
+
+[data-theme="dark"] .modal-dialog .btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+}
+
+[data-theme="dark"] .modal-dialog .btn-primary:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* === MODAL INLINE STYLES DARK THEME === */
+[data-theme="dark"] .modal[style*="background"] {
+  background-color: var(--bg-overlay) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] h1,
+[data-theme="dark"] .modal > div[style*="background"] h2,
+[data-theme="dark"] .modal > div[style*="background"] h3,
+[data-theme="dark"] .modal > div[style*="background"] h4 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] p,
+[data-theme="dark"] .modal > div[style*="background"] label {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] input,
+[data-theme="dark"] .modal > div[style*="background"] select,
+[data-theme="dark"] .modal > div[style*="background"] textarea {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] button {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .modal > div[style*="background"] button:hover {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--primary) !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .export-options {

@@ -1,0 +1,85 @@
+/* Dashboard Layout Fix */
+.dashboard {
+  min-height: calc(100vh - 120px); /* Considera header height */
+}
+
+/* Rimuovi topbar legacy */
+.topbar {
+  display: none !important;
+}
+
+/* Metriche Avanzate */
+.advanced-metrics {
+  margin-bottom: 30px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid var(--primary);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.metric-content h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.metric-content p {
+  margin: 4px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Dark mode support per dashboard */
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .province-card,
+[data-theme="dark"] .metric-card {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .chart-container {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Statistiche App Section */
+.app-stats-section {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.app-stats-section h2 {
+  margin-bottom: 20px;
+  color: var(--text-primary);
+}
+
+#appStatsContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+

@@ -36,20 +36,25 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // === Configurazione Firebase ===
-// 🔒 NOTA SICUREZZA: In produzione, queste credenziali dovrebbero essere:
-// 1. Spostate in un file separato (firebase-config-sync.js) NON nel repository
-// 2. Caricate tramite variabili d'ambiente
-// 3. Protette da Firebase Security Rules
-// 
-// Per ora: configurazione embedded per compatibilità sviluppo locale
-const firebaseConfig = {
-  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
-  authDomain: "quovadiscout.firebaseapp.com",
-  projectId: "quovadiscout",
-  storageBucket: "quovadiscout.firebasestorage.app",
-  messagingSenderId: "745134651793",
-  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
-};
+// 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
+// Il file firebase-config.js deve essere escluso dal repository (.gitignore)
+
+// Verifica che la configurazione Firebase sia disponibile
+if (typeof FirebaseConfig === 'undefined') {
+  console.error('❌ Configurazione Firebase non trovata!');
+  console.error('Assicurati che firebase-config.js sia presente e caricato correttamente.');
+  throw new Error('Configurazione Firebase mancante');
+}
+
+// Valida configurazione Firebase
+try {
+  validateFirebaseConfig(FirebaseConfig);
+} catch (error) {
+  console.error('❌ Errore validazione configurazione Firebase:', error);
+  throw error;
+}
+
+const firebaseConfig = FirebaseConfig;
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);

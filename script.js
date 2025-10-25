@@ -72,6 +72,11 @@ if (typeof FirebaseConfig === 'undefined') {
 // Valida configurazione Firebase
 try {
   validateFirebaseConfig(FirebaseConfig);
+  console.log('✅ Configurazione Firebase validata:', {
+    projectId: FirebaseConfig.projectId,
+    authDomain: FirebaseConfig.authDomain,
+    apiKey: FirebaseConfig.apiKey.substring(0, 10) + '...'
+  });
 } catch (error) {
   console.error('❌ Errore validazione configurazione Firebase:', error);
   throw error;
@@ -4146,8 +4151,14 @@ function inizializzaAuth() {
       // Aggiorna contatore elenco
       aggiornaContatoreElenco();
       
-      // Carica filtri salvati
-      await caricaFiltriSalvatiDropdown();
+      // Carica filtri salvati (con delay per assicurarsi che l'utente sia completamente autenticato)
+      setTimeout(async () => {
+        try {
+          await caricaFiltriSalvatiDropdown();
+        } catch (error) {
+          console.warn('⚠️ Errore nel caricamento filtri salvati (non critico):', error);
+        }
+      }, 1000);
       
       // 🔒 Inizializza session timeout
       initSessionTimeout();
@@ -4812,7 +4823,7 @@ async function loginWithEmail(email, password) {
       case 'auth/wrong-password':
       case 'auth/invalid-credential':
         // Messaggio generico per non rivelare quale campo è errato
-        errorMessage = '❌ Credenziali non valide';
+        errorMessage = '❌ Credenziali non valide. Verifica email e password';
         break;
       case 'auth/invalid-email':
         errorMessage = '❌ Email non valida';

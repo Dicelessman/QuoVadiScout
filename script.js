@@ -66,13 +66,11 @@ const colRef = collection(db, "strutture");
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {
   // 🔒 SICUREZZA: Verifica autenticazione PRIMA di caricare dati
-  // Temporaneamente disabilitato per permettere accesso pubblico ai dati strutture
-  // Le Firebase Security Rules proteggono le operazioni di scrittura
-  // if (!auth || !auth.currentUser) {
-  //   console.log('🔒 Accesso negato: autenticazione richiesta');
-  //   mostraSchermataLogin();
-  //   return [];
-  // }
+  if (!auth || !auth.currentUser) {
+    console.log('🔒 Accesso negato: autenticazione richiesta');
+    mostraSchermataLogin();
+    return [];
+  }
   
   const cacheKey = 'strutture_cache';
   const cacheTimestamp = 'strutture_cache_timestamp';
@@ -4097,6 +4095,7 @@ class InputSanitizer {
 // Inizializza il sistema di autenticazione
 function inizializzaAuth() {
   onAuthStateChanged(auth, async (user) => {
+    console.log('🔐 Auth state changed:', user ? 'User logged in' : 'User logged out');
     if (user) {
       // Utente autenticato
       utenteCorrente = user;
@@ -10366,12 +10365,5 @@ window.getUserLocation = trovaVicinoAMe; // Alias per compatibilità test
 console.log('✅ Funzioni globali esposte per compatibilità HTML onclick');
 
 // === DOM Ready Initialization ===
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 Inizializzazione applicazione...');
-  
-  // Initialize new UI
-  initializeNewUI();
-  initializeUIEventListeners();
-  
-  console.log('✅ Inizializzazione UI completata');
-});
+// Event listener DOMContentLoaded rimosso per evitare conflitti
+// L'inizializzazione principale è gestita da window.addEventListener("DOMContentLoaded", ...)

@@ -636,11 +636,16 @@ function mostraRicercaAvanzata() {
     'Caratteristiche Struttura': [
       { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
       { campo: 'Casa', tipo: 'checkbox', placeholder: 'Disponibile casa' },
-      { campo: 'Letti', tipo: 'text', placeholder: 'Numero di letti' },
-      { campo: 'Cucina', tipo: 'text', placeholder: 'è presente una cucina e di che tipo' },
-      { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili per attività' },
-      { campo: 'Fuochi', tipo: 'text', placeholder: 'Si possono fare fuochi' },
-      { campo: 'Hike', tipo: 'text', placeholder: 'Hike disponibili nelle vicinanze' },
+      { campo: 'Letti', tipo: 'checkbox', placeholder: 'Ha letti' },
+      { campo: 'Letti_dettaglio', tipo: 'text', placeholder: 'Numero di letti (dettaglio)' },
+      { campo: 'Cucina', tipo: 'checkbox', placeholder: 'Ha cucina' },
+      { campo: 'Cucina_dettaglio', tipo: 'text', placeholder: 'Tipo di cucina (dettaglio)' },
+      { campo: 'Spazi', tipo: 'checkbox', placeholder: 'Ha spazi per attività' },
+      { campo: 'Spazi_dettaglio', tipo: 'text', placeholder: 'Spazi disponibili (dettaglio)' },
+      { campo: 'Fuochi', tipo: 'checkbox', placeholder: 'Si possono fare fuochi' },
+      { campo: 'Fuochi_dettaglio', tipo: 'text', placeholder: 'Dettagli sui fuochi' },
+      { campo: 'Hike', tipo: 'checkbox', placeholder: 'Hike disponibili' },
+      { campo: 'Hike_dettaglio', tipo: 'text', placeholder: 'Hike disponibili (dettaglio)' },
       { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' },
       { campo: 'Altre info', tipo: 'textarea', placeholder: 'Altre informazioni' }
     ],
@@ -1270,12 +1275,23 @@ function filtra(lista) {
         if (campo === 'tipo' || campo === 'provincia') continue;
         if (valore === true) {
           // Per checkbox, verifica che il valore sia true
-          matchAvanzati = matchAvanzati && s[campo] === true;
+          // Per i campi delle caratteristiche, verifica che il campo abbia un valore non vuoto
+          if (['Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo)) {
+            matchAvanzati = matchAvanzati && s[campo] && s[campo].toString().trim() !== '';
+          } else {
+            matchAvanzati = matchAvanzati && s[campo] === true;
+          }
         } else if (typeof valore === 'string') {
           // Per campi di testo, verifica che contenga il valore (case insensitive)
+          // Gestisci i campi dettaglio che mappano ai campi originali
+          let campoOriginale = campo;
+          if (campo.endsWith('_dettaglio')) {
+            campoOriginale = campo.replace('_dettaglio', '');
+          }
+          
           matchAvanzati = matchAvanzati && 
-            s[campo] && 
-            s[campo].toString().toLowerCase().includes(valore.toLowerCase());
+            s[campoOriginale] && 
+            s[campoOriginale].toString().toLowerCase().includes(valore.toLowerCase());
         } else if (typeof valore === 'number') {
           // Per numeri (rating, coordinate, etc.)
           if (campo === 'rating_min') {
@@ -1725,6 +1741,7 @@ async function aggiungiStruttura() {
     Cucina: '',
     Spazi: '',
     Fuochi: '',
+    Hike: '',
     Escursioni: '',
     Trasporti: '',
     Branco: false,
@@ -6893,7 +6910,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         if (isEditMode) {
           // Modalità modifica
-          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'].includes(campo);
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione', 'Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
           const isUrlField = ['google_maps_link'].includes(campo);
           const isWebsiteField = campo === 'Sito';

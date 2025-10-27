@@ -55,7 +55,7 @@ function esportaExcel(strutture, options = {}) {
 function createCompleteWorksheet(strutture, includeImages, includeNotes, includePersonalNotes) {
   const headers = [
     'ID', 'Struttura', 'Luogo', 'Provincia', 'Indirizzo', 'Stato',
-    'Casa', 'Terreno', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
+    'Casa', 'Terreno', 'Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike',
     'Escursioni', 'Trasporti', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione',
     'Referente', 'Email', 'Sito', 'Contatto', 'II Contatto',
     'A Persona', 'A Giornata', 'A Notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina Costo', 'Altro',
@@ -80,6 +80,7 @@ function createCompleteWorksheet(strutture, includeImages, includeNotes, include
     s.Cucina || '',
     s.Spazi || '',
     s.Fuochi || '',
+    s.Hike || '',
     s.Escursioni || '',
     s.Trasporti || '',
     s.Branco ? 'Sì' : 'No',

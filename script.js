@@ -1276,7 +1276,10 @@ function filtra(lista) {
         if (valore === true) {
           // Per checkbox, verifica che il valore sia true
           // Per i campi delle caratteristiche, verifica che il campo abbia un valore non vuoto
-          if (['Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo)) {
+          if (['Letti', 'Spazi', 'Fuochi', 'Hike'].includes(campo)) {
+            matchAvanzati = matchAvanzati && s[campo] && s[campo].toString().trim() !== '';
+          } else if (campo === 'Cucina') {
+            // Per il campo Cucina delle caratteristiche, verifica che abbia un valore non vuoto
             matchAvanzati = matchAvanzati && s[campo] && s[campo].toString().trim() !== '';
           } else {
             matchAvanzati = matchAvanzati && s[campo] === true;
@@ -6910,7 +6913,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         if (isEditMode) {
           // Modalità modifica
-          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione', 'Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo);
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione', 'Letti', 'Spazi', 'Fuochi', 'Hike'].includes(campo);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
           const isUrlField = ['google_maps_link'].includes(campo);
           const isWebsiteField = campo === 'Sito';

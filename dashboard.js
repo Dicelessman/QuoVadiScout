@@ -134,11 +134,21 @@ function calcolaStatisticheProvince() {
 function aggiornaStatistiche() {
   const stats = calcolaStatistiche();
   
-  document.getElementById('totalStructures').textContent = stats.totali;
-  document.getElementById('totalCase').textContent = stats.case;
-  document.getElementById('totalTerreni').textContent = stats.terreni;
-  document.getElementById('totalEntrambe').textContent = stats.entrambe;
-  document.getElementById('totalSenza').textContent = stats.senza;
+  // Controlli di sicurezza per gli elementi DOM
+  const elements = {
+    totalStructures: document.getElementById('totalStructures'),
+    totalCase: document.getElementById('totalCase'),
+    totalTerreni: document.getElementById('totalTerreni'),
+    totalEntrambe: document.getElementById('totalEntrambe'),
+    totalSenza: document.getElementById('totalSenza')
+  };
+  
+  // Aggiorna solo gli elementi che esistono
+  if (elements.totalStructures) elements.totalStructures.textContent = stats.totali;
+  if (elements.totalCase) elements.totalCase.textContent = stats.case;
+  if (elements.totalTerreni) elements.totalTerreni.textContent = stats.terreni;
+  if (elements.totalEntrambe) elements.totalEntrambe.textContent = stats.entrambe;
+  if (elements.totalSenza) elements.totalSenza.textContent = stats.senza;
   
   // Nuove metriche avanzate
   aggiornaMetricheAvanzate();
@@ -147,26 +157,42 @@ function aggiornaStatistiche() {
 function aggiornaMetricheAvanzate() {
   const strutture = window.strutture || [];
   
+  // Controlli di sicurezza per gli elementi DOM
+  const elements = {
+    lastUpdate: document.getElementById('lastUpdate'),
+    structuresWithCoords: document.getElementById('structuresWithCoords'),
+    structuresWithNotes: document.getElementById('structuresWithNotes'),
+    avgRating: document.getElementById('avgRating'),
+    structuresVerified: document.getElementById('structuresVerified'),
+    provincesCovered: document.getElementById('provincesCovered')
+  };
+  
   // Ultimo aggiornamento
   const lastModified = strutture
     .map(s => s.lastModified ? new Date(s.lastModified.seconds * 1000) : null)
     .filter(d => d)
     .sort((a, b) => b - a)[0];
   
-  document.getElementById('lastUpdate').textContent = lastModified 
-    ? lastModified.toLocaleDateString('it-IT')
-    : 'N/A';
+  if (elements.lastUpdate) {
+    elements.lastUpdate.textContent = lastModified 
+      ? lastModified.toLocaleDateString('it-IT')
+      : 'N/A';
+  }
   
   // Strutture con coordinate
   const withCoords = strutture.filter(s => 
     (s.coordinate && s.coordinate.lat && s.coordinate.lng) ||
     (s.coordinate_lat && s.coordinate_lng)
   ).length;
-  document.getElementById('structuresWithCoords').textContent = `${withCoords} (${Math.round(withCoords/strutture.length*100)}%)`;
+  if (elements.structuresWithCoords) {
+    elements.structuresWithCoords.textContent = `${withCoords} (${Math.round(withCoords/strutture.length*100)}%)`;
+  }
   
   // Strutture con note personali
   const withNotes = strutture.filter(s => s.notePersonali && s.notePersonali.length > 0).length;
-  document.getElementById('structuresWithNotes').textContent = `${withNotes} (${Math.round(withNotes/strutture.length*100)}%)`;
+  if (elements.structuresWithNotes) {
+    elements.structuresWithNotes.textContent = `${withNotes} (${Math.round(withNotes/strutture.length*100)}%)`;
+  }
   
   // Rating medio
   const ratings = strutture
@@ -175,15 +201,21 @@ function aggiornaMetricheAvanzate() {
   const avgRating = ratings.length > 0 
     ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
     : 'N/A';
-  document.getElementById('avgRating').textContent = avgRating;
+  if (elements.avgRating) {
+    elements.avgRating.textContent = avgRating;
+  }
   
   // Strutture verificate (assumendo campo 'verificata' o simile)
   const verified = strutture.filter(s => s.verificata === true || s.verified === true).length;
-  document.getElementById('structuresVerified').textContent = `${verified} (${Math.round(verified/strutture.length*100)}%)`;
+  if (elements.structuresVerified) {
+    elements.structuresVerified.textContent = `${verified} (${Math.round(verified/strutture.length*100)}%)`;
+  }
   
   // Province coperte
   const uniqueProvinces = new Set(strutture.map(s => s.Prov).filter(p => p && p.trim() !== ''));
-  document.getElementById('provincesCovered').textContent = uniqueProvinces.size;
+  if (elements.provincesCovered) {
+    elements.provincesCovered.textContent = uniqueProvinces.size;
+  }
 }
 
 function aggiornaStatisticheProvince() {
@@ -191,8 +223,19 @@ function aggiornaStatisticheProvince() {
   const tableBody = document.getElementById('provinceTableBody');
   const filterSelect = document.getElementById('provinceFilter');
   
+  // Controllo di sicurezza per gli elementi DOM
+  if (!tableBody) {
+    console.error('❌ Elemento provinceTableBody non trovato - DOM non ancora pronto');
+    return;
+  }
+  
+  if (!filterSelect) {
+    console.error('❌ Elemento provinceFilter non trovato - DOM non ancora pronto');
+    return;
+  }
+  
   // Popola il dropdown se non è già popolato
-  if (filterSelect && filterSelect.options.length === 1) {
+  if (filterSelect.options.length === 1) {
     const provinces = Object.keys(provinceStats).sort();
     provinces.forEach(prov => {
       const option = document.createElement('option');
@@ -203,15 +246,10 @@ function aggiornaStatisticheProvince() {
   }
   
   // Ottieni filtro selezionato
-  const selectedProvince = filterSelect ? filterSelect.value : 'all';
+  const selectedProvince = filterSelect.value;
   
   // Pulisci la tabella
-  if (tableBody) {
-    tableBody.innerHTML = '';
-  } else {
-    console.error('❌ Elemento provinceTableBody non trovato');
-    return;
-  }
+  tableBody.innerHTML = '';
   
   // Ordina per numero totale di strutture
   const sortedProvinces = Object.entries(provinceStats)
@@ -661,7 +699,17 @@ function creaGrafici() {
 // === Inizializzazione Dashboard ===
 async function inizializzaDashboard() {
   try {
-    document.getElementById('loading').classList.remove('hidden');
+    // Verifica che gli elementi DOM essenziali siano presenti
+    const loadingElement = document.getElementById('loading');
+    if (!loadingElement) {
+      console.error('❌ Elemento loading non trovato');
+      return;
+    }
+    
+    loadingElement.classList.remove('hidden');
+    
+    // Attendi un momento per assicurarsi che il DOM sia completamente pronto
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const struttureCaricate = await caricaStrutture();
     aggiornaStatistiche();
@@ -673,22 +721,31 @@ async function inizializzaDashboard() {
     // console.log('🗺️ Inizializzazione mappa Leaflet...');
     // initMap();
     
-    document.getElementById('loading').classList.add('hidden');
+    loadingElement.classList.add('hidden');
     
   } catch (error) {
     console.error('❌ Errore nell\'inizializzazione:', error);
-    document.getElementById('loading').innerHTML = `
-      <div class="error">
-        <h3>⚠️ Errore nel caricamento</h3>
-        <p>Impossibile caricare i dati della dashboard.</p>
-        <button onclick="location.reload()">🔄 Ricarica</button>
-      </div>
-    `;
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+      loadingElement.innerHTML = `
+        <div class="error">
+          <h3>⚠️ Errore nel caricamento</h3>
+          <p>Impossibile caricare i dati della dashboard.</p>
+          <button onclick="location.reload()">🔄 Ricarica</button>
+        </div>
+      `;
+    }
   }
 }
 
 // === Event Listeners ===
-document.getElementById('refreshBtn').addEventListener('click', inizializzaDashboard);
+// Aggiungi event listener per il pulsante refresh solo se esiste
+const refreshBtn = document.getElementById('refreshBtn');
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', inizializzaDashboard);
+} else {
+  console.warn('⚠️ Pulsante refresh non trovato');
+}
 
 // Listener per filtro provincia
 const provinceFilter = document.getElementById('provinceFilter');
@@ -696,6 +753,8 @@ if (provinceFilter) {
   provinceFilter.addEventListener('change', () => {
     aggiornaStatisticheProvince();
   });
+} else {
+  console.warn('⚠️ Filtro provincia non trovato');
 }
 
 // La funzione mostraSchedaCompleta è ora gestita dal file script.js principale

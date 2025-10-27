@@ -3449,23 +3449,24 @@ async function mostraSegnalazione(strutturaId) {
     width: 500px;
     max-height: 80%;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.3));
+    border: 1px solid var(--border-light);
   `;
   
   modalContent.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="margin: 0; color: #dc3545;">⚠️ Segnala Problema</h3>
-      <button id="closeReportModal" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
+      <h3 style="margin: 0; color: var(--danger-color, #dc3545);">⚠️ Segnala Problema</h3>
+      <button id="closeReportModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-primary);">✕</button>
     </div>
     
     <div style="margin-bottom: 15px; padding: 10px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px;">
       <strong>Struttura:</strong> ${struttura.Struttura || 'Senza nome'}<br>
-      <span style="color: #666;">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
+      <span style="color: var(--text-secondary, #666);">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
     </div>
     
     <div style="margin-bottom: 15px;">
-      <label style="display: block; margin-bottom: 8px; font-weight: bold;">Tipo di problema:</label>
-      <select id="reportType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      <label style="display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-primary);">Tipo di problema:</label>
+      <select id="reportType" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary);">
         <option value="dati_obsoleti">Dati obsoleti o non aggiornati</option>
         <option value="struttura_chiusa">Struttura chiusa o non più disponibile</option>
         <option value="info_errate">Informazioni errate o incomplete</option>
@@ -3476,16 +3477,16 @@ async function mostraSegnalazione(strutturaId) {
     </div>
     
     <div style="margin-bottom: 15px;">
-      <label style="display: block; margin-bottom: 8px; font-weight: bold;">Descrizione del problema:</label>
+      <label style="display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-primary);">Descrizione del problema:</label>
       <textarea id="reportDescription" placeholder="Descrivi il problema riscontrato..." 
-                style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+                style="width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; background: var(--bg-primary); color: var(--text-primary);"></textarea>
     </div>
     
     <div style="display: flex; gap: 10px; justify-content: flex-end;">
-      <button id="cancelReport" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+      <button id="cancelReport" style="background: var(--secondary-color, #6c757d); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
         ❌ Annulla
       </button>
-      <button id="submitReport" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+      <button id="submitReport" style="background: var(--danger-color, #dc3545); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
         📤 Invia Segnalazione
       </button>
     </div>
@@ -6413,8 +6414,9 @@ function mostraSchedaCompleta(strutturaId) {
     min-width: 320px;
     width: 100%;
     overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.3));
     position: relative;
+    border: 1px solid var(--border-light);
   `;
   
   // Header con titolo e controlli
@@ -6425,14 +6427,14 @@ function mostraSchedaCompleta(strutturaId) {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #2f6b2f;
+    border-bottom: 2px solid var(--accent-color, #2f6b2f);
   `;
   
   const title = document.createElement('h2');
   title.textContent = isNewStructure ? '📋 Nuova Struttura' : `📋 Scheda: ${struttura.Struttura || 'Senza nome'}`;
   title.style.cssText = `
     margin: 0;
-    color: #2f6b2f;
+    color: var(--accent-color, #2f6b2f);
     font-size: 1.5rem;
   `;
   
@@ -6446,7 +6448,7 @@ function mostraSchedaCompleta(strutturaId) {
   const editBtn = document.createElement('button');
   editBtn.innerHTML = isNewStructure ? '✏️ Compila' : '✏️ Modifica';
   editBtn.style.cssText = `
-    background: #007bff;
+    background: var(--primary-color, #007bff);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -6459,7 +6461,7 @@ function mostraSchedaCompleta(strutturaId) {
   const saveBtn = document.createElement('button');
   saveBtn.innerHTML = isNewStructure ? '💾 Crea' : '💾 Salva';
   saveBtn.style.cssText = `
-    background: #28a745;
+    background: var(--success-color, #28a745);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -6473,7 +6475,7 @@ function mostraSchedaCompleta(strutturaId) {
   const cancelBtn = document.createElement('button');
   cancelBtn.innerHTML = '❌ Annulla';
   cancelBtn.style.cssText = `
-    background: #6c757d;
+    background: var(--secondary-color, #6c757d);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -6500,7 +6502,7 @@ function mostraSchedaCompleta(strutturaId) {
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '← Indietro';
   closeBtn.style.cssText = `
-    background: #6c757d;
+    background: var(--secondary-color, #6c757d);
     color: white;
     border: none;
     border-radius: 6px;
@@ -6527,7 +6529,7 @@ function mostraSchedaCompleta(strutturaId) {
   const mapBtn = document.createElement('button');
   mapBtn.innerHTML = '🗺️ Vedi su mappa';
   mapBtn.style.cssText = `
-    background: #007bff;
+    background: var(--primary-color, #007bff);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -6815,17 +6817,18 @@ function mostraSchedaCompleta(strutturaId) {
     Object.entries(categorie).forEach(([nomeCategoria, campi]) => {
       const categoriaDiv = document.createElement('div');
       categoriaDiv.style.cssText = `
-        background: #f8f9fa;
+        background: var(--bg-secondary);
         border-radius: 8px;
         padding: 15px;
-        border-left: 4px solid #2f6b2f;
+        border-left: 4px solid var(--accent-color, #2f6b2f);
+        border: 1px solid var(--border-light);
       `;
       
       const categoriaTitle = document.createElement('h3');
       categoriaTitle.textContent = nomeCategoria;
       categoriaTitle.style.cssText = `
         margin: 0 0 15px 0;
-        color: #2f6b2f;
+        color: var(--accent-color, #2f6b2f);
         font-size: 1.1rem;
       `;
       if (categoriaDiv && categoriaTitle) {
@@ -6845,7 +6848,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         const label = document.createElement('strong');
         label.textContent = `${campo}: `;
-        label.style.color = '#495057';
+        label.style.color = 'var(--text-primary)';
         
         if (isEditMode) {
           // Modalità modifica
@@ -6917,9 +6920,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               width: 100%;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value ? parseFloat(e.target.value) : null;
@@ -6936,9 +6941,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               width: 100%;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value;
@@ -6962,9 +6969,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               flex: 1;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value;
@@ -6974,7 +6983,7 @@ function mostraSchedaCompleta(strutturaId) {
             websiteBtn.innerHTML = '🌐';
             websiteBtn.title = 'Apri sito web';
             websiteBtn.style.cssText = `
-              background: #6c757d;
+              background: var(--secondary-color, #6c757d);
               color: white;
               border: none;
               border-radius: 4px;
@@ -7016,9 +7025,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               flex: 1;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value;
@@ -7028,7 +7039,7 @@ function mostraSchedaCompleta(strutturaId) {
             emailBtn.innerHTML = '📧';
             emailBtn.title = 'Scrivi email';
             emailBtn.style.cssText = `
-              background: #007bff;
+              background: var(--primary-color, #007bff);
               color: white;
               border: none;
               border-radius: 4px;
@@ -7072,9 +7083,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               flex: 1;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value;
@@ -7121,9 +7134,11 @@ function mostraSchedaCompleta(strutturaId) {
             input.style.cssText = `
               width: 100%;
               padding: 4px 8px;
-              border: 1px solid #ddd;
+              border: 1px solid var(--border-color);
               border-radius: 4px;
               font-size: 14px;
+              background: var(--bg-primary);
+              color: var(--text-primary);
             `;
             input.onchange = (e) => {
               struttura[campo] = e.target.value;
@@ -7634,12 +7649,14 @@ function mostraSchedaCompleta(strutturaId) {
       textarea.style.cssText = `
         width: 100%;
         padding: 8px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border-color);
         border-radius: 4px;
         font-size: 14px;
         font-family: inherit;
         resize: vertical;
         min-height: 80px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
       `;
       textarea.onchange = (e) => {
         struttura.Note = e.target.value;

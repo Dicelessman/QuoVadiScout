@@ -6854,8 +6854,8 @@ function mostraSchedaCompleta(strutturaId) {
         'A persona', 'A giornata', 'A notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altri costi', 'Altre info'
       ],
     'Caratteristiche Struttura': [
-      'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
-      'Hike', 'Trasporti', 'Altre info'
+      'Terreno', 'Casa', 'Letti', 'Letti', 'Cucina', 'Cucina', 'Spazi', 'Spazi', 'Fuochi', 'Fuochi',
+      'Hike', 'Hike', 'Trasporti', 'Altre info'
     ],
       'Adatto per': [
         'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'
@@ -6896,7 +6896,14 @@ function mostraSchedaCompleta(strutturaId) {
       categoriaDiv.appendChild(categoriaTitle);
     }
       
+      // Traccia le occorrenze dei campi per gestire i duplicati
+      const campoOccorrenze = {};
+      
       campi.forEach(campo => {
+        // Conta le occorrenze del campo
+        campoOccorrenze[campo] = (campoOccorrenze[campo] || 0) + 1;
+        const isSecondaOccorrenza = campoOccorrenze[campo] > 1;
+        
         const campoDiv = document.createElement('div');
         campoDiv.style.cssText = `
           margin-bottom: 10px;
@@ -6913,7 +6920,9 @@ function mostraSchedaCompleta(strutturaId) {
         
         if (isEditMode) {
           // Modalità modifica
-          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione', 'Letti', 'Spazi', 'Fuochi', 'Hike'].includes(campo);
+          // Per i campi duplicati, la prima occorrenza è checkbox, la seconda è text
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'].includes(campo) || 
+                                 (['Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo) && !isSecondaOccorrenza);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
           const isUrlField = ['google_maps_link'].includes(campo);
           const isWebsiteField = campo === 'Sito';
@@ -7210,6 +7219,10 @@ function mostraSchedaCompleta(strutturaId) {
           }
         } else {
           // Modalità visualizzazione
+          // Per i campi duplicati, la prima occorrenza è checkbox, la seconda è text
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'].includes(campo) || 
+                                 (['Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo) && !isSecondaOccorrenza);
+          
           if (campo === 'rating') {
             // Gestione speciale per il rating
             const ratingDiv = document.createElement('div');

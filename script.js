@@ -6915,7 +6915,11 @@ function mostraSchedaCompleta(strutturaId) {
         `;
         
         const label = document.createElement('strong');
-        label.textContent = `${campo}: `;
+        // Per i campi duplicati, aggiungi "info" alle etichette dei campi text
+        const labelText = (['Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike'].includes(campo) && isSecondaOccorrenza) 
+          ? `${campo} info: ` 
+          : `${campo}: `;
+        label.textContent = labelText;
         label.style.color = 'var(--text-primary)';
         
         if (isEditMode) {

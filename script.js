@@ -552,8 +552,8 @@ function mostraRicercaAvanzata() {
   const modalContent = document.createElement('div');
   modalContent.className = 'modal-content'; // Usa classe per ereditare tema
   modalContent.style.cssText = `
-    background: var(--bg-primary, white);
-    color: var(--text-primary, #1a1a1a);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -1547,7 +1547,8 @@ async function eliminaStrutturaConConferma(id) {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 30px;
     max-width: 95%;
@@ -1751,7 +1752,8 @@ function mostraAiuto() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -1875,7 +1877,8 @@ function mostraAbout() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -2150,7 +2153,8 @@ async function mostraNotePersonali(strutturaId) {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 90%;
@@ -2407,8 +2411,8 @@ function createResponsiveModal(id, title, content) {
   const modalContent = document.createElement('div');
   modalContent.className = 'modal-content';
   modalContent.style.cssText = `
-    background: var(--bg-primary, white);
-    color: var(--text-primary, #1a1a1a);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 100%;
@@ -2582,7 +2586,8 @@ async function mostraMappa() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -2774,7 +2779,8 @@ function mostraModaleSincronizzazione() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 30px;
     max-width: 500px;
@@ -2870,7 +2876,7 @@ async function eseguiSincronizzazione() {
     `;
     
     loadingModal.innerHTML = `
-      <div style="background: white; border-radius: 12px; padding: 30px; text-align: center; max-width: 400px;">
+      <div style="background: var(--bg-primary); color: var(--text-primary); border-radius: 12px; padding: 30px; text-align: center; max-width: 400px;">
         <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
         <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">Sincronizzazione in corso...</h3>
         <div style="color: #666; margin-bottom: 20px;">Caricamento dati da Firestore</div>
@@ -3385,7 +3391,8 @@ async function mostraSegnalazione(strutturaId) {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 90%;
@@ -4318,7 +4325,8 @@ function mostraSchedaUtente() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -4404,7 +4412,7 @@ function mostraSchedaUtente() {
     
     <div>
       <label style="display: block; margin-bottom: 5px; font-weight: 500;">Gruppo *</label>
-      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: white;" required>
+      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
         <option value="">Seleziona Gruppo</option>
         <option value="TO1" ${userProfile?.gruppo === 'TO1' ? 'selected' : ''}>TO1</option>
         <option value="TO2" ${userProfile?.gruppo === 'TO2' ? 'selected' : ''}>TO2</option>
@@ -4418,7 +4426,7 @@ function mostraSchedaUtente() {
     
     <div>
       <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruolo *</label>
-      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: white;" required>
+      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
         <option value="">Seleziona Ruolo</option>
         <option value="Senior" ${userProfile?.ruolo === 'Senior' ? 'selected' : ''}>Senior</option>
         <option value="SiSB" ${userProfile?.ruolo === 'SiSB' ? 'selected' : ''}>SiSB</option>
@@ -4605,7 +4613,8 @@ function mostraSchermataLogin() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 16px;
     padding: 40px;
     max-width: 95%;
@@ -4673,7 +4682,7 @@ function mostraSchermataLogin() {
       </div>
       
       <select id="registerGruppo" 
-              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: white;" required>
+              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
         <option value="">Seleziona Gruppo *</option>
         <option value="TO1">TO1</option>
         <option value="TO2">TO2</option>
@@ -4685,7 +4694,7 @@ function mostraSchermataLogin() {
       </select>
       
       <select id="registerRuolo" 
-              style="width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; background: white;" required>
+              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
         <option value="">Seleziona Ruolo *</option>
         <option value="Senior">Senior</option>
         <option value="SiSB">SiSB</option>
@@ -5436,7 +5445,8 @@ function mostraGestioneElencoPersonale() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -6084,7 +6094,8 @@ function mostraSchedaCompleta(strutturaId) {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -6516,9 +6527,10 @@ function mostraSchedaCompleta(strutturaId) {
         campoDiv.style.cssText = `
           margin-bottom: 10px;
           padding: 8px;
-          background: white;
+          background: var(--bg-secondary);
+          color: var(--text-primary);
           border-radius: 4px;
-          border: 1px solid #e9ecef;
+          border: 1px solid var(--border-light);
         `;
         
         const label = document.createElement('strong');
@@ -6558,7 +6570,8 @@ function mostraSchedaCompleta(strutturaId) {
               padding: 8px;
               border: 1px solid #ced4da;
               border-radius: 4px;
-              background: white;
+              background: var(--bg-secondary);
+              color: var(--text-primary);
             `;
             
             const options = [
@@ -7291,9 +7304,10 @@ function mostraSchedaCompleta(strutturaId) {
     campoDiv.style.cssText = `
       margin-bottom: 10px;
       padding: 8px;
-      background: white;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
       border-radius: 4px;
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--border-light);
     `;
     
     const label = document.createElement('strong');
@@ -7812,7 +7826,8 @@ function mostraPreferenzeNotifiche() {
   const modalContent = document.createElement('div');
   modalContent.className = 'modal';
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 20px 20px 0 0;
     padding: 0;
     width: 100%;
@@ -7828,7 +7843,8 @@ function mostraPreferenzeNotifiche() {
     <div style="
       position: sticky;
       top: 0;
-      background: white;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       border-radius: 20px 20px 0 0;
       padding: 16px 20px 20px 20px;
       border-bottom: 1px solid #e5e7eb;
@@ -8431,7 +8447,7 @@ async function downloadForOffline_DISABLED() {
   `;
   
   progressModal.innerHTML = `
-    <div style="background: white; padding: 24px; border-radius: 12px; text-align: center; min-width: 300px;">
+    <div style="background: var(--bg-primary); color: var(--text-primary); padding: 24px; border-radius: 12px; text-align: center; min-width: 300px;">
       <h3 style="margin: 0 0 16px 0; color: #2f6b2f;">📥 Download in corso...</h3>
       <div style="margin-bottom: 16px;">
         <div style="width: 100%; background: #e5e7eb; border-radius: 4px; height: 8px;">
@@ -8957,7 +8973,8 @@ function mostraOpzioniEsportazioneGenerale() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 90%;
@@ -9317,7 +9334,8 @@ async function mostraFeedAttivita() {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 95%;
@@ -9946,7 +9964,8 @@ function mostraRisultatiVicinoAMe(struttureVicine, userLat, userLng) {
   
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 12px;
     padding: 20px;
     max-width: 90%;
@@ -10313,7 +10332,7 @@ function mostraStatisticheApp() {
         <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">🏆 Funzioni Più Utilizzate</h3>
         ${stats.mostUsedFeatures.length > 0 ? 
           stats.mostUsedFeatures.map(f => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 4px; margin-bottom: 8px;">
               <span>${f.feature}</span>
               <span style="background: #2f6b2f; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${f.count}</span>
             </div>

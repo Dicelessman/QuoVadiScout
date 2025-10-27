@@ -2206,7 +2206,7 @@ input:checked + .toggle-slider:before {
   }
   
   div[id$="Modal"] > div {
-    background: white !important;
+    background: var(--bg-primary) !important;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
     padding: 20px !important;
     max-width: 100% !important;
@@ -2287,4 +2287,60 @@ input:checked + .toggle-slider:before {
     min-height: 48px !important;
     font-size: 16px !important;
   }
+}
+
+/* === REGOLE SPECIFICHE PER TEMA SCURO MODALI === */
+[data-theme="dark"] div[id$="Modal"] > div {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] h1,
+[data-theme="dark"] div[id$="Modal"] h2,
+[data-theme="dark"] div[id$="Modal"] h3,
+[data-theme="dark"] div[id$="Modal"] h4 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] p,
+[data-theme="dark"] div[id$="Modal"] label {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] input,
+[data-theme="dark"] div[id$="Modal"] select,
+[data-theme="dark"] div[id$="Modal"] textarea {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] input:focus,
+[data-theme="dark"] div[id$="Modal"] select:focus,
+[data-theme="dark"] div[id$="Modal"] textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] button {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] button:hover {
+  background: var(--bg-secondary) !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] .btn-primary {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-inverse) !important;
+}
+
+[data-theme="dark"] div[id$="Modal"] .btn-primary:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
 }

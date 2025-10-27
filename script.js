@@ -4816,8 +4816,17 @@ function mostraSchedaUtente() {
 
 async function salvaProfiloUtente() {
   try {
-    if (!getCurrentUser() || !getUserProfile()) {
+    const currentUser = getCurrentUser();
+    const userProfile = getUserProfile();
+    
+    if (!currentUser || !userProfile) {
       alert('❌ Errore: utente non autenticato');
+      return;
+    }
+    
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
       return;
     }
     
@@ -4832,31 +4841,29 @@ async function salvaProfiloUtente() {
       return;
     }
     
-    // Aggiorna profilo
-    getUserProfile().nome = nome;
-    getUserProfile().cognome = cognome;
-    getUserProfile().telefono = telefono;
-    getUserProfile().gruppo = gruppo;
-    getUserProfile().ruolo = ruolo;
-    // Raccogli preferenze notifiche (con controlli di sicurezza)
-    const notifNewStructures = document.getElementById('notifNewStructures');
-    const notifStructureUpdates = document.getElementById('notifStructureUpdates');
-    const notifPersonalList = document.getElementById('notifPersonalList');
-    const notifNearby = document.getElementById('notifNearby');
-    const notifReports = document.getElementById('notifReports');
-    const notifDistance = document.getElementById('notifDistance');
-    
-    getUserProfile().preferenzeNotifiche = {
-      newStructures: notifNewStructures ? notifNewStructures.checked : true,
-      structureUpdates: notifStructureUpdates ? notifStructureUpdates.checked : true,
-      personalListUpdates: notifPersonalList ? notifPersonalList.checked : true,
-      nearbyStructures: notifNearby ? notifNearby.checked : false,
-      reports: notifReports ? notifReports.checked : true,
-      distance: notifDistance ? parseInt(notifDistance.value) || 10 : 10
+    // Crea nuovo profilo aggiornato
+    const updatedProfile = {
+      ...userProfile,
+      nome: nome,
+      cognome: cognome,
+      telefono: telefono,
+      gruppo: gruppo,
+      ruolo: ruolo,
+      preferenzeNotifiche: {
+        newStructures: document.getElementById('notifNewStructures')?.checked ?? true,
+        structureUpdates: document.getElementById('notifStructureUpdates')?.checked ?? true,
+        personalListUpdates: document.getElementById('notifPersonalList')?.checked ?? true,
+        nearbyStructures: document.getElementById('notifNearby')?.checked ?? false,
+        reports: document.getElementById('notifReports')?.checked ?? true,
+        distance: parseInt(document.getElementById('notifDistance')?.value) || 10
+      }
     };
     
+    // Aggiorna lo stato locale
+    updateAuthState(currentUser, updatedProfile);
+    
     // Salva in Firestore
-    await setDoc(doc(db, 'users', getCurrentUser().uid), getUserProfile());
+    await secureFirestoreOperation(setDoc, doc(db, 'users', currentUser.uid), updatedProfile);
     
     console.log('✅ Profilo utente aggiornato');
     alert('✅ Profilo salvato con successo!');
@@ -5206,7 +5213,7 @@ async function registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, 
     });
     
     // Crea profilo utente completo
-    const getUserProfile() = {
+    const userProfile = {
       nome: nome,
       cognome: cognome,
       email: email,
@@ -5226,7 +5233,7 @@ async function registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, 
     };
     
     // Salva profilo in Firestore
-    await setDoc(doc(db, 'users', userCredential.user.uid), getUserProfile());
+    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
     
     console.log('✅ Registrazione riuscita:', userCredential.user.email);
     console.log('✅ Profilo utente creato con tutti i campi');
@@ -5477,14 +5484,16 @@ function mostraModaleProfiloUtente() {
   `;
   
   // Carica dati utente dal localStorage
-  const profiloUtente = JSON.parse(localStorage.getItem('getUserProfile()') || '{}');
+  const profiloUtente = JSON.parse(localStorage.getItem('userProfile') || '{}');
   const preferenzeNotifiche = JSON.parse(localStorage.getItem('notificationPreferences') || '{}');
   const provinciaPreferita = localStorage.getItem('preferredProvince') || '';
   
   // Ottieni province uniche dal database
   const provinceNelDB = [...new Set(strutture.map(s => s.Prov).filter(p => p))].sort();
   
-  const displayName = getUserProfile()?.nome || getCurrentUser().displayName || getCurrentUser().email.split('@')[0];
+  const currentUser = getCurrentUser();
+  const userProfile = getUserProfile();
+  const displayName = userProfile?.nome || currentUser?.displayName || currentUser?.email?.split('@')[0];
   
   modalContent.innerHTML = `
     <!-- Header -->
@@ -5718,7 +5727,7 @@ function mostraGestioneElencoPersonale() {
   console.log('📊 Strutture trovate:', struttureElenco.length);
   
   // Nascondi la scheda utente se è aperta
-  const userModal = document.getElementById('getUserProfile()Modal');
+  const userModal = document.getElementById('userProfileModal');
   if (userModal) {
     userModal.remove();
   }

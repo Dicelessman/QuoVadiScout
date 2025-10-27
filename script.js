@@ -630,22 +630,22 @@ function mostraRicercaAvanzata() {
       { campo: 'Forfait', tipo: 'text', placeholder: 'Chiedono un forfait' },
       { campo: 'Riscaldamento', tipo: 'text', placeholder: 'Costo riscaldamento' },
       { campo: 'Cucina', tipo: 'text', placeholder: 'Costo cucina' },
-      { campo: 'Altro', tipo: 'text', placeholder: 'Altri costi' },
+      { campo: 'Altri costi', tipo: 'text', placeholder: 'Altri costi' },
       { campo: 'Altre info', tipo: 'textarea', placeholder: 'Informazioni aggiuntive' }
     ],
     'Caratteristiche Struttura': [
       { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
       { campo: 'Casa', tipo: 'checkbox', placeholder: 'Disponibile casa' },
       { campo: 'Letti', tipo: 'checkbox', placeholder: 'Ha letti' },
-      { campo: 'Letti_dettaglio', tipo: 'text', placeholder: 'Numero di letti (dettaglio)' },
+      { campo: 'Letti', tipo: 'text', placeholder: 'Numero di letti' },
       { campo: 'Cucina', tipo: 'checkbox', placeholder: 'Ha cucina' },
-      { campo: 'Cucina_dettaglio', tipo: 'text', placeholder: 'Tipo di cucina (dettaglio)' },
+      { campo: 'Cucina', tipo: 'text', placeholder: 'Tipo di cucina' },
       { campo: 'Spazi', tipo: 'checkbox', placeholder: 'Ha spazi per attività' },
-      { campo: 'Spazi_dettaglio', tipo: 'text', placeholder: 'Spazi disponibili (dettaglio)' },
+      { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili' },
       { campo: 'Fuochi', tipo: 'checkbox', placeholder: 'Si possono fare fuochi' },
-      { campo: 'Fuochi_dettaglio', tipo: 'text', placeholder: 'Dettagli sui fuochi' },
+      { campo: 'Fuochi', tipo: 'text', placeholder: 'Dettagli sui fuochi' },
       { campo: 'Hike', tipo: 'checkbox', placeholder: 'Hike disponibili' },
-      { campo: 'Hike_dettaglio', tipo: 'text', placeholder: 'Hike disponibili (dettaglio)' },
+      { campo: 'Hike', tipo: 'text', placeholder: 'Hike disponibili' },
       { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' },
       { campo: 'Altre info', tipo: 'textarea', placeholder: 'Altre informazioni' }
     ],
@@ -1736,7 +1736,7 @@ async function aggiungiStruttura() {
     Forfait: '',
     Riscaldamento: '',
     Cucina: '',
-    Altro: '',
+    'Altri costi': '',
     'Altre info': '',
     Terreno: false,
     Casa: false,
@@ -6851,7 +6851,7 @@ function mostraSchedaCompleta(strutturaId) {
         'Struttura', 'Luogo', 'Indirizzo', 'Prov', 'Info'
       ],
       'Costi €': [
-        'A persona', 'A giornata', 'A notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altro', 'Altre info'
+        'A persona', 'A giornata', 'A notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altri costi', 'Altre info'
       ],
     'Caratteristiche Struttura': [
       'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',

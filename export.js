@@ -58,7 +58,7 @@ function createCompleteWorksheet(strutture, includeImages, includeNotes, include
     'Casa', 'Terreno', 'Letti', 'Cucina', 'Spazi', 'Fuochi', 'Hike',
     'Escursioni', 'Trasporti', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione',
     'Referente', 'Email', 'Sito', 'Contatto', 'II Contatto',
-    'A Persona', 'A Giornata', 'A Notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina Costo', 'Altro',
+    'A Persona', 'A Giornata', 'A Notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina Costo', 'Altri Costi',
     'Ultimo Controllo', 'Da Chi',
     'Info', 'Note', 'Altre Info', 'Rating', 'Coordinate', 'Immagini', 'Segnalazioni'
   ];
@@ -100,7 +100,7 @@ function createCompleteWorksheet(strutture, includeImages, includeNotes, include
     s.Forfait || '',
     s.Riscaldamento || '',
     s.Cucina || '',
-    s.Altro || '',
+    s['Altri costi'] || '',
     s['Ultimo controllo'] || '',
     s['Da chi'] || '',
     s.Info || '',

@@ -1710,9 +1710,15 @@ async function aggiungiStruttura() {
     Indirizzo: '',
     Prov: '',
     Info: '',
+    'A persona': '',
+    'A giornata': '',
     'A notte': '',
     Offerta: '',
     Forfait: '',
+    Riscaldamento: '',
+    Cucina: '',
+    Altro: '',
+    'Altre info': '',
     Terreno: false,
     Casa: false,
     Letti: '',
@@ -1724,13 +1730,17 @@ async function aggiungiStruttura() {
     Branco: false,
     Reparto: false,
     Compagnia: false,
+    Gruppo: false,
+    Sezione: false,
     Referente: '',
     Email: '',
     Sito: '',
     Contatto: '',
     IIcontatto: '',
     'Ultimo controllo': '',
+    'Da chi': '',
     Note: '',
+    'Altre info': '',
     // Nuovi campi per il sistema avanzato
     stato: 'attiva',
     coordinate_lat: null,
@@ -6820,24 +6830,24 @@ function mostraSchedaCompleta(strutturaId) {
       'Informazioni Principali': [
         'Struttura', 'Luogo', 'Indirizzo', 'Prov', 'Info'
       ],
-      'Costi': [
-        'A persona', 'A giornata', '€ notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altro'
+      'Costi €': [
+        'A persona', 'A giornata', 'A notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altro', 'Altre info'
       ],
-      'Caratteristiche Struttura': [
-        'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
-        'Hike', 'Trasporti'
-      ],
+    'Caratteristiche Struttura': [
+      'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
+      'Hike', 'Trasporti', 'Altre info'
+    ],
       'Adatto per': [
         'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'
       ],
       'Contatti': [
-        'Referente', 'Email', 'Sito', 'Contatto', 'IIcontatto'
+        'Referente', 'Email', 'Sito', 'Contatto', 'IIcontatto', 'Altre info'
       ],
       'Posizione Geografica': [
         'coordinate_lat', 'coordinate_lng', 'google_maps_link'
       ],
       'Gestione': [
-        'Ultimo controllo', 'stato'
+        'Ultimo controllo', 'Da chi', 'stato'
       ],
       'Valutazioni': [
         'rating'

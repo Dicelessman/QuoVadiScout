@@ -56,10 +56,11 @@ function createCompleteWorksheet(strutture, includeImages, includeNotes, include
   const headers = [
     'ID', 'Struttura', 'Luogo', 'Provincia', 'Indirizzo', 'Stato',
     'Casa', 'Terreno', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
-    'Escursioni', 'Trasporti', 'Branco', 'Reparto', 'Compagnia',
+    'Escursioni', 'Trasporti', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione',
     'Referente', 'Email', 'Sito', 'Contatto', 'II Contatto',
-    'Prezzo Notte', 'Offerta', 'Forfait', 'Ultimo Controllo',
-    'Info', 'Note', 'Rating', 'Coordinate', 'Immagini', 'Segnalazioni'
+    'A Persona', 'A Giornata', 'A Notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina Costo', 'Altro',
+    'Ultimo Controllo', 'Da Chi',
+    'Info', 'Note', 'Altre Info', 'Rating', 'Coordinate', 'Immagini', 'Segnalazioni'
   ];
 
   if (includePersonalNotes) {
@@ -84,17 +85,26 @@ function createCompleteWorksheet(strutture, includeImages, includeNotes, include
     s.Branco ? 'Sì' : 'No',
     s.Reparto ? 'Sì' : 'No',
     s.Compagnia ? 'Sì' : 'No',
+    s.Gruppo ? 'Sì' : 'No',
+    s.Sezione ? 'Sì' : 'No',
     s.Referente || '',
     s.Email || '',
     s.Sito || '',
     s.Contatto || '',
     s.IIcontatto || '',
-    s['€ notte'] || '',
+    s['A persona'] || '',
+    s['A giornata'] || '',
+    s['A notte'] || '',
     s.Offerta || '',
     s.Forfait || '',
+    s.Riscaldamento || '',
+    s.Cucina || '',
+    s.Altro || '',
     s['Ultimo controllo'] || '',
+    s['Da chi'] || '',
     s.Info || '',
     s.Note || '',
+    s['Altre info'] || '',
     s.rating?.average || 0,
     s.coordinate ? `${s.coordinate.lat}, ${s.coordinate.lng}` : '',
     includeImages ? (s.immagini?.length || 0) : '',

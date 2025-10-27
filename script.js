@@ -4631,14 +4631,14 @@ function mostraSchedaUtente() {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #2f6b2f;
+    border-bottom: 2px solid var(--accent-color, #2f6b2f);
   `;
   
   const title = document.createElement('h2');
   title.textContent = '👤 Scheda Utente';
   title.style.cssText = `
     margin: 0;
-    color: #2f6b2f;
+    color: var(--accent-color, #2f6b2f);
     font-size: 1.5rem;
   `;
   
@@ -4672,32 +4672,32 @@ function mostraSchedaUtente() {
   
   form.innerHTML = `
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nome *</label>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Nome *</label>
       <input type="text" id="userNome" value="${userProfile?.nome || ''}" 
-             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+             style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
     </div>
     
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Cognome *</label>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Cognome *</label>
       <input type="text" id="userCognome" value="${userProfile?.cognome || ''}" 
-             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+             style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
     </div>
     
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Email *</label>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Email *</label>
       <input type="email" id="userEmail" value="${userProfile?.email || ''}" readonly
-             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; background: #f5f5f5;">
+             style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);">
     </div>
     
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Telefono *</label>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Telefono *</label>
       <input type="tel" id="userTelefono" value="${userProfile?.telefono || ''}" 
-             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;" required>
+             style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
     </div>
     
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Gruppo *</label>
-      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Gruppo *</label>
+      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Gruppo</option>
         <option value="TO1" ${userProfile?.gruppo === 'TO1' ? 'selected' : ''}>TO1</option>
         <option value="TO2" ${userProfile?.gruppo === 'TO2' ? 'selected' : ''}>TO2</option>
@@ -4710,8 +4710,8 @@ function mostraSchedaUtente() {
     </div>
     
     <div>
-      <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruolo *</label>
-      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: var(--text-primary);">Ruolo *</label>
+      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Ruolo</option>
         <option value="Senior" ${userProfile?.ruolo === 'Senior' ? 'selected' : ''}>Senior</option>
         <option value="SiSB" ${userProfile?.ruolo === 'SiSB' ? 'selected' : ''}>SiSB</option>
@@ -4764,14 +4764,14 @@ function mostraSchedaUtente() {
     gap: 10px;
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-light);
     justify-content: flex-end;
   `;
   
   const saveBtn = document.createElement('button');
   saveBtn.textContent = '💾 Salva Profilo';
   saveBtn.style.cssText = `
-    background: #28a745;
+    background: var(--success-color, #28a745);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -4787,7 +4787,7 @@ function mostraSchedaUtente() {
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = '❌ Annulla';
   cancelBtn.style.cssText = `
-    background: #6c757d;
+    background: var(--secondary-color, #6c757d);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -4797,8 +4797,28 @@ function mostraSchedaUtente() {
   `;
   cancelBtn.onclick = () => modal.remove();
   
+  const logoutBtn = document.createElement('button');
+  logoutBtn.textContent = '🚪 Logout';
+  logoutBtn.style.cssText = `
+    background: var(--danger-color, #dc3545);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: auto;
+  `;
+  logoutBtn.onclick = async () => {
+    if (confirm('Sei sicuro di voler effettuare il logout?')) {
+      await logoutUser();
+      modal.remove();
+    }
+  };
+  
   footer.appendChild(saveBtn);
   footer.appendChild(cancelBtn);
+  footer.appendChild(logoutBtn);
   
   // Assembla il modal
   modalContent.appendChild(header);

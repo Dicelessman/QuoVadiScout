@@ -682,7 +682,8 @@ function mostraRicercaAvanzata() {
     const categoriaDiv = document.createElement('div');
     categoriaDiv.className = 'categoria-div';
     categoriaDiv.style.cssText = `
-      background: #f8f9fa;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
       border-radius: 8px;
       padding: 15px;
       border-left: 4px solid #2f6b2f;
@@ -1567,7 +1568,7 @@ async function eliminaStrutturaConConferma(id) {
       </p>
     </div>
     
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
+    <div style="background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
       <h3 style="margin: 0 0 8px 0; color: #2f6b2f;">${struttura.Struttura || 'Senza nome'}</h3>
       <p style="margin: 0; color: #666; font-size: 14px;">
         📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
@@ -1828,7 +1829,7 @@ function mostraAiuto() {
         <li><strong>Test sistema:</strong> Menu → "Test Sistemi"</li>
       </ul>
       
-      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
+      <div style="background: var(--bg-secondary); color: var(--text-primary); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
         <h4 style="margin: 0 0 10px 0; color: #2f6b2f;">💡 Suggerimenti</h4>
         <ul style="margin: 0;">
           <li>Usa i <strong>filtri salvati</strong> per ricerche frequenti</li>
@@ -1917,7 +1918,7 @@ function mostraAbout() {
       </ul>
       
       <h3 style="color: #2f6b2f; margin-top: 20px;">👨‍💻 Sviluppatore</h3>
-      <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+      <div style="background: var(--bg-secondary); color: var(--text-primary); padding: 15px; border-radius: 8px; margin: 15px 0;">
         <p style="margin: 0 0 10px 0;"><strong>Davide Rossi</strong></p>
         <p style="margin: 0 0 15px 0; color: #666;">Sviluppatore e mantainer del progetto QuoVadiScout</p>
         
@@ -1946,21 +1947,21 @@ function mostraAbout() {
       
       <h3 style="color: #2f6b2f; margin-top: 20px;">📊 Statistiche</h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 15px 0;">
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="text-align: center; padding: 15px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px;">
           <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalStructuresAbout">-</div>
           <div style="font-size: 12px; color: #666;">Strutture Totali</div>
         </div>
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="text-align: center; padding: 15px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px;">
           <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalUsersAbout">-</div>
           <div style="font-size: 12px; color: #666;">Utenti Attivi</div>
         </div>
-        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+        <div style="text-align: center; padding: 15px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px;">
           <div style="font-size: 24px; font-weight: bold; color: #2f6b2f;" id="totalExportsAbout">-</div>
           <div style="font-size: 12px; color: #666;">Esportazioni</div>
         </div>
       </div>
       
-      <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
+      <div style="background: var(--bg-secondary); color: var(--text-primary); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2f6b2f;">
         <h4 style="margin: 0 0 10px 0; color: #2f6b2f;">💡 Supporto e Feedback</h4>
         <p style="margin: 0; font-size: 14px;">
           Hai domande, suggerimenti o hai trovato un bug? Non esitare a contattarmi! 
@@ -2173,7 +2174,7 @@ async function mostraNotePersonali(strutturaId) {
       <button id="closeNoteModal" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
     </div>
     
-    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+    <div style="margin-bottom: 15px; padding: 10px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px;">
       <strong>${struttura.Struttura || 'Struttura senza nome'}</strong><br>
       <span style="color: #666;">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
     </div>
@@ -2196,7 +2197,7 @@ async function mostraNotePersonali(strutturaId) {
     <div id="noteEsistenti" style="max-height: 300px; overflow-y: auto;">
       ${noteEsistenti.length > 0 ? 
         noteEsistenti.map(nota => `
-          <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+          <div style="background: var(--bg-secondary); color: var(--text-primary); border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
             <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
               📅 ${new Date(nota.createdAt).toLocaleString('it-IT')}
             </div>
@@ -2338,7 +2339,7 @@ async function eliminaNota(notaId) {
         if (noteContainer) {
           noteContainer.innerHTML = noteEsistenti.length > 0 ? 
             noteEsistenti.map(nota => `
-              <div style="background: #e8f5e8; border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+              <div style="background: var(--bg-secondary); color: var(--text-primary); border-left: 4px solid #28a745; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
                 <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
                   📅 ${nota.createdAt.toLocaleString('it-IT')}
                 </div>
@@ -2792,7 +2793,7 @@ function mostraModaleSincronizzazione() {
   modalContent.innerHTML = `
     <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
     <h2 style="margin: 0 0 15px 0; color: #2f6b2f;">Sincronizzazione con Firestore</h2>
-    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
+    <div style="background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-medium); border-radius: 8px; padding: 15px; margin: 20px 0; text-align: left;">
       <div style="font-weight: bold; color: #856404; margin-bottom: 10px;">⚠️ Avviso Importante</div>
       <div style="color: #856404; font-size: 14px; line-height: 1.5;">
         • La sincronizzazione può durare <strong>diversi minuti</strong><br>
@@ -2880,7 +2881,7 @@ async function eseguiSincronizzazione() {
         <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
         <h3 style="margin: 0 0 15px 0; color: #2f6b2f;">Sincronizzazione in corso...</h3>
         <div style="color: #666; margin-bottom: 20px;">Caricamento dati da Firestore</div>
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0;">
+        <div style="background: var(--bg-secondary); color: var(--text-primary); border-radius: 8px; padding: 15px; margin: 15px 0;">
           <div style="font-size: 12px; color: #666;">Questo processo può richiedere alcuni minuti</div>
         </div>
         <button id="annullaSync" style="
@@ -3408,7 +3409,7 @@ async function mostraSegnalazione(strutturaId) {
       <button id="closeReportModal" style="background: none; border: none; font-size: 20px; cursor: pointer;">✕</button>
     </div>
     
-    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+    <div style="margin-bottom: 15px; padding: 10px; background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px;">
       <strong>Struttura:</strong> ${struttura.Struttura || 'Senza nome'}<br>
       <span style="color: #666;">📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}</span>
     </div>
@@ -4412,7 +4413,7 @@ function mostraSchedaUtente() {
     
     <div>
       <label style="display: block; margin-bottom: 5px; font-weight: 500;">Gruppo *</label>
-      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
+      <select id="userGruppo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Gruppo</option>
         <option value="TO1" ${userProfile?.gruppo === 'TO1' ? 'selected' : ''}>TO1</option>
         <option value="TO2" ${userProfile?.gruppo === 'TO2' ? 'selected' : ''}>TO2</option>
@@ -4426,7 +4427,7 @@ function mostraSchedaUtente() {
     
     <div>
       <label style="display: block; margin-bottom: 5px; font-weight: 500;">Ruolo *</label>
-      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
+      <select id="userRuolo" style="width: 100%; padding: 10px; border: 1px solid var(--border-medium); border-radius: 4px; font-size: 14px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Ruolo</option>
         <option value="Senior" ${userProfile?.ruolo === 'Senior' ? 'selected' : ''}>Senior</option>
         <option value="SiSB" ${userProfile?.ruolo === 'SiSB' ? 'selected' : ''}>SiSB</option>
@@ -4682,7 +4683,7 @@ function mostraSchermataLogin() {
       </div>
       
       <select id="registerGruppo" 
-              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
+              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 15px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Gruppo *</option>
         <option value="TO1">TO1</option>
         <option value="TO2">TO2</option>
@@ -4694,7 +4695,7 @@ function mostraSchermataLogin() {
       </select>
       
       <select id="registerRuolo" 
-              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; background: var(--bg-secondary); color: var(--text-primary);" required>
+              style="width: 100%; padding: 15px; border: 2px solid var(--border-medium); border-radius: 8px; font-size: 16px; margin-bottom: 20px; box-sizing: border-box; background: var(--bg-primary); color: var(--text-primary);" required>
         <option value="">Seleziona Ruolo *</option>
         <option value="Senior">Senior</option>
         <option value="SiSB">SiSB</option>
@@ -6570,8 +6571,9 @@ function mostraSchedaCompleta(strutturaId) {
               padding: 8px;
               border: 1px solid #ced4da;
               border-radius: 4px;
-              background: var(--bg-secondary);
+              background: var(--bg-primary);
               color: var(--text-primary);
+              border: 1px solid var(--border-medium);
             `;
             
             const options = [

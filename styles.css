@@ -2344,3 +2344,52 @@ input:checked + .toggle-slider:before {
   background: var(--primary-hover) !important;
   border-color: var(--primary-hover) !important;
 }
+
+/* === REGOLE SPECIFICHE PER INPUT E SELECT NEL TEMA SCURO === */
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-medium) !important;
+}
+
+[data-theme="dark"] input[type="text"]:focus,
+[data-theme="dark"] input[type="email"]:focus,
+[data-theme="dark"] input[type="password"]:focus,
+[data-theme="dark"] input[type="number"]:focus,
+[data-theme="dark"] input[type="search"]:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* Regole specifiche per i modali di ricerca avanzata */
+[data-theme="dark"] #ricercaAvanzataModal input,
+[data-theme="dark"] #ricercaAvanzataModal select,
+[data-theme="dark"] #ricercaAvanzataModal textarea {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-medium) !important;
+}
+
+[data-theme="dark"] #ricercaAvanzataModal input:focus,
+[data-theme="dark"] #ricercaAvanzataModal select:focus,
+[data-theme="dark"] #ricercaAvanzataModal textarea:focus {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}

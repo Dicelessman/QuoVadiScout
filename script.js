@@ -622,10 +622,16 @@ function mostraRicercaAvanzata() {
       { campo: 'Prov', tipo: 'text', placeholder: 'Sigla provincia (es. MI)' },
       { campo: 'Info', tipo: 'textarea', placeholder: 'Informazioni generali' }
     ],
-    'Prezzi e Offerte': [
-      { campo: '€ notte', tipo: 'text', placeholder: 'Prezzo per notte' },
+    'Costi €': [
+      { campo: 'A persona', tipo: 'text', placeholder: 'Costo a persona' },
+      { campo: 'A giornata', tipo: 'text', placeholder: 'Costo a giornata' },
+      { campo: 'A notte', tipo: 'text', placeholder: 'Prezzo per notte' },
       { campo: 'Offerta', tipo: 'text', placeholder: 'Basta fare una offerta' },
-      { campo: 'Forfait', tipo: 'text', placeholder: 'Chiedono un forfait' }
+      { campo: 'Forfait', tipo: 'text', placeholder: 'Chiedono un forfait' },
+      { campo: 'Riscaldamento', tipo: 'text', placeholder: 'Costo riscaldamento' },
+      { campo: 'Cucina', tipo: 'text', placeholder: 'Costo cucina' },
+      { campo: 'Altro', tipo: 'text', placeholder: 'Altri costi' },
+      { campo: 'Altre info', tipo: 'textarea', placeholder: 'Informazioni aggiuntive' }
     ],
     'Caratteristiche Struttura': [
       { campo: 'Terreno', tipo: 'checkbox', placeholder: 'Disponibile terreno' },
@@ -635,22 +641,27 @@ function mostraRicercaAvanzata() {
       { campo: 'Spazi', tipo: 'text', placeholder: 'Spazi disponibili per attività' },
       { campo: 'Fuochi', tipo: 'text', placeholder: 'Si possono fare fuochi' },
       { campo: 'Hike', tipo: 'text', placeholder: 'Hike disponibili nelle vicinanze' },
-      { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' }
+      { campo: 'Trasporti', tipo: 'text', placeholder: 'Come lo si può raggiungere' },
+      { campo: 'Altre info', tipo: 'textarea', placeholder: 'Altre informazioni' }
     ],
     'Adatto per': [
       { campo: 'Branco', tipo: 'checkbox', placeholder: 'Adatto per branco' },
       { campo: 'Reparto', tipo: 'checkbox', placeholder: 'Adatto per reparto' },
-      { campo: 'Compagnia', tipo: 'checkbox', placeholder: 'Adatto per compagnia' }
+      { campo: 'Compagnia', tipo: 'checkbox', placeholder: 'Adatto per compagnia' },
+      { campo: 'Gruppo', tipo: 'checkbox', placeholder: '50-100 persone' },
+      { campo: 'Sezione', tipo: 'checkbox', placeholder: '+100 persone' }
     ],
     'Contatti': [
       { campo: 'Referente', tipo: 'text', placeholder: 'Nome del referente' },
       { campo: 'Email', tipo: 'email', placeholder: 'Indirizzo email' },
       { campo: 'Sito', tipo: 'url', placeholder: 'Sito web o facebook' },
       { campo: 'Contatto', tipo: 'tel', placeholder: 'Numero di telefono principale' },
-      { campo: 'IIcontatto', tipo: 'tel', placeholder: 'Contatto secondario' }
+      { campo: 'IIcontatto', tipo: 'tel', placeholder: 'Contatto secondario' },
+      { campo: 'Altre info', tipo: 'textarea', placeholder: 'Altre informazioni di contatto' }
     ],
     'Gestione': [
       { campo: 'Ultimo controllo', tipo: 'date', placeholder: 'Data ultimo controllo' },
+      { campo: 'Da chi', tipo: 'text', placeholder: 'Chi ha controllato' },
             { campo: 'stato', tipo: 'select', placeholder: 'Stato struttura', options: [
         { value: '', label: 'Tutti gli stati' },
         { value: 'attiva', label: '🟢 Attiva' },
@@ -1699,7 +1710,7 @@ async function aggiungiStruttura() {
     Indirizzo: '',
     Prov: '',
     Info: '',
-    '€ notte': '',
+    'A notte': '',
     Offerta: '',
     Forfait: '',
     Terreno: false,
@@ -6809,15 +6820,15 @@ function mostraSchedaCompleta(strutturaId) {
       'Informazioni Principali': [
         'Struttura', 'Luogo', 'Indirizzo', 'Prov', 'Info'
       ],
-      'Prezzi e Offerte': [
-        '€ notte', 'Offerta', 'Forfait'
+      'Costi': [
+        'A persona', 'A giornata', '€ notte', 'Offerta', 'Forfait', 'Riscaldamento', 'Cucina', 'Altro'
       ],
       'Caratteristiche Struttura': [
         'Terreno', 'Casa', 'Letti', 'Cucina', 'Spazi', 'Fuochi',
         'Hike', 'Trasporti'
       ],
       'Adatto per': [
-        'Branco', 'Reparto', 'Compagnia'
+        'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'
       ],
       'Contatti': [
         'Referente', 'Email', 'Sito', 'Contatto', 'IIcontatto'
@@ -6872,7 +6883,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         if (isEditMode) {
           // Modalità modifica
-          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia'].includes(campo);
+          const isCheckboxField = ['Terreno', 'Casa', 'Branco', 'Reparto', 'Compagnia', 'Gruppo', 'Sezione'].includes(campo);
           const isGeoField = ['coordinate_lat', 'coordinate_lng'].includes(campo);
           const isUrlField = ['google_maps_link'].includes(campo);
           const isWebsiteField = campo === 'Sito';

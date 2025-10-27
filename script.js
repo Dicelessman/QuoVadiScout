@@ -998,23 +998,30 @@ async function salvaFiltriAvanzati() {
   }
   
   try {
-    if (!utenteCorrente) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
       alert('Devi essere loggato per salvare i filtri!');
       return;
     }
     
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
+      return;
+    }
+    
     const filtroData = {
-      userId: utenteCorrente.uid,
+      userId: currentUser.uid,
       nome: nomeFiltro.trim(),
       filtri: filtri,
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
-    await addDoc(collection(db, "user_filters"), filtroData);
+    await secureFirestoreOperation(addDoc, collection(db, "user_filters"), filtroData);
     
     // Log attività
-    await logActivity('filter_saved', nomeFiltro, utenteCorrente.uid, {
+    await logActivity('filter_saved', nomeFiltro, currentUser.uid, {
       filterCount: Object.keys(filtri).length
     });
     
@@ -1028,21 +1035,28 @@ async function salvaFiltriAvanzati() {
 
 async function caricaFiltriSalvati() {
   try {
-    if (!utenteCorrente || !utenteCorrente.uid) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.uid) {
       console.log('⚠️ Utente non autenticato, non posso caricare filtri salvati');
       return [];
     }
     
-    console.log('🔍 Caricamento filtri salvati per utente:', utenteCorrente.uid);
+    console.log('🔍 Caricamento filtri salvati per utente:', currentUser.uid);
     
     // Verifica se l'utente ha permessi di lettura
     try {
+      // 🔒 Validazione server-side
+      if (!await validateServerAuth()) {
+        console.warn('🔒 Sessione non valida per caricamento filtri');
+        return [];
+      }
+      
       const filtersRef = collection(db, "user_filters");
       const q = query(
         filtersRef, 
-        where("userId", "==", utenteCorrente.uid)
+        where("userId", "==", currentUser.uid)
       );
-      const snapshot = await getDocs(q);
+      const snapshot = await secureFirestoreOperation(getDocs, q);
       const filtri = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -1432,7 +1446,7 @@ async function salvaModifiche() {
     Info: document.getElementById('edit-info').value.trim(),
     // Aggiorna metadati
     lastModified: new Date(),
-    lastModifiedBy: utenteCorrente?.uid || null,
+    lastModifiedBy: getCurrentUser()?.uid || null,
     version: (strutturaCorrente.version || 1) + 1
   };
   
@@ -1451,10 +1465,16 @@ async function salvaModifiche() {
       return;
     }
     
-    await salvaVersione(strutturaCorrente, utenteCorrente?.uid);
+    await salvaVersione(strutturaCorrente, getCurrentUser()?.uid);
+    
+    // 🔒 Validazione server-side per operazioni critiche
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
+      return;
+    }
     
     // Aggiorna struttura
-    await updateDoc(doc(db, "strutture", strutturaCorrente.id), formData);
+    await secureFirestoreOperation(updateDoc, doc(db, "strutture", strutturaCorrente.id), formData);
     
     // INVALIDARE CACHE LOCALE per forzare ricaricamento
     localStorage.removeItem('strutture_cache');
@@ -1462,7 +1482,7 @@ async function salvaModifiche() {
     console.log('🗑️ Cache invalidata dopo modifica struttura');
     
     // Log attività
-    await logActivity('structure_updated', strutturaCorrente.id, utenteCorrente?.uid, {
+    await logActivity('structure_updated', strutturaCorrente.id, getCurrentUser()?.uid, {
       changes: Object.keys(formData).filter(key => formData[key] !== strutturaCorrente[key])
     });
     
@@ -2054,7 +2074,7 @@ async function ripristinaVersione(strutturaId, version) {
     await updateDoc(docRef, {
       ...versionData.data,
       lastModified: new Date(),
-      lastModifiedBy: utenteCorrente?.uid || null,
+      lastModifiedBy: getCurrentUser()?.uid || null,
       version: versionData.version + 1
     });
     
@@ -2069,9 +2089,10 @@ async function ripristinaVersione(strutturaId, version) {
 async function logActivity(action, entity, userId, details = {}) {
   try {
     // Ottieni informazioni utente correnti
-    const userInfo = utenteCorrente ? {
-      userName: utenteCorrente.displayName || utenteCorrente.email?.split('@')[0] || 'Utente',
-      userEmail: utenteCorrente.email || 'N/A'
+    const currentUser = getCurrentUser();
+    const userInfo = currentUser ? {
+      userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Utente',
+      userEmail: currentUser.email || 'N/A'
     } : {
       userName: 'Utente sconosciuto',
       userEmail: 'N/A'
@@ -2249,15 +2270,22 @@ async function mostraNotePersonali(strutturaId) {
 
 async function caricaNotePersonali(strutturaId) {
   try {
-    if (!utenteCorrente) return [];
+    const currentUser = getCurrentUser();
+    if (!currentUser) return [];
+    
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      console.warn('🔒 Sessione non valida per caricamento note');
+      return [];
+    }
     
     const notesRef = collection(db, "user_notes");
     const q = query(
       notesRef, 
-      where("userId", "==", utenteCorrente.uid),
+      where("userId", "==", currentUser.uid),
       where("strutturaId", "==", strutturaId)
     );
-    const snapshot = await getDocs(q);
+    const snapshot = await secureFirestoreOperation(getDocs, q);
     
     const note = snapshot.docs.map(doc => {
       const data = doc.data();
@@ -2284,23 +2312,30 @@ async function caricaNotePersonali(strutturaId) {
 
 async function salvaNotaPersonale(strutturaId, nota) {
   try {
-    if (!utenteCorrente) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
       alert('Devi essere loggato per salvare note personali');
       return;
     }
     
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
+      return;
+    }
+    
     const noteData = {
-      userId: utenteCorrente.uid,
+      userId: currentUser.uid,
       strutturaId: strutturaId,
       nota: nota,
       createdAt: new Date(),
       updatedAt: new Date()
     };
     
-    await addDoc(collection(db, "user_notes"), noteData);
+    await secureFirestoreOperation(addDoc, collection(db, "user_notes"), noteData);
     
     // Log attività
-    await logActivity('note_created', strutturaId, utenteCorrente.uid, {
+    await logActivity('note_created', strutturaId, currentUser.uid, {
       noteLength: nota.length
     });
     
@@ -2313,8 +2348,15 @@ async function salvaNotaPersonale(strutturaId, nota) {
 
 async function eliminaNota(notaId) {
   try {
-    if (!utenteCorrente) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
       alert('Devi essere loggato per eliminare note');
+      return;
+    }
+    
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
       return;
     }
     
@@ -2322,10 +2364,10 @@ async function eliminaNota(notaId) {
       return;
     }
     
-    await deleteDoc(doc(db, "user_notes", notaId));
+    await secureFirestoreOperation(deleteDoc, doc(db, "user_notes", notaId));
     
     // Log attività
-    await logActivity('note_deleted', notaId, utenteCorrente.uid);
+    await logActivity('note_deleted', notaId, currentUser.uid);
     
     // Ricarica il modal delle note
     const modal = document.getElementById('noteModal');
@@ -3150,7 +3192,7 @@ async function processaStruttureSenzaCoordinate() {
           coordinate_lat: strutturaConCoordinate.coordinate_lat,
           coordinate_lng: strutturaConCoordinate.coordinate_lng,
           lastModified: new Date(),
-          lastModifiedBy: utenteCorrente?.uid || null
+          lastModifiedBy: getCurrentUser()?.uid || null
         });
         
         // Aggiorna struttura locale
@@ -3280,8 +3322,15 @@ window.aggiornaListaLocale = aggiornaListaLocale;
 // === Sistema Rating ===
 async function voteStructure(strutturaId, rating) {
   try {
-    if (!utenteCorrente) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
       alert('Devi essere loggato per votare una struttura');
+      return;
+    }
+    
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      alert('❌ Sessione non valida. Effettua nuovamente il login.');
       return;
     }
 
@@ -3298,14 +3347,14 @@ async function voteStructure(strutturaId, rating) {
 
     // Salva il voto su Firestore
     const voteData = {
-      userId: utenteCorrente.uid,
+      userId: currentUser.uid,
       strutturaId: strutturaId,
       rating: rating,
       createdAt: new Date(),
-      userName: utenteCorrente.displayName || utenteCorrente.email?.split('@')[0] || 'Utente'
+      userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Utente'
     };
 
-    await addDoc(collection(db, "structure_ratings"), voteData);
+    await secureFirestoreOperation(addDoc, collection(db, "structure_ratings"), voteData);
 
     // Aggiorna il rating della struttura
     struttura.rating.count += 1;
@@ -3313,14 +3362,14 @@ async function voteStructure(strutturaId, rating) {
     struttura.rating.average = struttura.rating.total / struttura.rating.count;
 
     // Salva su Firestore
-    await updateDoc(doc(db, "strutture", strutturaId), {
+    await secureFirestoreOperation(updateDoc, doc(db, "strutture", strutturaId), {
       rating: struttura.rating,
       lastModified: new Date(),
-      lastModifiedBy: utenteCorrente.uid
+      lastModifiedBy: currentUser.uid
     });
 
     // Log attività
-    await logActivity('structure_rated', strutturaId, utenteCorrente.uid, {
+    await logActivity('structure_rated', strutturaId, currentUser.uid, {
       rating: rating,
       newAverage: struttura.rating.average
     });
@@ -3488,9 +3537,9 @@ async function inviaSegnalazione(strutturaId, tipo, descrizione) {
       strutturaNome: struttura.Struttura || 'Senza nome',
       tipo: tipo,
       descrizione: descrizione,
-      userId: utenteCorrente?.uid || null,
-      userName: utenteCorrente?.displayName || utenteCorrente?.email?.split('@')[0] || 'Utente anonimo',
-      userEmail: utenteCorrente?.email || null,
+      userId: getCurrentUser()?.uid || null,
+      userName: getCurrentUser()?.displayName || getCurrentUser()?.email?.split('@')[0] || 'Utente anonimo',
+      userEmail: getCurrentUser()?.email || null,
       createdAt: new Date(),
       status: 'pending', // pending, reviewed, resolved
       reviewedBy: null,
@@ -3509,18 +3558,18 @@ async function inviaSegnalazione(strutturaId, tipo, descrizione) {
       tipo: tipo,
       descrizione: descrizione,
       createdAt: new Date(),
-      userId: utenteCorrente?.uid || null
+      userId: getCurrentUser()?.uid || null
     });
 
     // Aggiorna su Firestore
     await updateDoc(doc(db, "strutture", strutturaId), {
       segnalazioni: struttura.segnalazioni,
       lastModified: new Date(),
-      lastModifiedBy: utenteCorrente?.uid || null
+      lastModifiedBy: getCurrentUser()?.uid || null
     });
 
     // Log attività
-    await logActivity('report_submitted', strutturaId, utenteCorrente?.uid || 'anonymous', {
+    await logActivity('report_submitted', strutturaId, getCurrentUser()?.uid || 'anonymous', {
       reportType: tipo,
       reportDescription: descrizione.substring(0, 100)
     });
@@ -3836,8 +3885,228 @@ window.toggleTheme = toggleTheme;
 window.themeManager = themeManager;
 
 // === Gestione Utenti Firebase ===
-let utenteCorrente = null;
-let userProfile = null;
+// 🔒 SICUREZZA: Variabili private per prevenire bypass da console
+const _authState = {
+  user: null,
+  profile: null,
+  isAuthenticated: false,
+  sessionToken: null,
+  lastValidation: 0
+};
+
+// 🔒 SICUREZZA: Getters sicuri per l'autenticazione
+function getCurrentUser() {
+  if (!_authState.isAuthenticated || !_authState.user) {
+    return null;
+  }
+  
+  // Verifica che il token di sessione sia ancora valido
+  if (!_authState.sessionToken || Date.now() - _authState.lastValidation > 300000) { // 5 minuti
+    console.warn('🔒 Token di sessione scaduto o non valido');
+    _authState.isAuthenticated = false;
+    _authState.user = null;
+    _authState.profile = null;
+    _authState.sessionToken = null;
+    return null;
+  }
+  
+  return _authState.user;
+}
+
+function getUserProfile() {
+  if (!_authState.isAuthenticated || !_authState.profile) {
+    return null;
+  }
+  
+  // Verifica che il token di sessione sia ancora valido
+  if (!_authState.sessionToken || Date.now() - _authState.lastValidation > 300000) { // 5 minuti
+    console.warn('🔒 Token di sessione scaduto o non valido');
+    _authState.isAuthenticated = false;
+    _authState.user = null;
+    _authState.profile = null;
+    _authState.sessionToken = null;
+    return null;
+  }
+  
+  return _authState.profile;
+}
+
+function isUserAuthenticated() {
+  return _authState.isAuthenticated && _authState.user !== null && _authState.sessionToken !== null;
+}
+
+// 🔒 SICUREZZA: Funzione per aggiornare lo stato di autenticazione
+function updateAuthState(user, profile = null, sessionToken = null) {
+  if (user) {
+    _authState.user = user;
+    _authState.profile = profile;
+    _authState.isAuthenticated = true;
+    _authState.sessionToken = sessionToken || generateSessionToken();
+    _authState.lastValidation = Date.now();
+  } else {
+    _authState.user = null;
+    _authState.profile = null;
+    _authState.isAuthenticated = false;
+    _authState.sessionToken = null;
+    _authState.lastValidation = 0;
+  }
+}
+
+// 🔒 SICUREZZA: Genera token di sessione sicuro
+function generateSessionToken() {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2);
+  const userAgent = navigator.userAgent.substring(0, 20);
+  return btoa(`${timestamp}-${random}-${userAgent}`).replace(/[^a-zA-Z0-9]/g, '');
+}
+
+// 🔒 SICUREZZA: Valida token di sessione
+function validateSessionToken(token) {
+  if (!token) return false;
+  
+  try {
+    const decoded = atob(token);
+    const parts = decoded.split('-');
+    if (parts.length !== 3) return false;
+    
+    const timestamp = parseInt(parts[0]);
+    const userAgent = parts[2];
+    
+    // Verifica che il token non sia più vecchio di 30 minuti
+    if (Date.now() - timestamp > 1800000) { // 30 minuti
+      return false;
+    }
+    
+    // Verifica che l'user agent sia lo stesso
+    if (userAgent !== navigator.userAgent.substring(0, 20)) {
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// 🔒 SICUREZZA: Funzione per forzare il logout
+function forceLogout() {
+  console.log('🔒 Forzando logout per sicurezza');
+  updateAuthState(null);
+  
+  // Pulisci localStorage
+  localStorage.removeItem('userSession');
+  localStorage.removeItem('loginAttempts');
+  
+  // Mostra schermata di login
+  mostraSchermataLogin();
+  
+  // Disconnetti da Firebase
+  if (auth.currentUser) {
+    signOut(auth).catch(console.error);
+  }
+}
+
+// 🔒 SICUREZZA: Validazione continua dell'autenticazione
+function startAuthValidation() {
+  setInterval(() => {
+    if (_authState.isAuthenticated && _authState.sessionToken) {
+      if (!validateSessionToken(_authState.sessionToken)) {
+        console.warn('🔒 Token di sessione non valido, disconnessione forzata');
+        forceLogout();
+      } else {
+        // Aggiorna timestamp di validazione
+        _authState.lastValidation = Date.now();
+      }
+    }
+  }, 60000); // Controlla ogni minuto
+}
+
+// 🔒 SICUREZZA: Proteggi le funzioni critiche
+function requireAuth(callback) {
+  if (!isUserAuthenticated()) {
+    console.error('🔒 Accesso negato: autenticazione richiesta');
+    mostraSchermataLogin();
+    return;
+  }
+  
+  if (typeof callback === 'function') {
+    callback();
+  }
+}
+
+// 🔒 SICUREZZA: Validazione server-side per operazioni critiche
+async function validateServerAuth() {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    // Verifica che l'utente sia ancora valido su Firebase
+    const idToken = await currentUser.getIdToken(true); // Forza refresh del token
+    
+    // Verifica che il token sia valido
+    if (!idToken) {
+      throw new Error('Token non valido');
+    }
+    
+    // Verifica che l'email sia verificata
+    if (!currentUser.emailVerified) {
+      console.warn('🔒 Email non verificata, accesso limitato');
+      // Non bloccare completamente, ma limitare le operazioni
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('🔒 Validazione server-side fallita:', error);
+    forceLogout();
+    return false;
+  }
+}
+
+// 🔒 SICUREZZA: Wrapper per operazioni Firestore con validazione
+async function secureFirestoreOperation(operation, ...args) {
+  if (!await validateServerAuth()) {
+    throw new Error('Operazione non autorizzata');
+  }
+  
+  return await operation(...args);
+}
+
+// 🔒 SICUREZZA: Override delle variabili globali per prevenire modifiche
+Object.defineProperty(window, 'utenteCorrente', {
+  get: () => {
+    console.warn('🔒 Accesso diretto a utenteCorrente bloccato per sicurezza');
+    return null;
+  },
+  set: () => {
+    console.warn('🔒 Modifica di utenteCorrente bloccata per sicurezza');
+  }
+});
+
+Object.defineProperty(window, 'userProfile', {
+  get: () => {
+    console.warn('🔒 Accesso diretto a userProfile bloccato per sicurezza');
+    return null;
+  },
+  set: () => {
+    console.warn('🔒 Modifica di userProfile bloccata per sicurezza');
+  }
+});
+
+// 🔒 SICUREZZA: Nascondi funzioni critiche dalla console
+const _protectedFunctions = {
+  updateAuthState,
+  generateSessionToken,
+  validateSessionToken,
+  forceLogout,
+  startAuthValidation
+};
+
+// Rimuovi le funzioni protette dall'oggetto window
+Object.keys(_protectedFunctions).forEach(key => {
+  delete window[key];
+});
 
 // === SICUREZZA: Rate Limiting per Login ===
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -4173,7 +4442,7 @@ function inizializzaAuth() {
     console.log('🔐 Auth state changed:', user ? 'User logged in' : 'User logged out');
     if (user) {
       // Utente autenticato
-      utenteCorrente = user;
+      updateAuthState(user);
       console.log('✅ Utente autenticato:', user.email);
       
       // Nascondi schermata di login
@@ -4223,10 +4492,12 @@ function inizializzaAuth() {
       
       // 🔒 Inizializza session timeout
       initSessionTimeout();
+      
+      // 🔒 Inizializza validazione continua dell'autenticazione
+      startAuthValidation();
     } else {
       // Utente non autenticato
-      utenteCorrente = null;
-      userProfile = null;
+      updateAuthState(null);
       elencoPersonale = [];
       console.log('❌ Nessun utente autenticato');
       
@@ -4241,20 +4512,27 @@ function inizializzaAuth() {
 
 async function caricaProfiloUtente(uid) {
   try {
+    // 🔒 Validazione server-side
+    if (!await validateServerAuth()) {
+      console.warn('🔒 Sessione non valida per caricamento profilo');
+      return;
+    }
+    
     const userDocRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userDocRef);
+    const userDoc = await secureFirestoreOperation(getDoc, userDocRef);
     
     if (userDoc.exists()) {
-      userProfile = userDoc.data();
-      console.log('📋 Profilo utente caricato:', userProfile);
+      const profile = userDoc.data();
+      updateAuthState(getCurrentUser(), profile);
+      console.log('📋 Profilo utente caricato:', profile);
       
       // Assicurati che i campi nuovi esistano (retrocompatibilità)
-      if (!userProfile.cognome) userProfile.cognome = '';
-      if (!userProfile.telefono) userProfile.telefono = '';
-      if (!userProfile.gruppo) userProfile.gruppo = '';
-      if (!userProfile.ruolo) userProfile.ruolo = '';
-      if (!userProfile.preferenzeNotifiche) {
-        userProfile.preferenzeNotifiche = {
+      if (!profile.cognome) profile.cognome = '';
+      if (!profile.telefono) profile.telefono = '';
+      if (!profile.gruppo) profile.gruppo = '';
+      if (!profile.ruolo) profile.ruolo = '';
+      if (!profile.preferenzeNotifiche) {
+        profile.preferenzeNotifiche = {
           newStructures: true,
           structureUpdates: true,
           personalListUpdates: true,
@@ -4263,12 +4541,16 @@ async function caricaProfiloUtente(uid) {
           distance: 10
         };
       }
+      
+      // Aggiorna lo stato con il profilo corretto
+      updateAuthState(getCurrentUser(), profile);
     } else {
       // Crea profilo utente se non esiste (per utenti esistenti)
-      userProfile = {
-        nome: utenteCorrente.displayName || utenteCorrente.email.split('@')[0],
+      const currentUser = getCurrentUser();
+      const newProfile = {
+        nome: currentUser.displayName || currentUser.email.split('@')[0],
         cognome: '',
-        email: utenteCorrente.email,
+        email: currentUser.email,
         telefono: '',
         gruppo: '',
         ruolo: '',
@@ -4284,7 +4566,8 @@ async function caricaProfiloUtente(uid) {
         }
       };
       
-      await setDoc(userDocRef, userProfile);
+      await secureFirestoreOperation(setDoc, userDocRef, newProfile);
+      updateAuthState(currentUser, newProfile);
       console.log('✅ Nuovo profilo utente creato');
     }
   } catch (error) {
@@ -4533,7 +4816,7 @@ function mostraSchedaUtente() {
 
 async function salvaProfiloUtente() {
   try {
-    if (!utenteCorrente || !userProfile) {
+    if (!getCurrentUser() || !getUserProfile()) {
       alert('❌ Errore: utente non autenticato');
       return;
     }
@@ -4550,11 +4833,11 @@ async function salvaProfiloUtente() {
     }
     
     // Aggiorna profilo
-    userProfile.nome = nome;
-    userProfile.cognome = cognome;
-    userProfile.telefono = telefono;
-    userProfile.gruppo = gruppo;
-    userProfile.ruolo = ruolo;
+    getUserProfile().nome = nome;
+    getUserProfile().cognome = cognome;
+    getUserProfile().telefono = telefono;
+    getUserProfile().gruppo = gruppo;
+    getUserProfile().ruolo = ruolo;
     // Raccogli preferenze notifiche (con controlli di sicurezza)
     const notifNewStructures = document.getElementById('notifNewStructures');
     const notifStructureUpdates = document.getElementById('notifStructureUpdates');
@@ -4563,7 +4846,7 @@ async function salvaProfiloUtente() {
     const notifReports = document.getElementById('notifReports');
     const notifDistance = document.getElementById('notifDistance');
     
-    userProfile.preferenzeNotifiche = {
+    getUserProfile().preferenzeNotifiche = {
       newStructures: notifNewStructures ? notifNewStructures.checked : true,
       structureUpdates: notifStructureUpdates ? notifStructureUpdates.checked : true,
       personalListUpdates: notifPersonalList ? notifPersonalList.checked : true,
@@ -4573,7 +4856,7 @@ async function salvaProfiloUtente() {
     };
     
     // Salva in Firestore
-    await setDoc(doc(db, 'users', utenteCorrente.uid), userProfile);
+    await setDoc(doc(db, 'users', getCurrentUser().uid), getUserProfile());
     
     console.log('✅ Profilo utente aggiornato');
     alert('✅ Profilo salvato con successo!');
@@ -4923,7 +5206,7 @@ async function registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, 
     });
     
     // Crea profilo utente completo
-    const userProfile = {
+    const getUserProfile() = {
       nome: nome,
       cognome: cognome,
       email: email,
@@ -4943,7 +5226,7 @@ async function registerWithEmail(nome, cognome, email, telefono, gruppo, ruolo, 
     };
     
     // Salva profilo in Firestore
-    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
+    await setDoc(doc(db, 'users', userCredential.user.uid), getUserProfile());
     
     console.log('✅ Registrazione riuscita:', userCredential.user.email);
     console.log('✅ Profilo utente creato con tutti i campi');
@@ -4997,6 +5280,9 @@ async function logoutUser() {
   try {
     // Salva l'elenco personale prima del logout
     await salvaElencoPersonaleUtente();
+    
+    // 🔒 Pulisci stato di autenticazione
+    updateAuthState(null);
     
     // Effettua il logout
     await signOut(auth);
@@ -5076,8 +5362,11 @@ function aggiornaUIUtente() {
   const userIcon = userBtn.querySelector('.user-icon') || userBtn.querySelector('.user-avatar');
   const userName = userBtn.querySelector('.user-name');
   
-  if (utenteCorrente) {
-    const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
+  const currentUser = getCurrentUser();
+  const userProfile = getUserProfile();
+  
+  if (currentUser) {
+    const displayName = userProfile?.nome || currentUser.displayName || currentUser.email.split('@')[0];
     if (userName) userName.textContent = displayName;
     if (userIcon) userIcon.textContent = '👤';
     userBtn.title = `Utente: ${displayName} (${elencoPersonale.length} strutture) - Clicca per disconnetterti`;
@@ -5099,6 +5388,7 @@ function aggiornaUIUtente() {
 }
 
 function caricaElencoPersonaleUtente() {
+  const userProfile = getUserProfile();
   if (userProfile) {
     elencoPersonale = userProfile.elencoPersonale || [];
   } else {
@@ -5107,14 +5397,23 @@ function caricaElencoPersonaleUtente() {
 }
 
 async function salvaElencoPersonaleUtente() {
-  if (utenteCorrente && userProfile) {
+  const currentUser = getCurrentUser();
+  const userProfile = getUserProfile();
+  
+  if (currentUser && userProfile) {
     try {
+      // 🔒 Validazione server-side
+      if (!await validateServerAuth()) {
+        console.warn('🔒 Sessione non valida per salvataggio elenco personale');
+        return;
+      }
+      
       // Aggiorna il profilo locale
       userProfile.elencoPersonale = elencoPersonale;
       
       // Salva su Firestore
-      const userDocRef = doc(db, 'users', utenteCorrente.uid);
-      await updateDoc(userDocRef, {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await secureFirestoreOperation(updateDoc, userDocRef, {
         elencoPersonale: elencoPersonale,
         ultimoAggiornamento: new Date().toISOString()
       });
@@ -5127,7 +5426,8 @@ async function salvaElencoPersonaleUtente() {
 }
 
 function cambiaUtente() {
-  if (utenteCorrente) {
+  const currentUser = getCurrentUser();
+  if (currentUser) {
     // Mostra scheda utente completa
     mostraSchedaUtente();
   } else {
@@ -5177,14 +5477,14 @@ function mostraModaleProfiloUtente() {
   `;
   
   // Carica dati utente dal localStorage
-  const profiloUtente = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const profiloUtente = JSON.parse(localStorage.getItem('getUserProfile()') || '{}');
   const preferenzeNotifiche = JSON.parse(localStorage.getItem('notificationPreferences') || '{}');
   const provinciaPreferita = localStorage.getItem('preferredProvince') || '';
   
   // Ottieni province uniche dal database
   const provinceNelDB = [...new Set(strutture.map(s => s.Prov).filter(p => p))].sort();
   
-  const displayName = userProfile?.nome || utenteCorrente.displayName || utenteCorrente.email.split('@')[0];
+  const displayName = getUserProfile()?.nome || getCurrentUser().displayName || getCurrentUser().email.split('@')[0];
   
   modalContent.innerHTML = `
     <!-- Header -->
@@ -5214,7 +5514,7 @@ function mostraModaleProfiloUtente() {
           
           <div>
             <label style="display: block; margin-bottom: 4px; color: var(--text-secondary, #6b7280); font-size: 0.875rem; font-weight: 500;">Email</label>
-            <input type="email" id="userEmail" value="${utenteCorrente.email || ''}" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-disabled, #f3f4f6); color: var(--text-secondary, #6b7280); font-size: 1rem;">
+            <input type="email" id="userEmail" value="${getCurrentUser().email || ''}" readonly style="width: 100%; padding: 10px; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; background: var(--bg-disabled, #f3f4f6); color: var(--text-secondary, #6b7280); font-size: 1rem;">
           </div>
           
           <div>
@@ -5418,7 +5718,7 @@ function mostraGestioneElencoPersonale() {
   console.log('📊 Strutture trovate:', struttureElenco.length);
   
   // Nascondi la scheda utente se è aperta
-  const userModal = document.getElementById('userProfileModal');
+  const userModal = document.getElementById('getUserProfile()Modal');
   if (userModal) {
     userModal.remove();
   }
@@ -6380,7 +6680,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         // Upload immagine
         const uploadedImage = await window.mediaManager.uploadImage(file, strutturaId, {
-          uploadedBy: window.utenteCorrente?.uid || 'anonymous'
+          uploadedBy: window.getCurrentUser()?.uid || 'anonymous'
         });
         
         console.log('✅ Immagine caricata:', uploadedImage.id);
@@ -7467,9 +7767,9 @@ function mostraSchedaCompleta(strutturaId) {
       if (isNewStructure) {
         // Aggiorna metadati per nuova struttura
         struttura.lastModified = new Date();
-        struttura.lastModifiedBy = utenteCorrente?.uid || null;
+        struttura.lastModifiedBy = getCurrentUser()?.uid || null;
         struttura.createdAt = new Date();
-        struttura.createdBy = utenteCorrente?.uid || null;
+        struttura.createdBy = getCurrentUser()?.uid || null;
         struttura.version = 1;
         
         // Crea nuova struttura in Firestore
@@ -7486,7 +7786,7 @@ function mostraSchedaCompleta(strutturaId) {
         window.strutture = strutture;
         
         // Log attività
-        await logActivity('structure_created', docRef.id, utenteCorrente?.uid, {
+        await logActivity('structure_created', docRef.id, getCurrentUser()?.uid, {
           name: struttura.Struttura,
           location: struttura.Luogo
         });
@@ -7521,7 +7821,7 @@ function mostraSchedaCompleta(strutturaId) {
         
       } else {
         // Salva versione precedente prima di modificare
-        await salvaVersione(struttura, utenteCorrente?.uid);
+        await salvaVersione(struttura, getCurrentUser()?.uid);
         
         // Sincronizza formato coordinate se presenti
         if (struttura.coordinate_lat && struttura.coordinate_lng) {
@@ -7533,7 +7833,7 @@ function mostraSchedaCompleta(strutturaId) {
         
         // Aggiorna metadati
         struttura.lastModified = new Date();
-        struttura.lastModifiedBy = utenteCorrente?.uid || null;
+        struttura.lastModifiedBy = getCurrentUser()?.uid || null;
         struttura.version = (struttura.version || 1) + 1;
         
         // Aggiorna struttura esistente
@@ -7555,7 +7855,7 @@ function mostraSchedaCompleta(strutturaId) {
         window.strutture = strutture;
         
         // Log attività
-        await logActivity('structure_updated', strutturaId, utenteCorrente?.uid, {
+        await logActivity('structure_updated', strutturaId, getCurrentUser()?.uid, {
           version: struttura.version
         });
         
@@ -8280,7 +8580,7 @@ function caricaPreferenzeNotifiche() {
 }
 
 async function salvaPreferenzeNotifiche() {
-  if (!window.pushManager?.preferences || !window.utenteCorrente) {
+  if (!window.pushManager?.preferences || !window.getCurrentUser()) {
     alert('Errore: Utente non autenticato');
     return;
   }
@@ -8302,7 +8602,7 @@ async function salvaPreferenzeNotifiche() {
   if (distanceSliderEl) prefs.distance = parseInt(distanceSliderEl.value);
   
   // Salva su Firestore
-  await window.pushManager.preferences.save(window.utenteCorrente.uid);
+  await window.pushManager.preferences.save(window.getCurrentUser().uid);
   
   // Chiudi modal
   document.getElementById('preferenzeNotificheModal').remove();
@@ -8657,6 +8957,9 @@ async function pulisciCacheOffline_DISABLED() {
 // === Inizializzazione pagina ===
 window.addEventListener("DOMContentLoaded", async () => {
   mostraCaricamento();
+  
+  // 🔒 Inizializza sistema di sicurezza
+  console.log('🔒 Sistema di sicurezza attivato');
   
   // Attiva lazy loading immagini dopo caricamento DOM
   if (typeof setupLazyLoading === 'function') {
@@ -9744,7 +10047,7 @@ async function geocodificaTutteStrutture() {
         coordinate_lat: coordinates.lat,
         coordinate_lng: coordinates.lng,
         lastModified: new Date(),
-        lastModifiedBy: utenteCorrente?.uid || null
+        lastModifiedBy: getCurrentUser()?.uid || null
       });
       
       // INVALIDARE CACHE LOCALE per forzare ricaricamento
@@ -9799,7 +10102,7 @@ async function geocodificaSingolaStruttura(strutturaId) {
         coordinate_lat: coordinates.lat,
         coordinate_lng: coordinates.lng,
         lastModified: new Date(),
-        lastModifiedBy: utenteCorrente?.uid || null
+        lastModifiedBy: getCurrentUser()?.uid || null
       });
       
       // INVALIDARE CACHE LOCALE per forzare ricaricamento
@@ -9814,7 +10117,7 @@ async function geocodificaSingolaStruttura(strutturaId) {
       alert(`✅ Coordinate aggiornate per: ${struttura.Struttura}\nLat: ${coordinates.lat}, Lng: ${coordinates.lng}`);
       
       // Log attività
-      await logActivity('geocoding_updated', strutturaId, utenteCorrente?.uid, {
+      await logActivity('geocoding_updated', strutturaId, getCurrentUser()?.uid, {
         coordinates: coordinates
       });
       

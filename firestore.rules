@@ -20,27 +20,37 @@ service cloud.firestore {
 
     // ============================================
     // COLLEZIONE: users
-    // Solo il proprio profilo
+    // Solo il proprio profilo con validazioni rigorose
     // ============================================
     match /users/{userId} {
       // Lettura: Solo il proprio profilo
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && 
+                    request.auth.uid == userId &&
+                    request.auth.token.email_verified == true;
 
-      // Scrittura: Solo il proprio profilo
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Scrittura: Solo il proprio profilo con validazioni
+      allow write: if request.auth != null && 
+                     request.auth.uid == userId &&
+                     request.auth.token.email_verified == true &&
+                     // Verifica che i dati siano coerenti
+                     (request.resource.data.email == request.auth.token.email) &&
+                     // Verifica che non ci siano tentativi di modifica di campi critici
+                     (request.resource.data.uid == request.auth.uid);
     }
 
     // ============================================
     // COLLEZIONE: userLists (elenchi personali)
-    // Solo il proprietario
+    // Solo il proprietario con validazioni rigorose
     // ============================================
     match /userLists/{listId} {
       // Lettura: Solo il proprietario
       allow read: if request.auth != null &&
+                    request.auth.token.email_verified == true &&
                     resource.data.userId == request.auth.uid;
 
       // Scrittura: Solo il proprietario
       allow write: if request.auth != null &&
+                     request.auth.token.email_verified == true &&
                      request.resource.data.userId == request.auth.uid;
     }
 

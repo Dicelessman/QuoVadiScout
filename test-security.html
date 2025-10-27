@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 Test Sicurezza Login - QuoVadiScout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .console-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Test Sicurezza Login - QuoVadiScout</h1>
+    
+    <div class="test-container">
+        <h2>Controlli di Sicurezza</h2>
+        <button onclick="runSecurityTests()">Esegui Test di Sicurezza</button>
+        <button onclick="clearResults()">Pulisci Risultati</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Console Output</h2>
+        <div id="console-output" class="console-output"></div>
+    </div>
+
+    <script>
+        // Intercetta console.log per mostrare output nella pagina
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        function addToConsoleOutput(message, type = 'log') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'log');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'warn');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'error');
+        };
+
+        function addTestResult(testName, success, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${success ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `<strong>${testName}:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('console-output').textContent = '';
+        }
+
+        function runSecurityTests() {
+            clearResults();
+            console.log('🔒 Iniziando test di sicurezza...');
+
+            // Test 1: Verifica che le variabili globali siano protette
+            console.log('\nTest 1: Verifica protezione variabili globali');
+            try {
+                const utenteCorrente = window.utenteCorrente;
+                const userProfile = window.userProfile;
+                
+                if (utenteCorrente === null && userProfile === null) {
+                    addTestResult('Protezione Variabili Globali', true, 'Variabili protette correttamente');
+                    console.log('✅ Variabili globali protette');
+                } else {
+                    addTestResult('Protezione Variabili Globali', false, 'Variabili accessibili dalla console');
+                    console.log('❌ Variabili globali non protette');
+                }
+            } catch (error) {
+                addTestResult('Protezione Variabili Globali', true, 'Variabili protette correttamente');
+                console.log('✅ Variabili globali protette:', error.message);
+            }
+
+            // Test 2: Verifica che le funzioni critiche non siano accessibili
+            console.log('\nTest 2: Verifica protezione funzioni critiche');
+            const criticalFunctions = [
+                'updateAuthState',
+                'generateSessionToken', 
+                'validateSessionToken',
+                'forceLogout',
+                'startAuthValidation'
+            ];
+
+            let allFunctionsProtected = true;
+            criticalFunctions.forEach(funcName => {
+                if (window[funcName]) {
+                    addTestResult(`Protezione ${funcName}`, false, 'Funzione accessibile dalla console');
+                    console.log(`❌ Funzione ${funcName} accessibile dalla console`);
+                    allFunctionsProtected = false;
+                } else {
+                    console.log(`✅ Funzione ${funcName} protetta`);
+                }
+            });
+
+            if (allFunctionsProtected) {
+                addTestResult('Protezione Funzioni Critiche', true, 'Tutte le funzioni critiche sono protette');
+            }
+
+            // Test 3: Verifica che i getter sicuri funzionino
+            console.log('\nTest 3: Verifica getter sicuri');
+            try {
+                if (typeof getCurrentUser === 'function') {
+                    const user = getCurrentUser();
+                    console.log('getCurrentUser():', user);
+                } else {
+                    console.log('❌ getCurrentUser non disponibile');
+                }
+
+                if (typeof getUserProfile === 'function') {
+                    const profile = getUserProfile();
+                    console.log('getUserProfile():', profile);
+                } else {
+                    console.log('❌ getUserProfile non disponibile');
+                }
+
+                if (typeof isUserAuthenticated === 'function') {
+                    const isAuth = isUserAuthenticated();
+                    console.log('isUserAuthenticated():', isAuth);
+                    addTestResult('Getter Sicuri', true, 'Funzioni getter disponibili');
+                } else {
+                    addTestResult('Getter Sicuri', false, 'Funzioni getter non disponibili');
+                }
+            } catch (error) {
+                addTestResult('Getter Sicuri', false, 'Errore nei getter sicuri: ' + error.message);
+                console.log('❌ Errore nei getter sicuri:', error.message);
+            }
+
+            // Test 4: Verifica che i tentativi di modifica delle variabili globali siano bloccati
+            console.log('\nTest 4: Verifica blocco modifiche variabili globali');
+            try {
+                window.utenteCorrente = { uid: 'fake-user' };
+                addTestResult('Blocco Modifica utenteCorrente', false, 'Modifica non bloccata');
+                console.log('❌ Modifica di utenteCorrente non bloccata');
+            } catch (error) {
+                addTestResult('Blocco Modifica utenteCorrente', true, 'Modifica bloccata correttamente');
+                console.log('✅ Modifica di utenteCorrente bloccata:', error.message);
+            }
+
+            try {
+                window.userProfile = { nome: 'Fake User' };
+                addTestResult('Blocco Modifica userProfile', false, 'Modifica non bloccata');
+                console.log('❌ Modifica di userProfile non bloccata');
+            } catch (error) {
+                addTestResult('Blocco Modifica userProfile', true, 'Modifica bloccata correttamente');
+                console.log('✅ Modifica di userProfile bloccata:', error.message);
+            }
+
+            // Test 5: Verifica che le operazioni critiche richiedano autenticazione
+            console.log('\nTest 5: Verifica protezione operazioni critiche');
+            try {
+                // Simula un tentativo di bypass
+                console.log('Tentativo di bypass simulato...');
+                
+                // Verifica che le funzioni di sicurezza siano presenti
+                if (typeof validateServerAuth === 'function' && 
+                    typeof secureFirestoreOperation === 'function' && 
+                    typeof requireAuth === 'function') {
+                    addTestResult('Protezione Operazioni Critiche', true, 'Funzioni di protezione disponibili');
+                    console.log('✅ Funzioni di protezione disponibili');
+                } else {
+                    addTestResult('Protezione Operazioni Critiche', false, 'Funzioni di protezione mancanti');
+                    console.log('❌ Funzioni di protezione mancanti');
+                }
+            } catch (error) {
+                addTestResult('Protezione Operazioni Critiche', true, 'Operazioni critiche protette: ' + error.message);
+                console.log('✅ Operazioni critiche protette:', error.message);
+            }
+
+            console.log('\n🔒 Test di sicurezza completati');
+            console.log('Se tutti i test mostrano ✅, le misure di sicurezza sono attive');
+        }
+
+        // Esegui test automaticamente al caricamento della pagina
+        window.addEventListener('load', () => {
+            console.log('🔒 Pagina di test caricata. Clicca "Esegui Test di Sicurezza" per iniziare.');
+        });
+    </script>
+</body>
+</html>

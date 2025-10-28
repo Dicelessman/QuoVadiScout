@@ -4063,6 +4063,9 @@ function getCurrentUser() {
   return _authState.user;
 }
 
+// Esponi globalmente per uso in altri moduli
+window.getCurrentUser = getCurrentUser;
+
 function getUserProfile() {
   if (!_authState.isAuthenticated || !_authState.profile) {
     return null;

@@ -258,6 +258,9 @@ function renderStrutture(lista) {
     resultsCount.textContent = `${lista.length} strutture`;
   }
   
+  // Aggiorna mappa principale con le strutture filtrate
+  updateMainMap(lista);
+  
   if (container) {
   container.innerHTML = "";
   }
@@ -2643,6 +2646,88 @@ function createResponsiveModal(id, title, content) {
 }
 
 // === Gestione Mappe ===
+
+// Variabile globale per la mappa principale
+let mainMapInstance = null;
+
+// Inizializza la mappa principale nella schermata
+async function initializeMainMap() {
+  try {
+    const mapContainer = document.getElementById('mainMap');
+    if (!mapContainer) {
+      console.warn('⚠️ Container mappa principale non trovato');
+      return;
+    }
+
+    // Inizializza il MapsManager se non esiste
+    if (!window.mapsManager) {
+      window.mapsManager = new MapsManager();
+    }
+
+    // Inizializza la mappa nel container principale
+    await window.mapsManager.initialize('mainMap');
+    mainMapInstance = window.mapsManager;
+    
+    console.log('✅ Mappa principale inizializzata');
+
+    // Mostra le strutture sulla mappa se disponibili
+    if (strutture && strutture.length > 0) {
+      updateMainMap(strutture);
+    }
+
+  } catch (error) {
+    console.error('❌ Errore inizializzazione mappa principale:', error);
+  }
+}
+
+// Aggiorna la mappa principale con le strutture filtrate
+function updateMainMap(struttureList) {
+  try {
+    if (!mainMapInstance || !mainMapInstance.map) {
+      console.warn('⚠️ Mappa principale non inizializzata');
+      return;
+    }
+
+    // Mostra le strutture sulla mappa
+    if (window.showStructuresOnMap && typeof window.showStructuresOnMap === 'function') {
+      window.showStructuresOnMap(struttureList);
+      console.log(`✅ Mappa principale aggiornata con ${struttureList.length} strutture`);
+    }
+  } catch (error) {
+    console.error('❌ Errore aggiornamento mappa principale:', error);
+  }
+}
+
+// Gestione pulsanti mappa principale
+function setupMainMapControls() {
+  // Pulsante centro su di me
+  const centerMapBtn = document.getElementById('centerMapBtn');
+  if (centerMapBtn) {
+    centerMapBtn.addEventListener('click', async () => {
+      try {
+        if (window.centerMapOnUser && typeof window.centerMapOnUser === 'function') {
+          await window.centerMapOnUser();
+        }
+      } catch (error) {
+        alert('Impossibile ottenere la tua posizione');
+      }
+    });
+  }
+
+  // Pulsante mostra/nascondi mappa
+  const toggleMapBtn = document.getElementById('toggleMapBtn');
+  if (toggleMapBtn) {
+    toggleMapBtn.addEventListener('click', () => {
+      const mapContainer = document.getElementById('mainMapContainer');
+      if (mapContainer) {
+        mapContainer.classList.toggle('collapsed');
+        // Cambia icona
+        toggleMapBtn.textContent = mapContainer.classList.contains('collapsed') ? '👁️' : '🙈';
+      }
+    });
+  }
+}
+
 async function mostraMappa() {
   // Chiudi il menu automaticamente
   closeMenu();
@@ -4519,6 +4604,9 @@ function inizializzaAuth() {
         }
         aggiornaContatoreElenco();
         console.log('✅ Strutture caricate e visualizzate');
+        
+        // Inizializza mappa principale dopo caricamento strutture
+        await initializeMainMap();
       } catch (error) {
         console.error('❌ Errore nel caricamento strutture:', error);
       }
@@ -9157,6 +9245,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Inizializza UI event listeners
   initializeNewUI();
   initializeUIEventListeners();
+  
+  // Inizializza controlli mappa principale
+  setupMainMapControls();
   
   // Inizializza sistema autenticazione Firebase
   inizializzaAuth();

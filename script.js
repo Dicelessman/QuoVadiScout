@@ -8180,15 +8180,16 @@ async function mostraSchedaCompleta(strutturaId) {
     }
   }
   
-  // Inizializza contenuto
-  await creaGalleriaImmagini();
-  creaContenutoScheda();
-  
+  // Costruisci DOM prima di caricare contenuto asincrono
   modalContent.appendChild(header);
   modalContent.appendChild(galleryContainer);
   modalContent.appendChild(content);
   modalScheda.appendChild(modalContent);
   document.body.appendChild(modalScheda);
+  
+  // Ora che il modal è nel DOM, carica il contenuto
+  creaContenutoScheda();
+  await creaGalleriaImmagini();
   
   // Chiudi modal cliccando fuori
   modalScheda.addEventListener('click', (e) => {

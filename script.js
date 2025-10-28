@@ -6911,6 +6911,9 @@ function mostraSchedaCompleta(strutturaId) {
     }
   }
   
+  // Esponi funzione globalmente per uso inline
+  window.eliminaImmagine = eliminaImmagine;
+  
   // Funzione per aprire lightbox
   function apriLightbox(imageId) {
     // Implementazione lightbox semplificata
@@ -6954,6 +6957,9 @@ function mostraSchedaCompleta(strutturaId) {
     lightbox.focus();
     lightbox.tabIndex = -1;
   }
+  
+  // Esponi funzione globalmente per uso inline
+  window.apriLightbox = apriLightbox;
   
   // Funzione per creare il contenuto
   function creaContenutoScheda() {

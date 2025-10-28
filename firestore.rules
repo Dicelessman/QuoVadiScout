@@ -83,10 +83,10 @@ service cloud.firestore {
     }
 
     // ============================================
-    // COLLEZIONE: structureVersions (versioni strutture)
+    // COLLEZIONE: structure_versions (versioni strutture)
     // Solo utenti autenticati possono leggere
     // ============================================
-    match /structureVersions/{versionId} {
+    match /structure_versions/{versionId} {
       // Solo utenti autenticati possono leggere
       allow read: if request.auth != null;
 

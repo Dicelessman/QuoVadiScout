@@ -34,6 +34,14 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+  listAll
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 // === Configurazione Firebase ===
 // 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
@@ -109,8 +117,17 @@ const firebaseConfig = FirebaseConfig;
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 const colRef = collection(db, "strutture");
+
+// Esponi Storage globalmente per media-manager.js
+window.firebaseStorage = storage;
+window.firebaseStorageRef = ref;
+window.firebaseUploadBytes = uploadBytesResumable;
+window.firebaseGetDownloadURL = getDownloadURL;
+window.firebaseDeleteObject = deleteObject;
+window.firebaseListAll = listAll;
 
 // === Caricamento dati da Firestore ===
 async function caricaStrutture() {

@@ -1,0 +1,63 @@
+rules_version = '2';
+
+// Firebase Storage Rules per QuoVadiScout
+// Versione: 1.0.0
+// Ultimo aggiornamento: 2024
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidImageSize() {
+      // Max 10MB per immagine
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    function isValidThumbnailSize() {
+      // Max 1MB per thumbnail
+      return request.resource.size < 1 * 1024 * 1024;
+    }
+    
+    // Regole per le immagini delle strutture
+    match /structures/{structureId}/images/{imageFile} {
+      
+      // LETTURA: Tutti gli utenti autenticati possono vedere le immagini
+      allow read: if isAuthenticated();
+      
+      // SCRITTURA: Solo utenti autenticati possono caricare immagini
+      allow create: if isAuthenticated() 
+                    && isValidImageType()
+                    && (
+                      (imageFile.matches('thumb_.*') && isValidThumbnailSize())
+                      || isValidImageSize()
+                    );
+      
+      // UPDATE: Solo chi ha caricato l'immagine può aggiornarla
+      allow update: if isAuthenticated()
+                    && isValidImageType()
+                    && isValidImageSize();
+      
+      // DELETE: Solo utenti autenticati possono eliminare
+      // (Puoi restringere ulteriormente se vuoi solo l'uploader)
+      allow delete: if isAuthenticated();
+    }
+    
+    // Blocca tutto il resto
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

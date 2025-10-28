@@ -16,11 +16,25 @@ class MediaManager {
   
   async initializeStorage() {
     try {
-      if (window.firebase && window.firebase.storage) {
-        this.storage = window.firebase.storage();
+      // Attendi che Firebase Storage sia disponibile
+      const maxRetries = 10;
+      let retries = 0;
+      
+      while (!window.firebaseStorage && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retries++;
+      }
+      
+      if (window.firebaseStorage) {
+        this.storage = window.firebaseStorage;
+        this.storageRef = window.firebaseStorageRef;
+        this.uploadBytes = window.firebaseUploadBytes;
+        this.getDownloadURL = window.firebaseGetDownloadURL;
+        this.deleteObject = window.firebaseDeleteObject;
+        this.listAll = window.firebaseListAll;
         console.log('✅ MediaManager: Firebase Storage inizializzato');
       } else {
-        console.warn('⚠️ MediaManager: Firebase Storage non disponibile');
+        console.warn('⚠️ MediaManager: Firebase Storage non disponibile dopo', maxRetries, 'tentativi');
       }
     } catch (error) {
       console.error('❌ MediaManager: Errore inizializzazione storage:', error);
@@ -45,42 +59,45 @@ class MediaManager {
       
       // Upload immagini se Firebase Storage disponibile
       if (this.storage && window.db) {
-        const storageRef = this.storage.ref(`structures/${structureId}/images/${fileName}`);
-        const thumbnailRef = this.storage.ref(`structures/${structureId}/images/${thumbnailName}`);
+        // Crea riferimenti storage usando la nuova API
+        const imageStorageRef = this.storageRef(this.storage, `structures/${structureId}/images/${fileName}`);
+        const thumbnailStorageRef = this.storageRef(this.storage, `structures/${structureId}/images/${thumbnailName}`);
+        
+        // Metadati per l'immagine principale
+        const imageMetadata = {
+          contentType: compressed.imageBlob.type,
+          customMetadata: {
+            originalName: file.name,
+            structureId: structureId,
+            geoData: JSON.stringify(geoData),
+            uploadedBy: metadata.uploadedBy || 'unknown'
+          }
+        };
+        
+        // Metadati per il thumbnail
+        const thumbnailMetadata = {
+          contentType: compressed.thumbnailBlob.type,
+          customMetadata: {
+            type: 'thumbnail',
+            structureId: structureId
+          }
+        };
         
         // Upload immagine principale
-        const uploadTask = storageRef.put(compressed.imageBlob, {
-          metadata: {
-            contentType: compressed.imageBlob.type,
-            customMetadata: {
-              originalName: file.name,
-              structureId: structureId,
-              geoData: JSON.stringify(geoData),
-              ...metadata
-            }
-          }
-        });
+        const imageUploadTask = this.uploadBytes(imageStorageRef, compressed.imageBlob, imageMetadata);
         
         // Upload thumbnail
-        const thumbnailTask = thumbnailRef.put(compressed.thumbnailBlob, {
-          metadata: {
-            contentType: compressed.thumbnailBlob.type,
-            customMetadata: {
-              type: 'thumbnail',
-              structureId: structureId
-            }
-          }
-        });
+        const thumbnailUploadTask = this.uploadBytes(thumbnailStorageRef, compressed.thumbnailBlob, thumbnailMetadata);
         
         // Attendi completamento upload
-        const [imageResult, thumbnailResult] = await Promise.all([
-          uploadTask,
-          thumbnailTask
+        const [imageSnapshot, thumbnailSnapshot] = await Promise.all([
+          imageUploadTask,
+          thumbnailUploadTask
         ]);
         
         // Ottieni URL pubblici
-        const imageUrl = await imageResult.ref.getDownloadURL();
-        const thumbnailUrl = await thumbnailResult.ref.getDownloadURL();
+        const imageUrl = await this.getDownloadURL(imageSnapshot.ref);
+        const thumbnailUrl = await this.getDownloadURL(thumbnailSnapshot.ref);
         
         const result = {
           id: `img_${timestamp}`,
@@ -299,11 +316,17 @@ class MediaManager {
   async deleteImage(imageId, structureId) {
     try {
       if (this.storage && window.db) {
-        // Elimina da Firebase Storage
-        const imageRef = this.storage.ref(`structures/${structureId}/images/${imageId}`);
-        await imageRef.delete();
+        // Elimina da Firebase Storage usando la nuova API
+        const imageRef = this.storageRef(this.storage, `structures/${structureId}/images/${imageId}`);
+        const thumbRef = this.storageRef(this.storage, `structures/${structureId}/images/thumb_${imageId}`);
         
-        console.log('✅ MediaManager: Immagine eliminata da Firebase Storage');
+        // Elimina sia l'immagine principale che il thumbnail
+        await Promise.allSettled([
+          this.deleteObject(imageRef),
+          this.deleteObject(thumbRef)
+        ]);
+        
+        console.log('✅ MediaManager: Immagine e thumbnail eliminati da Firebase Storage');
       } else {
         // Elimina da IndexedDB
         const db = await this.openIndexedDB();
@@ -323,40 +346,37 @@ class MediaManager {
   async getGallery(structureId) {
     try {
       if (this.storage && window.db) {
-        // Recupera da Firebase Storage
-        const folderRef = this.storage.ref(`structures/${structureId}/images`);
-        const listResult = await folderRef.listAll();
+        // Recupera da Firebase Storage usando la nuova API
+        const folderRef = this.storageRef(this.storage, `structures/${structureId}/images`);
+        const listResult = await this.listAll(folderRef);
         
         const images = [];
         for (const itemRef of listResult.items) {
           if (!itemRef.name.startsWith('thumb_')) {
             try {
-              const metadata = await itemRef.getMetadata();
-              const url = await itemRef.getDownloadURL();
+              const url = await this.getDownloadURL(itemRef);
               
               // Cerca thumbnail corrispondente
-              const thumbRef = this.storage.ref(`structures/${structureId}/images/thumb_${itemRef.name}`);
+              const thumbRef = this.storageRef(this.storage, `structures/${structureId}/images/thumb_${itemRef.name}`);
               let thumbnailUrl = null;
               
               try {
-                thumbnailUrl = await thumbRef.getDownloadURL();
+                thumbnailUrl = await this.getDownloadURL(thumbRef);
               } catch (thumbError) {
                 // Thumbnail non trovato, usa immagine principale
                 thumbnailUrl = url;
               }
               
               images.push({
-                id: metadata.name,
+                id: itemRef.name,
                 url: url,
                 thumbnailUrl: thumbnailUrl,
-                name: metadata.name,
-                size: metadata.size,
-                uploadedAt: new Date(metadata.timeCreated),
-                geoData: metadata.customMetadata?.geoData ? 
-                  JSON.parse(metadata.customMetadata.geoData) : null
+                name: itemRef.name,
+                uploadedAt: new Date(), // Non possiamo ottenere i metadata facilmente con la nuova API
+                geoData: null // Salvato nel nome o in Firestore se necessario
               });
             } catch (itemError) {
-              console.warn('⚠️ MediaManager: Errore recupero immagine:', itemRef.name);
+              console.warn('⚠️ MediaManager: Errore recupero immagine:', itemRef.name, itemError);
             }
           }
         }

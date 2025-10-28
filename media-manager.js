@@ -1,50 +1,61 @@
-// === QuoVadiScout v1.2.1 - Cache Bust: 2024-12-19-11-25 ===
-console.log('🔄 MediaManager caricato con versione v1.2.1 - Cache bust applicato');
+// === QuoVadiScout v1.3.0 - Cache Bust: 2024-12-20-15-00 ===
+console.log('🔄 MediaManager caricato con versione v1.3.0 - Cloudinary Integration');
 
-// MediaManager per gestione upload immagini, compressione e geotagging
+// MediaManager per gestione upload immagini con Cloudinary
 class MediaManager {
   constructor() {
-    this.storage = null;
+    this.cloudinary = null;
+    this.cloudinaryConfig = null;
     this.compressionQuality = 0.8;
     this.maxWidth = 1920;
     this.maxHeight = 1080;
     this.thumbnailSize = 300;
     
-    // Inizializza Firebase Storage se disponibile
+    // Inizializza Cloudinary
     this.initializeStorage();
   }
   
   async initializeStorage() {
     try {
-      // Attendi che Firebase Storage sia disponibile
-      const maxRetries = 10;
+      // Attendi che la configurazione Cloudinary sia disponibile
+      const maxRetries = 20;
       let retries = 0;
       
-      while (!window.firebaseStorage && retries < maxRetries) {
+      while (!window.CloudinaryConfig && retries < maxRetries) {
         await new Promise(resolve => setTimeout(resolve, 100));
         retries++;
       }
       
-      if (window.firebaseStorage) {
-        this.storage = window.firebaseStorage;
-        this.storageRef = window.firebaseStorageRef;
-        this.uploadBytes = window.firebaseUploadBytes;
-        this.getDownloadURL = window.firebaseGetDownloadURL;
-        this.deleteObject = window.firebaseDeleteObject;
-        this.listAll = window.firebaseListAll;
-        console.log('✅ MediaManager: Firebase Storage inizializzato');
+      if (window.CloudinaryConfig) {
+        this.cloudinaryConfig = window.CloudinaryConfig;
+        
+        // Valida configurazione
+        if (window.validateCloudinaryConfig && !window.validateCloudinaryConfig(this.cloudinaryConfig)) {
+          console.error('❌ MediaManager: Configurazione Cloudinary non valida');
+          return;
+        }
+        
+        console.log('✅ MediaManager: Cloudinary inizializzato con cloud:', this.cloudinaryConfig.cloudName);
+        this.cloudinary = true; // Flag che indica che Cloudinary è pronto
       } else {
-        console.warn('⚠️ MediaManager: Firebase Storage non disponibile dopo', maxRetries, 'tentativi');
+        console.warn('⚠️ MediaManager: Configurazione Cloudinary non trovata dopo', maxRetries, 'tentativi');
+        console.warn('📝 Assicurati di aver creato cloudinary-config.js da cloudinary-config.template.js');
       }
     } catch (error) {
-      console.error('❌ MediaManager: Errore inizializzazione storage:', error);
+      console.error('❌ MediaManager: Errore inizializzazione Cloudinary:', error);
     }
   }
   
-  // Upload immagine con compressione e geotagging
+  // Upload immagine con compressione e Cloudinary
   async uploadImage(file, structureId, metadata = {}) {
     try {
       console.log('📸 MediaManager: Inizio upload immagine:', file.name);
+      
+      // Verifica che Cloudinary sia configurato
+      if (!this.cloudinary || !this.cloudinaryConfig) {
+        console.warn('⚠️ Cloudinary non configurato, uso fallback offline');
+        return await this.uploadImageOffline(file, structureId, metadata);
+      }
       
       // Comprimi immagine
       const compressed = await this.compressImage(file);
@@ -54,74 +65,96 @@ class MediaManager {
       
       // Genera nomi file unici
       const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const thumbnailName = `thumb_${fileName}`;
+      const publicId = `${this.cloudinaryConfig.folder}/${structureId}/${timestamp}`;
       
-      // Upload immagini se Firebase Storage disponibile
-      if (this.storage && window.db) {
-        // Crea riferimenti storage usando la nuova API
-        const imageStorageRef = this.storageRef(this.storage, `structures/${structureId}/images/${fileName}`);
-        const thumbnailStorageRef = this.storageRef(this.storage, `structures/${structureId}/images/${thumbnailName}`);
-        
-        // Metadati per l'immagine principale
-        const imageMetadata = {
-          contentType: compressed.imageBlob.type,
-          customMetadata: {
-            originalName: file.name,
-            structureId: structureId,
-            geoData: JSON.stringify(geoData),
-            uploadedBy: metadata.uploadedBy || 'unknown'
-          }
-        };
-        
-        // Metadati per il thumbnail
-        const thumbnailMetadata = {
-          contentType: compressed.thumbnailBlob.type,
-          customMetadata: {
-            type: 'thumbnail',
-            structureId: structureId
-          }
-        };
-        
-        // Upload immagine principale
-        const imageUploadTask = this.uploadBytes(imageStorageRef, compressed.imageBlob, imageMetadata);
-        
-        // Upload thumbnail
-        const thumbnailUploadTask = this.uploadBytes(thumbnailStorageRef, compressed.thumbnailBlob, thumbnailMetadata);
-        
-        // Attendi completamento upload
-        const [imageSnapshot, thumbnailSnapshot] = await Promise.all([
-          imageUploadTask,
-          thumbnailUploadTask
-        ]);
-        
-        // Ottieni URL pubblici
-        const imageUrl = await this.getDownloadURL(imageSnapshot.ref);
-        const thumbnailUrl = await this.getDownloadURL(thumbnailSnapshot.ref);
-        
-        const result = {
-          id: `img_${timestamp}`,
-          url: imageUrl,
-          thumbnailUrl: thumbnailUrl,
-          fileName: fileName,
-          originalName: file.name,
-          size: compressed.imageBlob.size,
-          thumbnailSize: compressed.thumbnailBlob.size,
-          geoData: geoData,
-          uploadedAt: new Date(),
-          structureId: structureId
-        };
-        
-        console.log('✅ MediaManager: Upload completato:', result.id);
-        return result;
-        
-      } else {
-        // Fallback: salva in IndexedDB se Firebase non disponibile
-        return await this.saveImageOffline(file, structureId, compressed, geoData, metadata);
+      // Crea FormData per upload Cloudinary
+      const formData = new FormData();
+      formData.append('file', compressed.imageBlob);
+      formData.append('upload_preset', this.cloudinaryConfig.uploadPreset);
+      formData.append('public_id', publicId);
+      formData.append('folder', this.cloudinaryConfig.folder);
+      
+      // Aggiungi metadata come context
+      const contextData = {
+        structureId: structureId,
+        originalName: file.name,
+        uploadedBy: metadata.uploadedBy || 'unknown',
+        uploadedAt: new Date().toISOString(),
+        ...geoData
+      };
+      formData.append('context', Object.entries(contextData).map(([k, v]) => `${k}=${v}`).join('|'));
+      
+      // Upload a Cloudinary
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${this.cloudinaryConfig.cloudName}/image/upload`;
+      
+      console.log('📤 Uploading a Cloudinary...');
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Cloudinary upload failed: ${response.statusText}`);
       }
       
+      const cloudinaryResponse = await response.json();
+      
+      // Genera URL per thumbnail e trasformazioni
+      const baseUrl = cloudinaryResponse.secure_url.split('/upload/')[0];
+      const publicIdPath = cloudinaryResponse.public_id;
+      
+      // URL immagine principale con trasformazioni
+      const imageUrl = `${baseUrl}/upload/w_1920,h_1080,c_limit,q_auto:good,f_auto/${publicIdPath}.${cloudinaryResponse.format}`;
+      
+      // URL thumbnail
+      const thumbnailUrl = `${baseUrl}/upload/w_300,h_300,c_fill,g_auto,q_auto:eco,f_auto/${publicIdPath}.${cloudinaryResponse.format}`;
+      
+      const result = {
+        id: `img_${timestamp}`,
+        cloudinaryId: cloudinaryResponse.public_id,
+        url: imageUrl,
+        thumbnailUrl: thumbnailUrl,
+        originalUrl: cloudinaryResponse.secure_url,
+        fileName: cloudinaryResponse.original_filename,
+        originalName: file.name,
+        size: cloudinaryResponse.bytes,
+        format: cloudinaryResponse.format,
+        width: cloudinaryResponse.width,
+        height: cloudinaryResponse.height,
+        geoData: geoData,
+        uploadedAt: new Date(),
+        structureId: structureId
+      };
+      
+      // Salva riferimento in IndexedDB per la galleria
+      try {
+        const db = await this.openIndexedDB();
+        const transaction = db.transaction(['images'], 'readwrite');
+        const store = transaction.objectStore('images');
+        await store.put(result);
+      } catch (dbError) {
+        console.warn('⚠️ Errore salvataggio riferimento in IndexedDB:', dbError);
+      }
+      
+      console.log('✅ MediaManager: Upload Cloudinary completato:', result.id);
+      return result;
+      
     } catch (error) {
-      console.error('❌ MediaManager: Errore upload immagine:', error);
+      console.error('❌ MediaManager: Errore upload Cloudinary:', error);
+      console.warn('⚠️ Tentativo fallback offline...');
+      // Fallback: salva in IndexedDB
+      return await this.uploadImageOffline(file, structureId, metadata);
+    }
+  }
+  
+  // Upload offline fallback (IndexedDB)
+  async uploadImageOffline(file, structureId, metadata = {}) {
+    try {
+      const compressed = await this.compressImage(file);
+      const geoData = await this.extractGeoData(file);
+      return await this.saveImageOffline(file, structureId, compressed, geoData, metadata);
+    } catch (error) {
+      console.error('❌ Errore upload offline:', error);
       throw error;
     }
   }
@@ -312,21 +345,27 @@ class MediaManager {
     }
   }
   
-  // Elimina immagine
+  // Elimina immagine da Cloudinary
   async deleteImage(imageId, structureId) {
     try {
-      if (this.storage && window.db) {
-        // Elimina da Firebase Storage usando la nuova API
-        const imageRef = this.storageRef(this.storage, `structures/${structureId}/images/${imageId}`);
-        const thumbRef = this.storageRef(this.storage, `structures/${structureId}/images/thumb_${imageId}`);
+      if (this.cloudinary && this.cloudinaryConfig) {
+        // Per eliminare da Cloudinary serve l'API Secret
+        // Quindi non possiamo farlo direttamente dal client
+        // Opzioni:
+        // 1. Marcare come eliminata in Firestore
+        // 2. Creare una Cloud Function
+        // 3. Lasciare le immagini su Cloudinary (non costano molto)
         
-        // Elimina sia l'immagine principale che il thumbnail
-        await Promise.allSettled([
-          this.deleteObject(imageRef),
-          this.deleteObject(thumbRef)
-        ]);
+        console.warn('⚠️ Eliminazione da Cloudinary non implementata lato client');
+        console.log('💡 L\'immagine resterà su Cloudinary ma sarà rimossa dalla galleria locale');
         
-        console.log('✅ MediaManager: Immagine e thumbnail eliminati da Firebase Storage');
+        // Elimina riferimento da IndexedDB locale
+        const db = await this.openIndexedDB();
+        const transaction = db.transaction(['images'], 'readwrite');
+        const store = transaction.objectStore('images');
+        await store.delete(imageId);
+        
+        console.log('✅ MediaManager: Riferimento immagine eliminato localmente');
       } else {
         // Elimina da IndexedDB
         const db = await this.openIndexedDB();
@@ -345,63 +384,25 @@ class MediaManager {
   // Recupera galleria immagini per una struttura
   async getGallery(structureId) {
     try {
-      if (this.storage && window.db) {
-        // Recupera da Firebase Storage usando la nuova API
-        const folderRef = this.storageRef(this.storage, `structures/${structureId}/images`);
-        const listResult = await this.listAll(folderRef);
-        
-        const images = [];
-        for (const itemRef of listResult.items) {
-          if (!itemRef.name.startsWith('thumb_')) {
-            try {
-              const url = await this.getDownloadURL(itemRef);
-              
-              // Cerca thumbnail corrispondente
-              const thumbRef = this.storageRef(this.storage, `structures/${structureId}/images/thumb_${itemRef.name}`);
-              let thumbnailUrl = null;
-              
-              try {
-                thumbnailUrl = await this.getDownloadURL(thumbRef);
-              } catch (thumbError) {
-                // Thumbnail non trovato, usa immagine principale
-                thumbnailUrl = url;
-              }
-              
-              images.push({
-                id: itemRef.name,
-                url: url,
-                thumbnailUrl: thumbnailUrl,
-                name: itemRef.name,
-                uploadedAt: new Date(), // Non possiamo ottenere i metadata facilmente con la nuova API
-                geoData: null // Salvato nel nome o in Firestore se necessario
-              });
-            } catch (itemError) {
-              console.warn('⚠️ MediaManager: Errore recupero immagine:', itemRef.name, itemError);
-            }
-          }
-        }
-        
-        return images.sort((a, b) => b.uploadedAt - a.uploadedAt);
-        
-      } else {
-        // Recupera da IndexedDB
-        const db = await this.openIndexedDB();
-        const transaction = db.transaction(['images'], 'readonly');
-        const store = transaction.objectStore('images');
-        const index = store.index('structureId');
-        
-        const images = await new Promise((resolve, reject) => {
-          const request = index.getAll(structureId);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
-        
-        return images.map(img => ({
-          ...img,
-          url: URL.createObjectURL(img.imageBlob),
-          thumbnailUrl: URL.createObjectURL(img.thumbnailBlob)
-        }));
-      }
+      // Cloudinary non ha modo di listare immagini lato client
+      // Quindi usiamo IndexedDB locale per salvare i riferimenti
+      const db = await this.openIndexedDB();
+      const transaction = db.transaction(['images'], 'readonly');
+      const store = transaction.objectStore('images');
+      const index = store.index('structureId');
+      
+      const images = await new Promise((resolve, reject) => {
+        const request = index.getAll(structureId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      
+      // Se le immagini hanno blob locali, crea URL
+      return images.map(img => ({
+        ...img,
+        url: img.url || (img.imageBlob ? URL.createObjectURL(img.imageBlob) : null),
+        thumbnailUrl: img.thumbnailUrl || (img.thumbnailBlob ? URL.createObjectURL(img.thumbnailBlob) : null)
+      })).filter(img => img.url); // Filtra immagini senza URL
       
     } catch (error) {
       console.error('❌ MediaManager: Errore recupero galleria:', error);

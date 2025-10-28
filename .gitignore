@@ -6,7 +6,7 @@ firebase-config.js
 firebase-config-sync.js
 
 # Cloudinary Configuration (credenziali sensibili)
-# cloudinary-config.js
+cloudinary-config.js
 
 # Environment files
 .env

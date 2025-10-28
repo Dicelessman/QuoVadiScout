@@ -7199,6 +7199,56 @@ function mostraSchedaCompleta(strutturaId) {
             
             campoDiv.appendChild(label);
             campoDiv.appendChild(inputContainer);
+          } else if (campo === 'rating') {
+            // Gestione speciale per il rating - anche in modalità modifica
+            const ratingDiv = document.createElement('div');
+            ratingDiv.style.cssText = `
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin: 8px 0;
+            `;
+            
+            const starsContainer = document.createElement('div');
+            starsContainer.style.cssText = `
+              display: flex;
+              gap: 2px;
+            `;
+            
+            const currentRating = struttura.rating?.average || 0;
+            const totalVotes = struttura.rating?.count || 0;
+            
+            // Crea le stelle
+            for (let i = 1; i <= 5; i++) {
+              const star = document.createElement('span');
+              star.style.cssText = `
+                font-size: 20px;
+                color: ${i <= currentRating ? '#ffc107' : '#e9ecef'};
+                cursor: pointer;
+                transition: color 0.2s;
+              `;
+              star.textContent = '★';
+              star.title = `Vota ${i} stelle`;
+              star.onclick = () => voteStructure(struttura.id, i);
+              star.onmouseover = () => {
+                star.style.color = '#ffc107';
+              };
+              star.onmouseout = () => {
+                star.style.color = i <= currentRating ? '#ffc107' : '#e9ecef';
+              };
+              starsContainer.appendChild(star);
+            }
+            
+            const ratingInfo = document.createElement('span');
+            ratingInfo.textContent = ` (${currentRating.toFixed(1)}/5 - ${totalVotes} voti)`;
+            ratingInfo.style.color = '#6c757d';
+            ratingInfo.style.fontSize = '14px';
+            
+            ratingDiv.appendChild(label);
+            ratingDiv.appendChild(starsContainer);
+            ratingDiv.appendChild(ratingInfo);
+            
+            campoDiv.appendChild(ratingDiv);
           } else {
             // Campo di testo normale
             const input = document.createElement('input');

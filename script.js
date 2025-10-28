@@ -713,7 +713,7 @@ function mostraRicercaAvanzata() {
     categoriaTitle.textContent = nomeCategoria;
     categoriaTitle.style.cssText = `
       margin: 0 0 15px 0;
-      color: #2f6b2f;
+      color: var(--accent-color, #2f6b2f);
       font-size: 1.1rem;
     `;
     if (categoriaDiv && categoriaTitle) {
@@ -7335,7 +7335,7 @@ function mostraSchedaCompleta(strutturaId) {
             
             const ratingInfo = document.createElement('span');
             ratingInfo.textContent = ` (${currentRating.toFixed(1)}/5 - ${totalVotes} voti)`;
-            ratingInfo.style.color = '#6c757d';
+            ratingInfo.style.color = 'var(--text-secondary)';
             ratingInfo.style.fontSize = '14px';
             
             ratingDiv.appendChild(label);
@@ -7383,7 +7383,7 @@ function mostraSchedaCompleta(strutturaId) {
             
             const ratingLabel = document.createElement('strong');
             ratingLabel.textContent = 'Rating: ';
-            ratingLabel.style.color = '#495057';
+            ratingLabel.style.color = 'var(--text-primary)';
             
             const starsContainer = document.createElement('div');
             starsContainer.style.cssText = `
@@ -7417,7 +7417,7 @@ function mostraSchedaCompleta(strutturaId) {
             
             const ratingInfo = document.createElement('span');
             ratingInfo.textContent = ` (${currentRating.toFixed(1)}/5 - ${totalVotes} voti)`;
-            ratingInfo.style.color = '#6c757d';
+            ratingInfo.style.color = 'var(--text-secondary)';
             ratingInfo.style.fontSize = '14px';
             
             ratingDiv.appendChild(ratingLabel);
@@ -7437,7 +7437,7 @@ function mostraSchedaCompleta(strutturaId) {
             
             const statoLabel = document.createElement('strong');
             statoLabel.textContent = 'Stato: ';
-            statoLabel.style.color = '#495057';
+            statoLabel.style.color = 'var(--text-primary)';
             
             const statoValue = document.createElement('span');
             const stato = struttura[campo];
@@ -7476,7 +7476,7 @@ function mostraSchedaCompleta(strutturaId) {
             } else {
               statoValue.textContent = 'Non specificato';
               statoValue.style.cssText = `
-                color: #6c757d;
+                color: var(--text-secondary);
                 font-style: italic;
               `;
             }
@@ -7496,7 +7496,7 @@ function mostraSchedaCompleta(strutturaId) {
             
             const linkLabel = document.createElement('strong');
             linkLabel.textContent = 'Google Maps: ';
-            linkLabel.style.color = '#495057';
+            linkLabel.style.color = 'var(--text-primary)';
             
             const valore = struttura[campo];
             
@@ -7529,7 +7529,7 @@ function mostraSchedaCompleta(strutturaId) {
             } else {
               const noLink = document.createElement('span');
               noLink.textContent = 'Non specificato';
-              noLink.style.color = '#6c757d';
+              noLink.style.color = 'var(--text-secondary)';
               noLink.style.fontStyle = 'italic';
               
               linkDiv.appendChild(linkLabel);
@@ -7635,14 +7635,14 @@ function mostraSchedaCompleta(strutturaId) {
             
             const websiteLabel = document.createElement('strong');
             websiteLabel.textContent = 'Sito: ';
-            websiteLabel.style.color = '#495057';
+            websiteLabel.style.color = 'var(--text-primary)';
             
             const valore = struttura[campo];
             
             if (valore && valore.trim() !== '') {
               const websiteValue = document.createElement('span');
               websiteValue.textContent = valore;
-              websiteValue.style.color = '#212529';
+              websiteValue.style.color = 'var(--text-primary)';
               
               const websiteBtn = document.createElement('button');
               websiteBtn.innerHTML = '🌐';
@@ -7674,7 +7674,7 @@ function mostraSchedaCompleta(strutturaId) {
               websiteDiv.appendChild(websiteLabel);
               const noValue = document.createElement('span');
               noValue.textContent = 'Non specificato';
-              noValue.style.color = '#6c757d';
+              noValue.style.color = 'var(--text-secondary)';
               websiteDiv.appendChild(noValue);
             }
             
@@ -7691,14 +7691,14 @@ function mostraSchedaCompleta(strutturaId) {
             
             const emailLabel = document.createElement('strong');
             emailLabel.textContent = 'Email: ';
-            emailLabel.style.color = '#495057';
+            emailLabel.style.color = 'var(--text-primary)';
             
             const valore = struttura[campo];
             
             if (valore && valore.trim() !== '') {
               const emailValue = document.createElement('span');
               emailValue.textContent = valore;
-              emailValue.style.color = '#212529';
+              emailValue.style.color = 'var(--text-primary)';
               
               const emailBtn = document.createElement('button');
               emailBtn.innerHTML = '📧';
@@ -7732,7 +7732,7 @@ function mostraSchedaCompleta(strutturaId) {
               emailDiv.appendChild(emailLabel);
               const noValue = document.createElement('span');
               noValue.textContent = 'Non specificato';
-              noValue.style.color = '#6c757d';
+              noValue.style.color = 'var(--text-secondary)';
               emailDiv.appendChild(noValue);
             }
             
@@ -7749,14 +7749,14 @@ function mostraSchedaCompleta(strutturaId) {
             
             const phoneLabel = document.createElement('strong');
             phoneLabel.textContent = `${campo}: `;
-            phoneLabel.style.color = '#495057';
+            phoneLabel.style.color = 'var(--text-primary)';
             
             const valore = struttura[campo];
             
             if (valore && valore.trim() !== '') {
               const phoneValue = document.createElement('span');
               phoneValue.textContent = valore;
-              phoneValue.style.color = '#212529';
+              phoneValue.style.color = 'var(--text-primary)';
               
               const whatsappBtn = document.createElement('button');
               whatsappBtn.innerHTML = '💬';
@@ -7790,7 +7790,7 @@ function mostraSchedaCompleta(strutturaId) {
               phoneDiv.appendChild(phoneLabel);
               const noValue = document.createElement('span');
               noValue.textContent = 'Non specificato';
-              noValue.style.color = '#6c757d';
+              noValue.style.color = 'var(--text-secondary)';
               phoneDiv.appendChild(noValue);
             }
             
@@ -7801,7 +7801,7 @@ function mostraSchedaCompleta(strutturaId) {
           
           if (valore === undefined || valore === null || valore === '') {
             value.textContent = 'Non specificato';
-            value.style.color = '#6c757d';
+            value.style.color = 'var(--text-secondary)';
             value.style.fontStyle = 'italic';
           } else if (typeof valore === 'boolean') {
             value.textContent = valore ? 'Sì' : 'No';
@@ -7809,7 +7809,7 @@ function mostraSchedaCompleta(strutturaId) {
             value.style.fontWeight = 'bold';
           } else {
             value.textContent = valore;
-            value.style.color = '#212529';
+            value.style.color = 'var(--text-primary)';
           }
           
           campoDiv.appendChild(label);
@@ -7832,10 +7832,10 @@ function mostraSchedaCompleta(strutturaId) {
     // Aggiungi campo Note
     const noteDiv = document.createElement('div');
     noteDiv.style.cssText = `
-      background: #f8f9fa;
+      background: var(--bg-secondary);
       border-radius: 8px;
       padding: 15px;
-      border-left: 4px solid #6c757d;
+      border-left: 4px solid var(--text-secondary);
       grid-column: 1 / -1;
     `;
     
@@ -7843,7 +7843,7 @@ function mostraSchedaCompleta(strutturaId) {
     noteTitle.textContent = 'Note';
     noteTitle.style.cssText = `
       margin: 0 0 15px 0;
-      color: #6c757d;
+      color: var(--text-secondary);
       font-size: 1.1rem;
     `;
     noteDiv.appendChild(noteTitle);
@@ -7860,7 +7860,7 @@ function mostraSchedaCompleta(strutturaId) {
     
     const label = document.createElement('strong');
     label.textContent = 'Note: ';
-    label.style.color = '#495057';
+    label.style.color = 'var(--text-primary)';
     
     if (isEditMode) {
       // Modalità modifica - textarea per note
@@ -7895,11 +7895,11 @@ function mostraSchedaCompleta(strutturaId) {
       
       if (valore === undefined || valore === null || valore === '') {
         value.textContent = 'Nessuna nota';
-        value.style.color = '#6c757d';
+        value.style.color = 'var(--text-secondary)';
         value.style.fontStyle = 'italic';
       } else {
         value.textContent = valore;
-        value.style.color = '#212529';
+        value.style.color = 'var(--text-primary)';
         value.style.whiteSpace = 'pre-wrap';
       }
       

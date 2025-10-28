@@ -2668,7 +2668,13 @@ async function initializeMainMap() {
     await window.mapsManager.initialize('mainMap');
     mainMapInstance = window.mapsManager;
     
-    console.log('✅ Mappa principale inizializzata');
+    // Centra la mappa sul Piemonte (Torino)
+    if (mainMapInstance.map) {
+      mainMapInstance.map.setView([45.0703, 7.6869], 8.5);
+      console.log('✅ Mappa principale inizializzata e centrata sul Piemonte');
+    } else {
+      console.log('✅ Mappa principale inizializzata');
+    }
 
     // Mostra le strutture sulla mappa se disponibili
     if (strutture && strutture.length > 0) {

@@ -6538,7 +6538,7 @@ function generaContenutoStampa(struttureElenco) {
 let modalScheda = null;
 let isEditMode = false;
 
-function mostraSchedaCompleta(strutturaId) {
+async function mostraSchedaCompleta(strutturaId) {
   const struttura = strutture.find(s => s.id === strutturaId);
   if (!struttura) {
     console.error('Struttura non trovata:', strutturaId);
@@ -8018,12 +8018,12 @@ function mostraSchedaCompleta(strutturaId) {
   }
   
   // Funzione per alternare modalità
-  function toggleEditMode() {
+  async function toggleEditMode() {
     isEditMode = !isEditMode;
     editBtn.style.display = isEditMode ? 'none' : 'inline-block';
     saveBtn.style.display = isEditMode ? 'inline-block' : 'none';
     cancelBtn.style.display = isEditMode ? 'inline-block' : 'none';
-    creaGalleriaImmagini();
+    await creaGalleriaImmagini();
     creaContenutoScheda();
   }
   
@@ -8181,7 +8181,7 @@ function mostraSchedaCompleta(strutturaId) {
   }
   
   // Inizializza contenuto
-  creaGalleriaImmagini();
+  await creaGalleriaImmagini();
   creaContenutoScheda();
   
   modalContent.appendChild(header);

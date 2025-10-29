@@ -2213,6 +2213,50 @@ function getStatoLabel(stato) {
 }
 
 // === Gestione Note Personali ===
+// Funzione per caricare note personali per l'elenco personale
+async function loadPersonalNotesForElenco(struttureElenco) {
+  if (!window.utenteCorrente) return;
+  
+  try {
+    const { collection, query, where, getDocs } = window.firebase.firestore;
+    const db = window.db;
+    
+    // Carica tutte le note personali dell'utente
+    const notesRef = collection(db, "user_notes");
+    const q = query(notesRef, where("userId", "==", window.utenteCorrente.uid));
+    const snapshot = await getDocs(q);
+    
+    const noteMap = {};
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (!noteMap[data.strutturaId]) {
+        noteMap[data.strutturaId] = [];
+      }
+      noteMap[data.strutturaId].push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date(),
+        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt)) : new Date()
+      });
+    });
+    
+    // Aggiungi le note alle strutture
+    struttureElenco.forEach(struttura => {
+      if (noteMap[struttura.id]) {
+        struttura.personalNotes = noteMap[struttura.id];
+        // Ordina le note per data di creazione (più recenti prima)
+        struttura.personalNotes.sort((a, b) => b.createdAt - a.createdAt);
+        console.log(`📝 Note trovate per ${struttura.Struttura}:`, struttura.personalNotes.length);
+      } else {
+        struttura.personalNotes = [];
+      }
+    });
+    
+  } catch (error) {
+    console.error('Errore nel caricamento note personali per elenco:', error);
+  }
+}
+
 async function mostraNotePersonali(strutturaId) {
   const struttura = strutture.find(s => s.id === strutturaId);
   if (!struttura) return;
@@ -5929,7 +5973,7 @@ function aggiornaContatoreElenco() {
 }
 
 // === Gestione Elenco Personale ===
-function esportaElencoPersonale() {
+async function esportaElencoPersonale() {
   console.log('📤 Avvio esportazione elenco personale...');
   console.log('📋 Strutture in elenco personale:', elencoPersonale.length);
   
@@ -5938,13 +5982,16 @@ function esportaElencoPersonale() {
     return;
   }
   
-  mostraGestioneElencoPersonale();
+  await mostraGestioneElencoPersonale();
 }
 
-function mostraGestioneElencoPersonale() {
+async function mostraGestioneElencoPersonale() {
   console.log('📋 Apertura gestione elenco personale...');
   const struttureElenco = strutture.filter(s => elencoPersonale.includes(s.id));
   console.log('📊 Strutture trovate:', struttureElenco.length);
+  
+  // Carica le note personali per tutte le strutture dell'elenco
+  await loadPersonalNotesForElenco(struttureElenco);
   
   // Nascondi la scheda utente se è aperta
   const userModal = document.getElementById('userProfileModal');
@@ -6094,9 +6141,15 @@ function mostraGestioneElencoPersonale() {
         
         const infoDiv = document.createElement('div');
         infoDiv.style.cssText = `flex: 1;`;
+        // Controlla se ci sono note personali
+        const hasNotes = struttura.personalNotes && struttura.personalNotes.length > 0;
+        const notesCount = hasNotes ? struttura.personalNotes.length : 0;
+        const latestNote = hasNotes ? struttura.personalNotes[0] : null;
+        
         infoDiv.innerHTML = `
-          <div style="font-weight: bold; color: #2f6b2f; margin-bottom: 4px;">
+          <div style="font-weight: bold; color: #2f6b2f; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
             ${struttura.Struttura || 'Senza nome'}
+            ${hasNotes ? `<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold;">📝 ${notesCount}</span>` : ''}
           </div>
           <div style="font-size: 0.9rem; color: #666;">
             📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
@@ -6106,6 +6159,13 @@ function mostraGestioneElencoPersonale() {
             ${struttura.Casa ? '🏠 Casa' : ''} ${struttura.Terreno ? '🌱 Terreno' : ''}
             ${!struttura.Casa && !struttura.Terreno ? '❓ Senza categoria' : ''}
           </div>
+          ${hasNotes && latestNote ? `
+          <div style="font-size: 0.8rem; color: #6c757d; margin-top: 6px; padding: 6px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #28a745;">
+            <strong>📝 Ultima nota:</strong> ${latestNote.nota.length > 80 ? latestNote.nota.substring(0, 80) + '...' : latestNote.nota}
+            <div style="font-size: 0.7rem; color: #999; margin-top: 2px;">
+              ${latestNote.createdAt.toLocaleDateString('it-IT')} alle ${latestNote.createdAt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}
+            </div>
+          </div>` : ''}
         `;
         
         const actionsDiv = document.createElement('div');
@@ -6161,10 +6221,10 @@ function mostraGestioneElencoPersonale() {
           cursor: pointer;
           font-size: 14px;
         `;
-        removeBtn.onclick = () => {
+        removeBtn.onclick = async () => {
           rimuoviDallElenco(struttura.id);
           modal.remove();
-          mostraGestioneElencoPersonale();
+          await mostraGestioneElencoPersonale();
         };
         
         actionsDiv.appendChild(viewBtn);
@@ -6260,10 +6320,10 @@ function mostraGestioneElencoPersonale() {
           cursor: pointer;
           font-size: 12px;
         `;
-        removeBtn.onclick = () => {
+        removeBtn.onclick = async () => {
           rimuoviDallElenco(struttura.id);
           modal.remove();
-          mostraGestioneElencoPersonale();
+          await mostraGestioneElencoPersonale();
         };
         
         actionsDiv.appendChild(viewBtn);
@@ -6273,10 +6333,16 @@ function mostraGestioneElencoPersonale() {
         headerDiv.appendChild(titleDiv);
         headerDiv.appendChild(actionsDiv);
         
+        // Controlla se ci sono note personali
+        const hasNotes = struttura.personalNotes && struttura.personalNotes.length > 0;
+        const notesCount = hasNotes ? struttura.personalNotes.length : 0;
+        const latestNote = hasNotes ? struttura.personalNotes[0] : null;
+        
         const contentDiv = document.createElement('div');
         contentDiv.innerHTML = `
           <div style="margin-bottom: 8px; color: #666;">
             📍 ${struttura.Luogo || 'N/A'}, ${struttura.Prov || 'N/A'}
+            ${hasNotes ? `<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-left: 8px;">📝 ${notesCount} note</span>` : ''}
           </div>
           ${struttura.Referente ? `<div style="margin-bottom: 8px; color: #666;">
             👤 <strong>Referente:</strong> ${struttura.Referente}
@@ -6288,6 +6354,17 @@ function mostraGestioneElencoPersonale() {
             ${struttura.Casa ? '<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px;">🏠 Casa</span>' : ''}
             ${struttura.Terreno ? '<span style="background: #e8f5e8; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 12px;">🌱 Terreno</span>' : ''}
           </div>
+          ${hasNotes && latestNote ? `
+          <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #28a745;">
+            <div style="font-size: 12px; font-weight: bold; color: #28a745; margin-bottom: 4px;">📝 Ultima nota personale:</div>
+            <div style="font-size: 13px; color: #495057; margin-bottom: 4px;">
+              ${latestNote.nota.length > 120 ? latestNote.nota.substring(0, 120) + '...' : latestNote.nota}
+            </div>
+            <div style="font-size: 11px; color: #6c757d;">
+              ${latestNote.createdAt.toLocaleDateString('it-IT')} alle ${latestNote.createdAt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}
+              ${notesCount > 1 ? ` • ${notesCount - 1} altre note` : ''}
+            </div>
+          </div>` : ''}
           ${struttura.Info ? `<div style="font-size: 13px; color: #888; margin-top: 8px;">
             ${struttura.Info.length > 150 ? struttura.Info.substring(0, 150) + '...' : struttura.Info}
           </div>` : ''}
@@ -6365,13 +6442,13 @@ function mostraGestioneElencoPersonale() {
     font-size: 14px;
     font-weight: 500;
   `;
-  clearAllBtn.onclick = () => {
+  clearAllBtn.onclick = async () => {
     if (confirm('Sei sicuro di voler svuotare completamente l\'elenco personale?')) {
       elencoPersonale = [];
       salvaElencoPersonaleUtente();
       aggiornaContatoreElenco();
       modal.remove();
-      mostraGestioneElencoPersonale();
+      await mostraGestioneElencoPersonale();
     }
   };
   
@@ -6391,14 +6468,14 @@ function mostraGestioneElencoPersonale() {
     font-weight: 500;
   `;
   exportBtn.disabled = struttureElenco.length === 0;
-  exportBtn.onclick = () => {
+  exportBtn.onclick = async () => {
     console.log('📤 Pulsante esportazione cliccato');
     console.log('📊 Strutture da esportare:', struttureElenco.length);
     
     if (struttureElenco.length > 0) {
       console.log('✅ Rimuovo modal e apro menu esportazione');
       modal.remove();
-      mostraMenuEsportazione(struttureElenco);
+      await mostraMenuEsportazione(struttureElenco);
     } else {
       console.log('❌ Nessuna struttura da esportare');
     }
@@ -6417,9 +6494,9 @@ function mostraGestioneElencoPersonale() {
     font-weight: 500;
   `;
   printBtn.disabled = struttureElenco.length === 0;
-  printBtn.onclick = () => {
+  printBtn.onclick = async () => {
     if (struttureElenco.length > 0) {
-      stampaElenco(struttureElenco);
+      await stampaElenco(struttureElenco);
       modal.remove();
     }
   };
@@ -6445,9 +6522,12 @@ function mostraGestioneElencoPersonale() {
   });
 }
 
-function mostraMenuEsportazione(struttureElenco) {
+async function mostraMenuEsportazione(struttureElenco) {
   console.log('📋 Apertura menu esportazione...');
   console.log('📊 Strutture ricevute:', struttureElenco.length);
+  
+  // Carica le note personali per tutte le strutture
+  await loadPersonalNotesForElenco(struttureElenco);
   
   const menu = document.createElement('div');
   menu.className = 'export-menu';
@@ -6527,7 +6607,10 @@ function mostraMenuEsportazione(struttureElenco) {
 
 // Funzione per export generale (tutte le strutture) - definita più sotto
 
-function stampaElenco(struttureElenco) {
+async function stampaElenco(struttureElenco) {
+  // Carica le note personali per tutte le strutture
+  await loadPersonalNotesForElenco(struttureElenco);
+  
   const printWindow = window.open('', '_blank');
   const printContent = generaContenutoStampa(struttureElenco);
   printWindow.document.write(printContent);
@@ -6567,9 +6650,20 @@ function generaContenutoStampa(struttureElenco) {
           ${s.Referente ? `<div class="info"><strong>👤 Referente:</strong> ${s.Referente}</div>` : ''}
           ${s.Contatto || s.Email ? `<div class="info"><strong>📞 Contatti:</strong> ${s.Contatto || s.Email}</div>` : ''}
           ${s.Info ? `<div class="info"><strong>ℹ️ Info:</strong> ${s.Info}</div>` : ''}
+          ${s.personalNotes && s.personalNotes.length > 0 ? `
+          <div class="info">
+            <strong>📝 Note personali (${s.personalNotes.length}):</strong>
+            ${s.personalNotes.map(nota => `
+              <div style="margin: 5px 0; padding: 8px; background: #f8f9fa; border-left: 3px solid #28a745; border-radius: 4px;">
+                <div style="font-size: 14px; margin-bottom: 4px;">${nota.nota}</div>
+                <div style="font-size: 12px; color: #6c757d;">${nota.createdAt.toLocaleDateString('it-IT')} alle ${nota.createdAt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
+              </div>
+            `).join('')}
+          </div>` : ''}
           <div class="tags">
             ${s.Casa ? '<span class="tag casa">🏠 Casa</span>' : ''}
             ${s.Terreno ? '<span class="tag terreno">🌱 Terreno</span>' : ''}
+            ${s.personalNotes && s.personalNotes.length > 0 ? `<span class="tag" style="background: #d4edda; color: #155724;">📝 ${s.personalNotes.length} note</span>` : ''}
           </div>
         </div>
       `).join('')}
@@ -10985,8 +11079,8 @@ function mostraStatisticheApp() {
 function showNotification(title, options = {}) {
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification(title, {
-      icon: '/icon-192.png',
-      badge: '/badge-72.png',
+      icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMyZjZiMmYiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Ik0xMiAyTDEzLjA5IDguMjZMMjAgOUwxMy4wOSAxNS43NEwxMiAyMkwxMC45MSAxNS43NEw0IDlMMTAuOTEgOC4yNkwxMiAyWiIvPgo8L3N2Zz4KPC9zdmc+',
+      badge: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiByeD0iOSIgZmlsbD0iIzJmNmIyZiIvPgo8c3ZnIHg9IjE4IiB5PSIxOCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjM2IiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIi8+Cjwvc3ZnPgo8L3N2Zz4=',
       tag: 'quovadiscout',
       ...options
     });

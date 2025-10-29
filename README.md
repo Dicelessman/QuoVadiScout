@@ -202,7 +202,7 @@ QuoVadiScout/
 ## 🌐 URL di Produzione
 
 ### Vercel (Raccomandato)
-- **Production**: https://quovadiscout-q8dmcfm6a-dicelessmans-projects.vercel.app
+- **Production**: https://quovadiscout.vercel.app
 - **GitHub Pages**: https://dicelessmans-projects.github.io/QuoVadiScout
 
 ### Caratteristiche Vercel

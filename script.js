@@ -49,30 +49,28 @@ import {
 
 // Verifica che la configurazione Firebase sia disponibile
 if (typeof FirebaseConfig === 'undefined') {
-  console.warn('⚠️ Configurazione Firebase esterna non trovata, uso configurazione demo');
-  
-  // Configurazione Firebase reale
+  console.warn('⚠️ Configurazione Firebase non trovata. In Vercel è servita da /api/firebase-config.js');
+  // Fallback sicuro vuoto (evita chiavi hardcoded nel repository)
   window.FirebaseConfig = {
-    apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
-    authDomain: "quovadiscout.firebaseapp.com",
-    projectId: "quovadiscout",
-    storageBucket: "quovadiscout.firebasestorage.app",
-    messagingSenderId: "745134651793",
-    appId: "1:745134651793:web:dabd5ae6b7b579172dc230",
-    measurementId: "G-XXXXXXXXXX", // Aggiungi se hai Google Analytics
-    vapidKey: "YOUR_VAPID_KEY_HERE", // Aggiungi se hai push notifications
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: "",
+    measurementId: "",
+    vapidKey: "",
     environment: "production",
-    authorizedDomains: ["localhost", "127.0.0.1", "dicelessman.github.io"],
+    authorizedDomains: ["localhost", "127.0.0.1"],
     rateLimits: {
       requestsPerMinute: 60,
       requestsPerHour: 1000,
       requestsPerDay: 10000
     }
   };
-  
-  // Funzione di validazione
+  // Funzione di validazione minimale
   window.validateFirebaseConfig = function(config) {
-    console.log('✅ Configurazione Firebase reale caricata');
+    console.warn('⚠️ Configurazione Firebase vuota in fallback');
     return true;
   };
 }

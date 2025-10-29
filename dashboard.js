@@ -7,14 +7,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // === Configurazione Firebase ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDHFnQOMoaxY1d-7LRVgh7u_ioRWPDWVfI",
-  authDomain: "quovadiscout.firebaseapp.com",
-  projectId: "quovadiscout",
-  storageBucket: "quovadiscout.firebasestorage.app",
-  messagingSenderId: "745134651793",
-  appId: "1:745134651793:web:dabd5ae6b7b579172dc230"
-};
+// Caricata runtime da /api/firebase-config.js
+const firebaseConfig = (typeof window !== 'undefined' && window.FirebaseConfig)
+  ? window.FirebaseConfig
+  : {
+      apiKey: '',
+      authDomain: '',
+      projectId: '',
+      storageBucket: '',
+      messagingSenderId: '',
+      appId: ''
+    };
 
 // === Inizializzazione Firebase ===
 const app = initializeApp(firebaseConfig);

@@ -1,3 +1,10 @@
+# Config sensibili lato client (non committare)
+cloudinary-config.js
+
+# Node & Vercel locali
+node_modules/
+.vercel/
+
 # 🔒 Git Ignore for QuoVadiScout
 # File sensibili e non necessari nel repository
 

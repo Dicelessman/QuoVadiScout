@@ -53,11 +53,16 @@ QuoVadiScout è una Progressive Web App (PWA) completa per la gestione di strutt
 
 ## 🚀 Installazione & Deploy
 
+### 🌐 URL di Produzione
+- **Vercel (Principale)**: https://quovadiscout-f8fvu3pev-dicelessmans-projects.vercel.app
+- **GitHub Pages (Backup)**: https://dicelessman.github.io/QuoVadiScout/
+
 ### Prerequisiti
 - Account Firebase
-- GitHub Pages (per hosting)
+- Account Vercel (per hosting principale)
+- GitHub Pages (per backup)
 
-### Deploy su GitHub Pages
+### Deploy su Vercel (Raccomandato)
 
 1. **Crea un nuovo repository su GitHub**
 
@@ -72,30 +77,38 @@ cd QuoVadiScout
    - Crea un nuovo progetto
    - Abilita Authentication (Email/Password e Google)
    - Abilita Firestore Database
-   - Crea le Security Rules (vedi `FIREBASE_RULES.md`)
+   - Crea le Security Rules (vedi `firestore.rules`)
 
-4. **Aggiorna configurazione Firebase** in `script.js`:
-```javascript
-const firebaseConfig = {
-  apiKey: "tua-api-key",
-  authDomain: "tuo-progetto.firebaseapp.com",
-  projectId: "tuo-progetto",
-  // ...
-};
-```
+4. **Configura Vercel**:
+   - Vai su [Vercel](https://vercel.com)
+   - Importa il repository GitHub
+   - Imposta le Environment Variables:
+     - `FIREBASE_API_KEY`
+     - `FIREBASE_AUTH_DOMAIN`
+     - `FIREBASE_PROJECT_ID`
+     - `FIREBASE_STORAGE_BUCKET`
+     - `FIREBASE_MESSAGING_SENDER_ID`
+     - `FIREBASE_APP_ID`
+     - `CLOUDINARY_CLOUD_NAME`
+     - `CLOUDINARY_API_KEY`
+     - `CLOUDINARY_UPLOAD_PRESET`
+     - `CLOUDINARY_FOLDER`
 
-5. **Push su GitHub**:
-```bash
-git add .
-git commit -m "Initial commit"
-git push origin main
-```
+5. **Deploy automatico**:
+   - Vercel deploya automaticamente ad ogni push
+   - Le configurazioni sono servite via endpoint runtime sicuri
 
-6. **Abilita GitHub Pages**:
+### Deploy su GitHub Pages (Backup)
+
+1. **Abilita GitHub Pages**:
    - Settings → Pages
    - Source: Deploy from a branch
    - Branch: main
    - Folder: / (root)
+
+2. **Configura domini autorizzati**:
+   - Firebase Console → Authentication → Authorized domains
+   - Aggiungi il dominio GitHub Pages
 
 ---
 
@@ -148,7 +161,9 @@ QuoVadiScout/
 ### Note Importanti
 - Le API keys Firebase sono pubbliche per design
 - La sicurezza reale è garantita dalle Firebase Security Rules
+- Le credenziali sensibili sono servite via endpoint runtime su Vercel
 - Non committare mai credenziali sensibili nel repository
+- Configurazioni runtime: `/api/firebase-config.js` e `/api/cloudinary-config.js`
 
 ---
 
@@ -180,7 +195,7 @@ QuoVadiScout/
 - **Maps**: Leaflet.js
 - **Charts**: Canvas API
 - **PWA**: Service Worker, Manifest
-- **Deploy**: GitHub Pages
+- **Deploy**: Vercel (principale) + GitHub Pages (backup)
 
 ---
 

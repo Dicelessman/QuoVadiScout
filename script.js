@@ -5478,8 +5478,24 @@ async function loginWithGoogle() {
 
 async function logoutUser() {
   try {
-    // Salva l'elenco personale prima del logout
-    await salvaElencoPersonaleUtente();
+    // Salva l'elenco personale PRIMA di qualsiasi operazione di logout
+    const currentUser = getCurrentUser();
+    const userProfile = getUserProfile();
+    
+    if (currentUser && userProfile && elencoPersonale) {
+      try {
+        // Salva direttamente senza validazione server-side (siamo ancora autenticati)
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, {
+          elencoPersonale: elencoPersonale,
+          ultimoAggiornamento: new Date().toISOString()
+        });
+        console.log('✅ Elenco personale salvato prima del logout');
+      } catch (error) {
+        console.warn('⚠️ Errore salvataggio elenco personale (non critico):', error);
+        // Non bloccare il logout per questo errore
+      }
+    }
     
     // 🔒 Pulisci stato di autenticazione
     updateAuthState(null);

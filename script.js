@@ -5478,22 +5478,29 @@ async function loginWithGoogle() {
 
 async function logoutUser() {
   try {
-    // Salva l'elenco personale PRIMA di qualsiasi operazione di logout
+    // Salva l'elenco personale in localStorage come backup
     const currentUser = getCurrentUser();
     const userProfile = getUserProfile();
     
     if (currentUser && userProfile && elencoPersonale) {
       try {
-        // Salva direttamente senza validazione server-side (siamo ancora autenticati)
+        // Salva in localStorage come backup
+        localStorage.setItem(`elenco_personale_${currentUser.uid}`, JSON.stringify(elencoPersonale));
+        console.log('✅ Elenco personale salvato in localStorage come backup');
+        
+        // Prova a salvare su Firestore, ma non bloccare il logout se fallisce
         const userDocRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userDocRef, {
-          elencoPersonale: elencoPersonale,
-          ultimoAggiornamento: new Date().toISOString()
-        });
-        console.log('✅ Elenco personale salvato prima del logout');
+        await Promise.race([
+          updateDoc(userDocRef, {
+            elencoPersonale: elencoPersonale,
+            ultimoAggiornamento: new Date().toISOString()
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
+        ]);
+        console.log('✅ Elenco personale salvato su Firestore');
       } catch (error) {
         console.warn('⚠️ Errore salvataggio elenco personale (non critico):', error);
-        // Non bloccare il logout per questo errore
+        // L'elenco è già salvato in localStorage, quindi non è critico
       }
     }
     
@@ -5605,8 +5612,24 @@ function aggiornaUIUtente() {
 
 function caricaElencoPersonaleUtente() {
   const userProfile = getUserProfile();
+  const currentUser = getCurrentUser();
+  
   if (userProfile) {
     elencoPersonale = userProfile.elencoPersonale || [];
+  } else if (currentUser) {
+    // Prova a caricare dal localStorage come backup
+    try {
+      const backupElenco = localStorage.getItem(`elenco_personale_${currentUser.uid}`);
+      if (backupElenco) {
+        elencoPersonale = JSON.parse(backupElenco);
+        console.log('✅ Elenco personale ripristinato da localStorage');
+      } else {
+        elencoPersonale = [];
+      }
+    } catch (error) {
+      console.warn('⚠️ Errore caricamento elenco da localStorage:', error);
+      elencoPersonale = [];
+    }
   } else {
     elencoPersonale = [];
   }

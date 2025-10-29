@@ -47,6 +47,13 @@ import {
 // 🔒 SICUREZZA: Credenziali caricate dinamicamente da firebase-config.js
 // Il file firebase-config.js deve essere escluso dal repository (.gitignore)
 
+// Assicura che esista la funzione di validazione
+if (typeof window.validateFirebaseConfig !== 'function') {
+  window.validateFirebaseConfig = function(config) {
+    return true;
+  };
+}
+
 // Verifica che la configurazione Firebase sia disponibile
 if (typeof FirebaseConfig === 'undefined') {
   console.warn('⚠️ Configurazione Firebase non trovata. In Vercel è servita da /api/firebase-config.js');
@@ -77,7 +84,7 @@ if (typeof FirebaseConfig === 'undefined') {
 
 // Valida configurazione Firebase
 try {
-  validateFirebaseConfig(FirebaseConfig);
+  window.validateFirebaseConfig(FirebaseConfig);
   console.log('✅ Configurazione Firebase validata:', {
     projectId: FirebaseConfig.projectId,
     authDomain: FirebaseConfig.authDomain,

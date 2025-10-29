@@ -148,13 +148,21 @@ service cloud.firestore {
     // Solo il proprietario
     // ============================================
     match /user_notes/{noteId} {
-      // Solo il proprietario può leggere/scrivere
-      allow read, write: if request.auth != null &&
-                           resource.data.userId == request.auth.uid;
+      // Lettura: solo il proprietario
+      allow read: if request.auth != null &&
+                   resource.data.userId == request.auth.uid;
       
-      // Per i nuovi documenti, controlla che userId sia corretto
+      // Creazione: solo il proprietario con userId corretto
       allow create: if request.auth != null &&
                       request.resource.data.userId == request.auth.uid;
+      
+      // Aggiornamento: solo il proprietario
+      allow update: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+      
+      // Eliminazione: solo il proprietario
+      allow delete: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
     }
 
     // ============================================

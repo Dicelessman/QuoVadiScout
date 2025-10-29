@@ -33,9 +33,7 @@ service cloud.firestore {
                      request.auth.uid == userId &&
                      request.auth.token.email_verified == true &&
                      // Verifica che i dati siano coerenti
-                     (request.resource.data.email == request.auth.token.email) &&
-                     // Verifica che non ci siano tentativi di modifica di campi critici
-                     (request.resource.data.uid == request.auth.uid);
+                     (request.resource.data.email == request.auth.token.email);
     }
 
     // ============================================
@@ -143,6 +141,20 @@ service cloud.firestore {
     // Permetti query sulla collezione user_filters per utenti autenticati
     match /user_filters/{document=**} {
       allow read: if request.auth != null;
+    }
+
+    // ============================================
+    // COLLEZIONE: user_notes (note personali)
+    // Solo il proprietario
+    // ============================================
+    match /user_notes/{noteId} {
+      // Solo il proprietario può leggere/scrivere
+      allow read, write: if request.auth != null &&
+                           resource.data.userId == request.auth.uid;
+      
+      // Per i nuovi documenti, controlla che userId sia corretto
+      allow create: if request.auth != null &&
+                      request.resource.data.userId == request.auth.uid;
     }
 
     // ============================================

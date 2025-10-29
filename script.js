@@ -2681,14 +2681,26 @@ async function initializeMainMap() {
       return;
     }
 
+    // Controlla se la mappa è già inizializzata
+    if (mainMapInstance && mainMapInstance.map && !mainMapInstance.map._container) {
+      console.log('🗺️ Mappa già inizializzata, riutilizzo istanza esistente');
+      return;
+    }
+
     // Inizializza il MapsManager se non esiste
     if (!window.mapsManager) {
       window.mapsManager = new MapsManager();
     }
 
-    // Inizializza la mappa nel container principale
-    await window.mapsManager.initialize('mainMap');
-    mainMapInstance = window.mapsManager;
+    // Controlla se la mappa è già inizializzata nel container
+    if (window.mapsManager.map && window.mapsManager.isInitialized) {
+      console.log('🗺️ Mappa già inizializzata, aggiorno solo i marker');
+      mainMapInstance = window.mapsManager;
+    } else {
+      // Inizializza la mappa nel container principale
+      await window.mapsManager.initialize('mainMap');
+      mainMapInstance = window.mapsManager;
+    }
     
     // Centra la mappa sul Piemonte (Torino)
     if (mainMapInstance.map) {

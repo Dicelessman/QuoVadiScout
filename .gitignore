@@ -140,3 +140,5 @@ ui-debug.log
 .vscode/settings.json
 .history/
 
+.vercel
+.env*.local

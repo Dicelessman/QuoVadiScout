@@ -199,6 +199,21 @@ QuoVadiScout/
 
 ---
 
+## 🌐 URL di Produzione
+
+### Vercel (Raccomandato)
+- **Production**: https://quovadiscout-q8dmcfm6a-dicelessmans-projects.vercel.app
+- **GitHub Pages**: https://dicelessmans-projects.github.io/QuoVadiScout
+
+### Caratteristiche Vercel
+- ✅ **Sicurezza**: API keys protette tramite environment variables
+- ✅ **Performance**: Edge functions e CDN globale
+- ✅ **PWA**: Manifest e Service Worker configurati correttamente
+- ✅ **HTTPS**: Certificati SSL automatici
+- ✅ **Auto-deploy**: Deploy automatico da GitHub
+
+---
+
 ## 📊 Performance
 
 - ✅ Cache intelligente (5 minuti)
@@ -225,12 +240,15 @@ Quando `DEBUG = false`, tutti i log di sviluppo sono disabilitati.
 ## 📝 Changelog
 
 ### v1.3.0 (19 Dicembre 2024)
-- ✅ Sistema toast notifications
-- ✅ Logging condizionale per produzione
-- ✅ Virtual scrolling ottimizzato
-- ✅ Consolide documentazione
-- ✅ Firebase Security Rules deployate
-- ✅ Performance ottimizzate
+- ✅ **Migrazione Vercel** con configurazione sicura
+- ✅ **API Keys protette** tramite environment variables
+- ✅ **Runtime configuration** per Firebase e Cloudinary
+- ✅ **Firebase Security Rules** deployate e ottimizzate
+- ✅ **PWA manifest** configurato correttamente
+- ✅ **Sistema toast notifications**
+- ✅ **Logging condizionale** per produzione
+- ✅ **Virtual scrolling** ottimizzato
+- ✅ **Performance** ottimizzate
 
 ### v1.2.1
 - Implementazione geolocalizzazione

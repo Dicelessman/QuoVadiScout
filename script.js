@@ -5478,30 +5478,14 @@ async function loginWithGoogle() {
 
 async function logoutUser() {
   try {
-    // Salva l'elenco personale in localStorage come backup
+    // Salva l'elenco personale SOLO in localStorage (nessuna operazione Firestore)
     const currentUser = getCurrentUser();
     const userProfile = getUserProfile();
     
     if (currentUser && userProfile && elencoPersonale) {
-      try {
-        // Salva in localStorage come backup
-        localStorage.setItem(`elenco_personale_${currentUser.uid}`, JSON.stringify(elencoPersonale));
-        console.log('✅ Elenco personale salvato in localStorage come backup');
-        
-        // Prova a salvare su Firestore, ma non bloccare il logout se fallisce
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        await Promise.race([
-          updateDoc(userDocRef, {
-            elencoPersonale: elencoPersonale,
-            ultimoAggiornamento: new Date().toISOString()
-          }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
-        ]);
-        console.log('✅ Elenco personale salvato su Firestore');
-      } catch (error) {
-        console.warn('⚠️ Errore salvataggio elenco personale (non critico):', error);
-        // L'elenco è già salvato in localStorage, quindi non è critico
-      }
+      // Salva in localStorage come backup
+      localStorage.setItem(`elenco_personale_${currentUser.uid}`, JSON.stringify(elencoPersonale));
+      console.log('✅ Elenco personale salvato in localStorage');
     }
     
     // 🔒 Pulisci stato di autenticazione
@@ -5641,6 +5625,9 @@ async function salvaElencoPersonaleUtente() {
   
   if (currentUser && userProfile) {
     try {
+      // Salva sempre in localStorage come backup
+      localStorage.setItem(`elenco_personale_${currentUser.uid}`, JSON.stringify(elencoPersonale));
+      
       // 🔒 Validazione server-side
       if (!await validateServerAuth()) {
         console.warn('🔒 Sessione non valida per salvataggio elenco personale');
@@ -5660,6 +5647,7 @@ async function salvaElencoPersonaleUtente() {
       console.log('✅ Elenco personale salvato su Firestore');
     } catch (error) {
       console.error('❌ Errore salvataggio elenco personale:', error);
+      // L'elenco è già salvato in localStorage, quindi non è critico
     }
   }
 }

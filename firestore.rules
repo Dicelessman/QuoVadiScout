@@ -166,6 +166,29 @@ service cloud.firestore {
     }
 
     // ============================================
+    // COLLEZIONE: structure_ratings (voti strutture)
+    // Solo utenti autenticati
+    // ============================================
+    match /structure_ratings/{ratingId} {
+      // Lettura: tutti gli utenti autenticati
+      allow read: if request.auth != null;
+      
+      // Creazione: solo utenti autenticati con userId corretto
+      allow create: if request.auth != null &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5;
+      
+      // Aggiornamento: solo il proprietario del voto
+      allow update: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+      
+      // Eliminazione: solo il proprietario del voto
+      allow delete: if request.auth != null &&
+                      resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
     // BLOCCO DEFAULT: Tutto il resto negato
     // ============================================
     match /{document=**} {
